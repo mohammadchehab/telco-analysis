@@ -274,17 +274,17 @@ export const capabilityAPI = {
 
   // Validate research data by ID
   async validateResearchData(id: number, data: any): Promise<APIResponse<{ valid: boolean; errors: string[] }>> {
-    return apiClient.post(apiConfig.ENDPOINTS.CAPABILITY_WORKFLOW_VALIDATE(id), { data });
+    return apiClient.post(apiConfig.ENDPOINTS.CAPABILITY_WORKFLOW_VALIDATE(id), data);
   },
 
   // Process domain results by ID
   async processDomainResults(id: number, data: any): Promise<APIResponse<{ message: string }>> {
-    return apiClient.post(`/api/capabilities/${id}/workflow/process-domain`, { data });
+    return apiClient.post(`/api/capabilities/${id}/workflow/process-domain`, data);
   },
 
   // Process comprehensive results by ID
   async processComprehensiveResults(id: number, data: any): Promise<APIResponse<{ message: string }>> {
-    return apiClient.post(`/api/capabilities/${id}/workflow/process-comprehensive`, { data });
+    return apiClient.post(`/api/capabilities/${id}/workflow/process-comprehensive`, data);
   },
 };
 

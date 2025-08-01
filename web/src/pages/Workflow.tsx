@@ -94,7 +94,7 @@ const Workflow: React.FC = () => {
     if (capabilityName && capabilityId) {
       console.log('Initializing workflow for capability:', capabilityName, 'ID:', capabilityId);
       setSelectedCapability(capabilityName);
-      dispatch(initializeWorkflow(capabilityName));
+      dispatch(initializeWorkflow(parseInt(capabilityId)));
     } else {
       console.log('No capability name or ID provided');
     }
@@ -103,7 +103,7 @@ const Workflow: React.FC = () => {
       console.log('Workflow component unmounting');
       dispatch(clearWorkflow());
     };
-  }, [dispatch, capabilityName, capabilitySummaries.length]);
+  }, [dispatch, capabilityName, capabilityId, capabilitySummaries.length]);
 
   const handleCapabilityChange = (event: any) => {
     const newCapabilityName = event.target.value;
@@ -115,7 +115,7 @@ const Workflow: React.FC = () => {
       if (selectedCapability) {
         // Update URL to reflect the selected capability ID
         navigate(`/workflow/${selectedCapability.id}`);
-        dispatch(initializeWorkflow(newCapabilityName));
+        dispatch(initializeWorkflow(selectedCapability.id));
       }
     }
   };
@@ -142,11 +142,17 @@ const Workflow: React.FC = () => {
   };
 
   const handleUpload = async () => {
-    if (!selectedFile || !selectedCapability) return;
+    if (!selectedFile || !selectedCapability || !capabilityId) return;
 
     try {
+      // Find the capability ID for the selected capability name
+      const selectedCapabilityObj = capabilitySummaries.find(c => c.name === selectedCapability);
+      if (!selectedCapabilityObj) {
+        throw new Error('Capability not found');
+      }
+
       await dispatch(uploadResearchFile({
-        capabilityName: selectedCapability,
+        capabilityId: selectedCapabilityObj.id,
         file: selectedFile,
         expectedType,
       })).unwrap();
@@ -154,7 +160,7 @@ const Workflow: React.FC = () => {
       // Validate the uploaded data
       if (jsonData) {
         await dispatch(validateResearchData({
-          capabilityName: selectedCapability,
+          capabilityId: selectedCapabilityObj.id,
           jsonData,
           expectedType,
         })).unwrap();
@@ -173,18 +179,24 @@ const Workflow: React.FC = () => {
   };
 
   const handleProcessResults = async () => {
-    if (!selectedCapability || !jsonData) return;
+    if (!selectedCapability || !jsonData || !capabilityId) return;
 
     try {
+      // Find the capability ID for the selected capability name
+      const selectedCapabilityObj = capabilitySummaries.find(c => c.name === selectedCapability);
+      if (!selectedCapabilityObj) {
+        throw new Error('Capability not found');
+      }
+
       if (expectedType === 'domain_analysis') {
         await dispatch(processDomainResults({
-          capabilityName: selectedCapability,
-          jsonData: jsonData as DomainAnalysisResponse,
+          capabilityId: selectedCapabilityObj.id,
+          jsonData: jsonData as any,
         })).unwrap();
       } else {
         await dispatch(processComprehensiveResults({
-          capabilityName: selectedCapability,
-          jsonData: jsonData as ComprehensiveResearchResponse,
+          capabilityId: selectedCapabilityObj.id,
+          jsonData: jsonData as any,
         })).unwrap();
       }
 
@@ -201,14 +213,21 @@ const Workflow: React.FC = () => {
   };
 
   const handleGeneratePrompt = async () => {
-    if (!selectedCapability) return;
+    if (!selectedCapability || !capabilityId) return;
 
     try {
-      await dispatch(generatePrompt({
-        capabilityName: selectedCapability,
+      // Find the capability ID for the selected capability name
+      const selectedCapabilityObj = capabilitySummaries.find(c => c.name === selectedCapability);
+      if (!selectedCapabilityObj) {
+        throw new Error('Capability not found');
+      }
+
+      const result = await dispatch(generatePrompt({
+        capabilityId: selectedCapabilityObj.id,
         promptType: expectedType,
       })).unwrap();
 
+      // setGeneratedPrompt(result.prompt); // This line was removed from the new_code, so it's removed here.
       dispatch(addNotification({
         type: 'success',
         message: 'Prompt generated successfully',
@@ -528,7 +547,10 @@ const Workflow: React.FC = () => {
                         sx={{ mt: 2 }}
                       >
                         {validationResult.valid ? 'Validation passed' : 'Validation failed'}
-                        {validationResult.errors.length > 0 && (
+                        <Typography variant="body2" sx={{ mt: 1 }}>
+                          Debug: valid={String(validationResult.valid)}, errors={validationResult.errors?.length || 0}
+                        </Typography>
+                        {validationResult.errors && validationResult.errors.length > 0 && (
                           <Box sx={{ mt: 1 }}>
                             <Typography variant="body2" fontWeight="bold">
                               Errors:

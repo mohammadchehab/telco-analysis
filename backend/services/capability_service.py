@@ -268,17 +268,28 @@ class CapabilityService:
             return get_prompt_template(prompt_type, capability_name)
     
     @staticmethod
-    def process_domain_results(db: Session, capability_name: str, data: Dict[str, Any]) -> Dict[str, Any]:
+    def process_domain_results(db: Session, capability_name: str, data: Dict[str, Any], user_id: int = None) -> Dict[str, Any]:
         """Process domain analysis results"""
         capability = db.query(Capability).filter(Capability.name == capability_name).first()
         if not capability:
             return {"error": "Capability not found"}
         
         processed_domains = 0
+        skipped_domains = 0
         
-        if "proposed_framework" in data and "domains" in data["proposed_framework"]:
-            for domain_data in data["proposed_framework"]["domains"]:
+        if "enhanced_framework" in data and "domains" in data["enhanced_framework"]:
+            for domain_data in data["enhanced_framework"]["domains"]:
                 domain_name = domain_data["domain_name"]
+                
+                # Check if domain already exists
+                existing_domain = db.query(Domain).filter(
+                    Domain.capability_id == capability.id,
+                    Domain.domain_name == domain_name
+                ).first()
+                
+                if existing_domain:
+                    skipped_domains += 1
+                    continue
                 
                 # Create domain
                 domain = Domain(
@@ -290,15 +301,25 @@ class CapabilityService:
                 
                 # Create attributes
                 for attr_data in domain_data.get("attributes", []):
-                    attribute = Attribute(
-                        capability_id=capability.id,
-                        domain_name=domain_name,
-                        attribute_name=attr_data["attribute_name"],
-                        definition=attr_data.get("definition", ""),
-                        tm_forum_mapping=attr_data.get("tm_forum_mapping", ""),
-                        importance=attr_data.get("importance", "medium")
-                    )
-                    db.add(attribute)
+                    attribute_name = attr_data["attribute_name"]
+                    
+                    # Check if attribute already exists
+                    existing_attribute = db.query(Attribute).filter(
+                        Attribute.capability_id == capability.id,
+                        Attribute.domain_name == domain_name,
+                        Attribute.attribute_name == attribute_name
+                    ).first()
+                    
+                    if not existing_attribute:
+                        attribute = Attribute(
+                            capability_id=capability.id,
+                            domain_name=domain_name,
+                            attribute_name=attribute_name,
+                            definition=attr_data.get("definition", ""),
+                            tm_forum_mapping=attr_data.get("tm_forum_mapping", ""),
+                            importance=attr_data.get("importance", "medium")
+                        )
+                        db.add(attribute)
                 
                 processed_domains += 1
         
@@ -306,23 +327,38 @@ class CapabilityService:
         tracker = db.query(CapabilityTracker).filter(CapabilityTracker.capability_name == capability_name).first()
         if tracker:
             tracker.review_completed = True
-            tracker.last_updated = datetime.now().isoformat()
+            tracker.last_updated = datetime.now()
         else:
             tracker = CapabilityTracker(
                 capability_name=capability_name,
                 review_completed=True,
                 comprehensive_ready=False,
-                last_updated=datetime.now().isoformat()
+                last_updated=datetime.now()
             )
             db.add(tracker)
         
         # Update capability status
         capability.status = "ready"
         
+        # Log activity if user_id provided
+        if user_id:
+            from models.models import ActivityLog
+            activity = ActivityLog(
+                user_id=user_id,
+                username="system",  # Will be updated by the API layer
+                action="processed_domain_results",
+                entity_type="capability",
+                entity_id=capability.id,
+                entity_name=capability_name,
+                details=f"Processed {processed_domains} domains, skipped {skipped_domains} duplicates"
+            )
+            db.add(activity)
+        
         db.commit()
         
         return {
             "processed_domains": processed_domains,
+            "skipped_domains": skipped_domains,
             "capability_name": capability_name,
             "next_workflow_step": "comprehensive_research"
         }
@@ -358,8 +394,8 @@ class CapabilityService:
                             evidence_url=json.dumps(vendor_data.get("evidence", [])),
                             score_decision=vendor_data.get("score_decision", ""),
                             research_type="capability_research",
-                            research_date=data.get("research_date", datetime.now().isoformat()),
-                            created_at=datetime.now().isoformat()
+                            research_date=data.get("research_date", datetime.now()),
+                            created_at=datetime.now()
                         )
                         db.add(score)
                         processed_vendors += 1
@@ -368,13 +404,13 @@ class CapabilityService:
         tracker = db.query(CapabilityTracker).filter(CapabilityTracker.capability_name == capability_name).first()
         if tracker:
             tracker.comprehensive_ready = True
-            tracker.last_updated = datetime.now().isoformat()
+            tracker.last_updated = datetime.now()
         else:
             tracker = CapabilityTracker(
                 capability_name=capability_name,
                 review_completed=True,
                 comprehensive_ready=True,
-                last_updated=datetime.now().isoformat()
+                last_updated=datetime.now()
             )
             db.add(tracker)
         

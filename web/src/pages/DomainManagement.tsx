@@ -20,6 +20,12 @@ import {
   ListItemText,
   ListItemSecondaryAction,
   Divider,
+  Chip,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  OutlinedInput,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -28,12 +34,14 @@ import {
   ArrowBack as ArrowBackIcon,
   Save as SaveIcon,
   Cancel as CancelIcon,
+  Settings as SettingsIcon,
+  List as ListIcon,
 } from '@mui/icons-material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
-import { domainAPI } from '../utils/api';
+import { domainAPI, attributeAPI } from '../utils/api';
 import { addNotification } from '../store/slices/uiSlice';
-import type { Domain } from '../types';
+import type { Domain, Attribute } from '../types';
 
 const DomainManagement: React.FC = () => {
   const { capabilityId } = useParams<{ capabilityId: string }>();
@@ -41,16 +49,26 @@ const DomainManagement: React.FC = () => {
   const dispatch = useDispatch();
 
   const [domains, setDomains] = useState<Domain[]>([]);
+  const [attributes, setAttributes] = useState<Attribute[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showAttributeModal, setShowAttributeModal] = useState(false);
+  const [selectedDomain, setSelectedDomain] = useState<Domain | null>(null);
   const [editingDomain, setEditingDomain] = useState<Domain | null>(null);
   const [deletingDomain, setDeletingDomain] = useState<Domain | null>(null);
   const [formData, setFormData] = useState({ domain_name: '' });
+  const [attributeFormData, setAttributeFormData] = useState({
+    attribute_name: '',
+    definition: '',
+    tm_forum_mapping: '',
+    importance: 'medium',
+  });
 
   useEffect(() => {
     if (capabilityId) {
       loadDomains();
+      loadAttributes();
     }
   }, [capabilityId]);
 
@@ -69,6 +87,19 @@ const DomainManagement: React.FC = () => {
       setError(`Failed to load domains: ${error.message || error}`);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadAttributes = async () => {
+    if (!capabilityId) return;
+    
+    try {
+      const response = await attributeAPI.getByCapabilityId(parseInt(capabilityId));
+      if (response.success && response.data) {
+        setAttributes(response.data || []);
+      }
+    } catch (error: any) {
+      console.error('Failed to load attributes:', error);
     }
   };
 
@@ -164,6 +195,56 @@ const DomainManagement: React.FC = () => {
     }
   };
 
+  const handleCreateAttribute = async () => {
+    if (!selectedDomain || !attributeFormData.attribute_name.trim()) {
+      dispatch(addNotification({
+        type: 'error',
+        message: 'Attribute name is required',
+      }));
+      return;
+    }
+
+    try {
+      const response = await attributeAPI.create(parseInt(capabilityId!), {
+        ...attributeFormData,
+        domain_name: selectedDomain.domain_name,
+      });
+      if (response.success) {
+        dispatch(addNotification({
+          type: 'success',
+          message: `Attribute "${attributeFormData.attribute_name}" created successfully`,
+        }));
+        setShowAttributeModal(false);
+        setAttributeFormData({
+          attribute_name: '',
+          definition: '',
+          tm_forum_mapping: '',
+          importance: 'medium',
+        });
+        loadAttributes();
+      } else {
+        dispatch(addNotification({
+          type: 'error',
+          message: response.error || 'Failed to create attribute',
+        }));
+      }
+    } catch (error: any) {
+      dispatch(addNotification({
+        type: 'error',
+        message: `Failed to create attribute: ${error.message || error}`,
+      }));
+    }
+  };
+
+  const handleManageAttributes = (domain: Domain) => {
+    setSelectedDomain(domain);
+    setShowAttributeModal(true);
+  };
+
+  const getDomainAttributes = (domainName: string) => {
+    return attributes.filter(attr => attr.domain_name === domainName);
+  };
+
   const handleEditClick = (domain: Domain) => {
     setEditingDomain(domain);
     setFormData({ domain_name: domain.domain_name });
@@ -234,7 +315,19 @@ const DomainManagement: React.FC = () => {
             <React.Fragment key={domain.id}>
               <ListItem>
                 <ListItemText
-                  primary={domain.domain_name}
+                  primary={
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <Typography variant="subtitle1">
+                        {domain.domain_name}
+                      </Typography>
+                      <Chip 
+                        label={`${getDomainAttributes(domain.domain_name).length} attributes`}
+                        size="small"
+                        color="primary"
+                        variant="outlined"
+                      />
+                    </Box>
+                  }
                   secondary={`Domain ID: ${domain.id}`}
                 />
                 <ListItemSecondaryAction>
@@ -245,6 +338,16 @@ const DomainManagement: React.FC = () => {
                       sx={{ mr: 1 }}
                     >
                       <EditIcon />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Manage Attributes">
+                    <IconButton
+                      edge="end"
+                      onClick={() => handleManageAttributes(domain)}
+                      sx={{ mr: 1 }}
+                      color="primary"
+                    >
+                      <SettingsIcon />
                     </IconButton>
                   </Tooltip>
                   <Tooltip title="Delete Domain">
@@ -339,6 +442,110 @@ const DomainManagement: React.FC = () => {
               startIcon={<DeleteIcon />}
             >
               Delete
+            </Button>
+          </DialogActions>
+        </Dialog>
+      )}
+
+      {/* Attribute Management Modal */}
+      {selectedDomain && (
+        <Dialog
+          open={showAttributeModal}
+          onClose={() => setShowAttributeModal(false)}
+          maxWidth="md"
+          fullWidth
+        >
+          <DialogTitle>
+            Manage Attributes for {selectedDomain.domain_name}
+          </DialogTitle>
+          <DialogContent>
+            <Box sx={{ mt: 2 }}>
+              <Box sx={{ display: 'flex', gap: 3 }}>
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="h6">Attributes</Typography>
+                  {getDomainAttributes(selectedDomain.domain_name).length === 0 ? (
+                    <Typography variant="body2" color="textSecondary">
+                      No attributes defined for this domain.
+                    </Typography>
+                  ) : (
+                    <List>
+                      {getDomainAttributes(selectedDomain.domain_name).map((attr) => (
+                        <ListItem key={attr.id}>
+                          <ListItemText
+                            primary={attr.attribute_name}
+                            secondary={`Definition: ${attr.definition}, TM Forum Mapping: ${attr.tm_forum_mapping}, Importance: ${attr.importance}`}
+                          />
+                          <ListItemSecondaryAction>
+                            <Tooltip title="Edit Attribute">
+                              <IconButton edge="end">
+                                <EditIcon />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Delete Attribute">
+                              <IconButton edge="end" color="error">
+                                <DeleteIcon />
+                              </IconButton>
+                            </Tooltip>
+                          </ListItemSecondaryAction>
+                        </ListItem>
+                      ))}
+                    </List>
+                  )}
+                </Box>
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="h6">Add New Attribute</Typography>
+                  <TextField
+                    fullWidth
+                    label="Attribute Name"
+                    value={attributeFormData.attribute_name}
+                    onChange={(e) => setAttributeFormData({ ...attributeFormData, attribute_name: e.target.value })}
+                    sx={{ mt: 2 }}
+                    required
+                  />
+                  <TextField
+                    fullWidth
+                    label="Definition"
+                    value={attributeFormData.definition}
+                    onChange={(e) => setAttributeFormData({ ...attributeFormData, definition: e.target.value })}
+                    sx={{ mt: 2 }}
+                    multiline
+                    rows={2}
+                  />
+                  <TextField
+                    fullWidth
+                    label="TM Forum Mapping"
+                    value={attributeFormData.tm_forum_mapping}
+                    onChange={(e) => setAttributeFormData({ ...attributeFormData, tm_forum_mapping: e.target.value })}
+                    sx={{ mt: 2 }}
+                  />
+                  <FormControl fullWidth sx={{ mt: 2 }}>
+                    <InputLabel>Importance</InputLabel>
+                    <Select
+                      value={attributeFormData.importance}
+                      onChange={(e) => setAttributeFormData({ ...attributeFormData, importance: e.target.value as string })}
+                      label="Importance"
+                    >
+                      <MenuItem value="low">Low</MenuItem>
+                      <MenuItem value="medium">Medium</MenuItem>
+                      <MenuItem value="high">High</MenuItem>
+                      <MenuItem value="critical">Critical</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Box>
+              </Box>
+            </Box>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setShowAttributeModal(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="contained"
+              onClick={handleCreateAttribute}
+              disabled={!attributeFormData.attribute_name.trim()}
+              startIcon={<SaveIcon />}
+            >
+              Add Attribute
             </Button>
           </DialogActions>
         </Dialog>

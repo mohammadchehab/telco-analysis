@@ -1,10 +1,10 @@
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import type { PayloadAction } from '@reduxjs/toolkit';
 import type { 
   WorkflowStep, 
   PromptResponse, 
   FileUploadResult, 
-  ValidationResult,
-  APIResponse
+  ValidationResult
 } from '../../types';
 import { capabilityAPI } from '../../utils/api';
 
@@ -22,32 +22,7 @@ interface WorkflowState {
 
 const initialState: WorkflowState = {
   currentCapability: null,
-  workflowSteps: [
-    {
-      id: 'step-1',
-      name: 'Generate Research Prompt',
-      description: 'Generate appropriate research prompt based on capability state',
-      status: 'pending',
-      order: 1,
-      action: 'generate_prompt'
-    },
-    {
-      id: 'step-2',
-      name: 'Upload Research Results',
-      description: 'Upload and validate research results JSON file',
-      status: 'pending',
-      order: 2,
-      action: 'upload_results'
-    },
-    {
-      id: 'step-3',
-      name: 'Process Results',
-      description: 'Process uploaded results and update database',
-      status: 'pending',
-      order: 3,
-      action: 'process_results'
-    }
-  ],
+  workflowSteps: [],
   currentStep: 0,
   loading: false,
   error: null,
@@ -115,55 +90,27 @@ export const validateResearchData = createAsyncThunk(
 
 export const processDomainResults = createAsyncThunk(
   'workflow/processDomainResults',
-  async ({ capabilityName, jsonData }: { capabilityName: string; jsonData: any }) => {
-    const baseUrl = import.meta.env.VITE_API_BASE_URL;
-    if (!baseUrl) {
-      throw new Error('VITE_API_BASE_URL environment variable is required');
+  async ({ capabilityId, jsonData }: { capabilityId: number; jsonData: any }) => {
+    const response = await capabilityAPI.processDomainResults(capabilityId, jsonData);
+    
+    if (!response.success) {
+      throw new Error(response.error || 'Failed to process domain results');
     }
     
-    const response = await fetch(`${baseUrl}/api/capabilities/${capabilityName}/workflow/process-domain`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ data: jsonData }),
-    });
-    const data: APIResponse<{
-      success: boolean;
-      processed_attributes: number;
-      next_workflow_step: string;
-    }> = await response.json();
-    
-    if (!data.success) {
-      throw new Error(data.error || 'Failed to process domain results');
-    }
-    
-    return data.data!;
+    return response.data!;
   }
 );
 
 export const processComprehensiveResults = createAsyncThunk(
   'workflow/processComprehensiveResults',
-  async ({ capabilityName, jsonData }: { capabilityName: string; jsonData: any }) => {
-    const baseUrl = import.meta.env.VITE_API_BASE_URL;
-    if (!baseUrl) {
-      throw new Error('VITE_API_BASE_URL environment variable is required');
+  async ({ capabilityId, jsonData }: { capabilityId: number; jsonData: any }) => {
+    const response = await capabilityAPI.processComprehensiveResults(capabilityId, jsonData);
+    
+    if (!response.success) {
+      throw new Error(response.error || 'Failed to process comprehensive results');
     }
     
-    const response = await fetch(`${baseUrl}/api/capabilities/${capabilityName}/workflow/process-comprehensive`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ data: jsonData }),
-    });
-    const data: APIResponse<{
-      success: boolean;
-      processed_vendors: number;
-      analysis_ready: boolean;
-    }> = await response.json();
-    
-    if (!data.success) {
-      throw new Error(data.error || 'Failed to process comprehensive results');
-    }
-    
-    return data.data!;
+    return response.data!;
   }
 );
 
@@ -213,9 +160,9 @@ const workflowSlice = createSlice({
       })
       .addCase(initializeWorkflow.fulfilled, (state, action) => {
         state.loading = false;
-        state.workflowSteps = action.payload.workflow_steps;
+        state.workflowSteps = (action.payload as any).workflow_steps || [];
         state.currentStep = 0;
-        console.log('Workflow steps set:', action.payload.workflow_steps);
+        console.log('Workflow steps set:', (action.payload as any).workflow_steps);
         console.log('Current step set to:', 0);
       })
       .addCase(initializeWorkflow.rejected, (state, action) => {
@@ -228,7 +175,7 @@ const workflowSlice = createSlice({
       })
       .addCase(generatePrompt.fulfilled, (state, action) => {
         state.loading = false;
-        state.promptResponse = action.payload;
+        state.promptResponse = action.payload as any;
       })
       .addCase(generatePrompt.rejected, (state, action) => {
         state.loading = false;
@@ -240,7 +187,7 @@ const workflowSlice = createSlice({
       })
       .addCase(uploadResearchFile.fulfilled, (state, action) => {
         state.loading = false;
-        state.uploadedFile = action.payload;
+        state.uploadedFile = action.payload as any;
       })
       .addCase(uploadResearchFile.rejected, (state, action) => {
         state.loading = false;
@@ -252,7 +199,42 @@ const workflowSlice = createSlice({
       })
       .addCase(validateResearchData.fulfilled, (state, action) => {
         state.loading = false;
-        state.validationResult = action.payload;
+        // Extract validation_result from the response
+        console.log('Validation response:', action.payload);
+        
+        // Try different possible response structures
+        let validationData = null;
+        
+        // Structure 1: data.validation_result (wrapped in data)
+        if ((action.payload as any).data?.validation_result) {
+          validationData = (action.payload as any).data.validation_result;
+        }
+        // Structure 2: validation_result (direct)
+        else if ((action.payload as any).validation_result) {
+          validationData = (action.payload as any).validation_result;
+        }
+        // Structure 3: direct validation fields
+        else if (typeof (action.payload as any).valid === 'boolean') {
+          validationData = {
+            valid: (action.payload as any).valid,
+            errors: (action.payload as any).errors || [],
+            warnings: (action.payload as any).warnings || []
+          };
+        }
+        
+        console.log('Extracted validation data:', validationData);
+        
+        // Set the validation result
+        if (validationData && typeof validationData.valid === 'boolean') {
+          state.validationResult = validationData;
+        } else {
+          // Fallback: create a default invalid result
+          state.validationResult = {
+            valid: false,
+            errors: ['Failed to parse validation response'],
+            warnings: []
+          };
+        }
       })
       .addCase(validateResearchData.rejected, (state, action) => {
         state.loading = false;

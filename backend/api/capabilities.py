@@ -6,6 +6,7 @@ import uuid
 from datetime import datetime
 
 from core.database import get_db
+from core.auth import get_current_user
 from services.capability_service import CapabilityService
 from schemas.schemas import (
     CapabilityCreate, CapabilityUpdate, CapabilityResponse, CapabilitySummary, 
@@ -410,23 +411,45 @@ async def upload_research_file(
         return APIResponse(success=False, error=str(e))
 
 @router.post("/{capability_id}/workflow/validate", response_model=APIResponse)
-async def validate_research_data_by_id(capability_id: int, request: ValidationRequest, db: Session = Depends(get_db)):
+async def validate_research_data_by_id(capability_id: int, request: Dict[str, Any], db: Session = Depends(get_db)):
     """Validate research data by capability ID"""
     try:
         capability = CapabilityService.get_capability(db, capability_id)
         if not capability:
             return APIResponse(success=False, error="Capability not found")
         
-        validation_result = {
-            "valid": True,
-            "errors": [],
-            "warnings": []
-        }
+        errors = []
+        warnings = []
+        
+        # Check if it's the old format (wrapped in data) or new format (direct)
+        if "data" in request and "expected_type" in request:
+            # Old format - extract data
+            data = request["data"]
+            expected_type = request["expected_type"]
+        else:
+            # New format - use request directly
+            data = request
+            expected_type = "domain_analysis"  # Default to domain analysis
+        
+        if expected_type == "domain_analysis":
+            if "capability" not in data:
+                errors.append("Missing capability field")
+            if "enhanced_framework" not in data:
+                errors.append("Missing enhanced_framework field")
+        else:
+            if "attributes" not in data:
+                errors.append("Missing attributes field")
+            if "market_analysis" not in data:
+                errors.append("Missing market_analysis field")
         
         return APIResponse(
             success=True,
             data={
-                "validation_result": validation_result,
+                "validation_result": {
+                    "valid": len(errors) == 0,
+                    "errors": errors,
+                    "warnings": warnings
+                },
                 "capability_name": capability.name,
                 "capability_id": capability_id
             }
@@ -435,43 +458,69 @@ async def validate_research_data_by_id(capability_id: int, request: ValidationRe
         return APIResponse(success=False, error=str(e))
 
 @router.post("/name/{capability_name}/workflow/validate", response_model=APIResponse)
-async def validate_research_data(capability_name: str, request: ValidationRequest, db: Session = Depends(get_db)):
+async def validate_research_data(capability_name: str, request: Dict[str, Any], db: Session = Depends(get_db)):
     """Validate research data by capability name"""
     try:
         errors = []
         warnings = []
         
-        if request.expected_type == "domain_analysis":
-            if "capability" not in request.data:
-                errors.append("Missing capability field")
-            if "gap_analysis" not in request.data:
-                errors.append("Missing gap_analysis field")
+        # Check if it's the old format (wrapped in data) or new format (direct)
+        if "data" in request and "expected_type" in request:
+            # Old format - extract data
+            data = request["data"]
+            expected_type = request["expected_type"]
         else:
-            if "attributes" not in request.data:
+            # New format - use request directly
+            data = request
+            expected_type = "domain_analysis"  # Default to domain analysis
+        
+        if expected_type == "domain_analysis":
+            if "capability" not in data:
+                errors.append("Missing capability field")
+            if "enhanced_framework" not in data:
+                errors.append("Missing enhanced_framework field")
+        else:
+            if "attributes" not in data:
                 errors.append("Missing attributes field")
-            if "market_analysis" not in request.data:
+            if "market_analysis" not in data:
                 errors.append("Missing market_analysis field")
         
         return APIResponse(
             success=True,
             data={
-                "valid": len(errors) == 0,
-                "errors": errors,
-                "warnings": warnings
+                "validation_result": {
+                    "valid": len(errors) == 0,
+                    "errors": errors,
+                    "warnings": warnings
+                },
+                "capability_name": capability_name
             }
         )
     except Exception as e:
         return APIResponse(success=False, error=str(e))
 
 @router.post("/{capability_id}/workflow/process-domain", response_model=APIResponse)
-async def process_domain_results_by_id(capability_id: int, request: ProcessRequest, db: Session = Depends(get_db)):
+async def process_domain_results_by_id(
+    capability_id: int, 
+    request: Dict[str, Any], 
+    current_user: Dict[str, Any] = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
     """Process domain results by capability ID"""
     try:
         capability = CapabilityService.get_capability(db, capability_id)
         if not capability:
             return APIResponse(success=False, error="Capability not found")
         
-        result = CapabilityService.process_domain_results(db, capability.name, request.data)
+        # Check if it's the old format (wrapped in data) or new format (direct)
+        if "data" in request:
+            # Old format - extract data
+            data = request["data"]
+        else:
+            # New format - use request directly
+            data = request
+        
+        result = CapabilityService.process_domain_results(db, capability.name, data, current_user.get("id"))
         
         return APIResponse(
             success=True,
@@ -486,10 +535,23 @@ async def process_domain_results_by_id(capability_id: int, request: ProcessReque
         return APIResponse(success=False, error=str(e))
 
 @router.post("/name/{capability_name}/workflow/process-domain", response_model=APIResponse)
-async def process_domain_results(capability_name: str, request: ProcessRequest, db: Session = Depends(get_db)):
+async def process_domain_results(
+    capability_name: str, 
+    request: Dict[str, Any], 
+    current_user: Dict[str, Any] = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
     """Process domain results by capability name"""
     try:
-        result = CapabilityService.process_domain_results(db, capability_name, request.data)
+        # Check if it's the old format (wrapped in data) or new format (direct)
+        if "data" in request:
+            # Old format - extract data
+            data = request["data"]
+        else:
+            # New format - use request directly
+            data = request
+        
+        result = CapabilityService.process_domain_results(db, capability_name, data, current_user.get("id"))
         
         return APIResponse(
             success=True,
@@ -502,14 +564,22 @@ async def process_domain_results(capability_name: str, request: ProcessRequest, 
         return APIResponse(success=False, error=str(e))
 
 @router.post("/{capability_id}/workflow/process-comprehensive", response_model=APIResponse)
-async def process_comprehensive_results_by_id(capability_id: int, request: ProcessRequest, db: Session = Depends(get_db)):
+async def process_comprehensive_results_by_id(capability_id: int, request: Dict[str, Any], db: Session = Depends(get_db)):
     """Process comprehensive results by capability ID"""
     try:
         capability = CapabilityService.get_capability(db, capability_id)
         if not capability:
             return APIResponse(success=False, error="Capability not found")
         
-        result = CapabilityService.process_comprehensive_results(db, capability.name, request.data)
+        # Check if it's the old format (wrapped in data) or new format (direct)
+        if "data" in request:
+            # Old format - extract data
+            data = request["data"]
+        else:
+            # New format - use request directly
+            data = request
+        
+        result = CapabilityService.process_comprehensive_results(db, capability.name, data)
         
         return APIResponse(
             success=True,
@@ -524,10 +594,18 @@ async def process_comprehensive_results_by_id(capability_id: int, request: Proce
         return APIResponse(success=False, error=str(e))
 
 @router.post("/name/{capability_name}/workflow/process-comprehensive", response_model=APIResponse)
-async def process_comprehensive_results(capability_name: str, request: ProcessRequest, db: Session = Depends(get_db)):
+async def process_comprehensive_results(capability_name: str, request: Dict[str, Any], db: Session = Depends(get_db)):
     """Process comprehensive results by capability name"""
     try:
-        result = CapabilityService.process_comprehensive_results(db, capability_name, request.data)
+        # Check if it's the old format (wrapped in data) or new format (direct)
+        if "data" in request:
+            # Old format - extract data
+            data = request["data"]
+        else:
+            # New format - use request directly
+            data = request
+        
+        result = CapabilityService.process_comprehensive_results(db, capability_name, data)
         
         return APIResponse(
             success=True,

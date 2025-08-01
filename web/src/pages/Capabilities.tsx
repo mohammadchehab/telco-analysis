@@ -89,7 +89,7 @@ const Capabilities: React.FC = () => {
 
   const handleStartResearch = async (capabilityId: number, capabilityName: string) => {
     try {
-      await dispatch(startResearchWorkflow(capabilityName)).unwrap();
+      await dispatch(startResearchWorkflow(capabilityId)).unwrap();
       dispatch(addNotification({
         type: 'success',
         message: `Research workflow started for ${capabilityName}`,

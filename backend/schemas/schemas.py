@@ -70,7 +70,7 @@ class DomainBase(Base):
     domain_name: str
 
 class DomainCreate(DomainBase):
-    capability_id: int
+    pass  # capability_id is passed as URL parameter
 
 class DomainUpdate(Base):
     domain_name: Optional[str] = None
@@ -87,8 +87,7 @@ class AttributeBase(Base):
     importance: Optional[str] = None
 
 class AttributeCreate(AttributeBase):
-    capability_id: int
-    domain_name: str
+    domain_name: str  # capability_id is passed as URL parameter
 
 class AttributeUpdate(Base):
     domain_name: Optional[str] = None

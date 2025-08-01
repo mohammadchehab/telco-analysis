@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from core.database import engine
 from models import models
-from api import capabilities, domains, auth
+from api import capabilities, domains, auth, attributes
 
 print("🚀 Starting Telco Capability Analysis API...")
 
@@ -21,7 +21,7 @@ except Exception as e:
 # Create FastAPI app
 app = FastAPI(
     title="Telco Capability Analysis API",
-    description="A comprehensive API for telco capability analysis and research",
+    description="API for managing telco capabilities, domains, and attributes",
     version="1.0.0"
 )
 
@@ -38,6 +38,7 @@ app.add_middleware(
 app.include_router(capabilities.router)
 app.include_router(domains.router)
 app.include_router(auth.router)
+app.include_router(attributes.router)
 print("✅ Routers included successfully")
 
 @app.get("/")

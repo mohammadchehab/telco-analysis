@@ -2,14 +2,16 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
 import type { 
   Capability, 
+  CapabilitySummary, 
   CapabilityTracker, 
   VendorScore, 
-  FilterOptions,
-  CapabilitySummary,
   WorkflowStats,
+  FilterOptions,
+  BulkAction,
   WorkflowState,
   APIResponse
 } from '../../types';
+import { capabilityAPI } from '../../utils/api';
 
 interface CapabilitiesState {
   capabilities: Capability[];
@@ -142,26 +144,14 @@ export const updateCapabilityStatus = createAsyncThunk(
 
 export const startResearchWorkflow = createAsyncThunk(
   'capabilities/startResearchWorkflow',
-  async (capabilityName: string) => {
-    const baseUrl = import.meta.env.VITE_API_BASE_URL;
-    if (!baseUrl) {
-      throw new Error('VITE_API_BASE_URL environment variable is required');
+  async (capabilityId: number) => {
+    const response = await capabilityAPI.startResearch(capabilityId);
+    
+    if (!response.success) {
+      throw new Error(response.error || 'Failed to start research workflow');
     }
     
-    const response = await fetch(`${baseUrl}/api/capabilities/${capabilityName}/start-research`, {
-      method: 'POST',
-    });
-    const data: APIResponse<{
-      workflow_state: 'domain_analysis' | 'comprehensive_research';
-      prompt_url: string;
-      next_steps: string[];
-    }> = await response.json();
-    
-    if (!data.success) {
-      throw new Error(data.error || 'Failed to start research workflow');
-    }
-    
-    return { capabilityName, ...data.data! };
+    return { capabilityId, ...response.data! };
   }
 );
 
@@ -245,13 +235,14 @@ const capabilitiesSlice = createSlice({
       })
       .addCase(startResearchWorkflow.fulfilled, (state, action) => {
         // Update the capability tracker with new workflow state
-        const trackerIndex = state.capabilityTrackers.findIndex(t => t.capability_name === action.payload.capabilityName);
+        const payload = action.payload as any;
+        const trackerIndex = state.capabilityTrackers.findIndex(t => t.capability_name === payload.capabilityName);
         if (trackerIndex !== -1) {
           const tracker = state.capabilityTrackers[trackerIndex];
-          if (action.payload.workflow_state === 'domain_analysis') {
+          if (payload.workflow_state === 'domain_analysis') {
             tracker.review_completed = false;
             tracker.comprehensive_ready = false;
-          } else if (action.payload.workflow_state === 'comprehensive_research') {
+          } else if (payload.workflow_state === 'comprehensive_research') {
             tracker.review_completed = true;
             tracker.comprehensive_ready = true;
           }
