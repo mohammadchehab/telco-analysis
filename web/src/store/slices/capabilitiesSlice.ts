@@ -1,0 +1,274 @@
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import type { PayloadAction } from '@reduxjs/toolkit';
+import type { 
+  Capability, 
+  CapabilityTracker, 
+  VendorScore, 
+  FilterOptions,
+  CapabilitySummary,
+  WorkflowStats,
+  WorkflowState,
+  APIResponse
+} from '../../types';
+
+interface CapabilitiesState {
+  capabilities: Capability[];
+  capabilitySummaries: CapabilitySummary[];
+  capabilityTrackers: CapabilityTracker[];
+  vendorScores: VendorScore[];
+  workflowStats: WorkflowStats;
+  loading: boolean;
+  error: string | null;
+  filters: FilterOptions;
+  selectedCapabilities: string[];
+  currentCapability: string | null;
+}
+
+const initialState: CapabilitiesState = {
+  capabilities: [],
+  capabilitySummaries: [],
+  capabilityTrackers: [],
+  vendorScores: [],
+  workflowStats: {
+    total: 0,
+    readyForResearch: 0,
+    reviewRequired: 0,
+    domainAnalysis: 0,
+    completed: 0
+  },
+  loading: false,
+  error: null,
+  filters: {},
+  selectedCapabilities: [],
+  currentCapability: null,
+};
+
+// Async thunks
+export const fetchCapabilities = createAsyncThunk(
+  'capabilities/fetchCapabilities',
+  async () => {
+    const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/capabilities`);
+    const data: APIResponse<{
+      capabilities: CapabilitySummary[];
+      stats: WorkflowStats;
+    }> = await response.json();
+    
+    if (!data.success) {
+      throw new Error(data.error || 'Failed to fetch capabilities');
+    }
+    
+    return data.data!;
+  }
+);
+
+export const fetchCapabilityDetails = createAsyncThunk(
+  'capabilities/fetchCapabilityDetails',
+  async (capabilityId: number) => {
+    const baseUrl = import.meta.env.VITE_API_BASE_URL;
+    if (!baseUrl) {
+      throw new Error('VITE_API_BASE_URL environment variable is required');
+    }
+    
+    const response = await fetch(`${baseUrl}/api/capabilities/${capabilityId}`);
+    const data: APIResponse<Capability> = await response.json();
+    
+    if (!data.success) {
+      throw new Error(data.error || 'Failed to fetch capability details');
+    }
+    
+    return data.data!;
+  }
+);
+
+export const fetchCapabilityStatus = createAsyncThunk(
+  'capabilities/fetchCapabilityStatus',
+  async (capabilityId: number) => {
+    const baseUrl = import.meta.env.VITE_API_BASE_URL;
+    if (!baseUrl) {
+      throw new Error('VITE_API_BASE_URL environment variable is required');
+    }
+    
+    const response = await fetch(`${baseUrl}/api/capabilities/${capabilityId}/status`);
+    const data: APIResponse<CapabilityTracker> = await response.json();
+    
+    return data.data!;
+  }
+);
+
+export const fetchVendorScores = createAsyncThunk(
+  'capabilities/fetchVendorScores',
+  async (capabilityId?: number) => {
+    const baseUrl = import.meta.env.VITE_API_BASE_URL;
+    if (!baseUrl) {
+      throw new Error('VITE_API_BASE_URL environment variable is required');
+    }
+    
+    const url = capabilityId 
+      ? `${baseUrl}/api/capabilities/${capabilityId}/vendor-scores`
+      : `${baseUrl}/api/vendor-scores`;
+    const response = await fetch(url);
+    const data: APIResponse<VendorScore[]> = await response.json();
+    
+    if (!data.success) {
+      throw new Error(data.error || 'Failed to fetch vendor scores');
+    }
+    
+    return data.data!;
+  }
+);
+
+export const updateCapabilityStatus = createAsyncThunk(
+  'capabilities/updateCapabilityStatus',
+  async ({ capabilityName, status }: { capabilityName: string; status: WorkflowState }) => {
+    const baseUrl = import.meta.env.VITE_API_BASE_URL;
+    if (!baseUrl) {
+      throw new Error('VITE_API_BASE_URL environment variable is required');
+    }
+    
+    const response = await fetch(`${baseUrl}/api/capabilities/${capabilityName}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status }),
+    });
+    const data: APIResponse<Capability> = await response.json();
+    
+    if (!data.success) {
+      throw new Error(data.error || 'Failed to update capability status');
+    }
+    
+    return data.data!;
+  }
+);
+
+export const startResearchWorkflow = createAsyncThunk(
+  'capabilities/startResearchWorkflow',
+  async (capabilityName: string) => {
+    const baseUrl = import.meta.env.VITE_API_BASE_URL;
+    if (!baseUrl) {
+      throw new Error('VITE_API_BASE_URL environment variable is required');
+    }
+    
+    const response = await fetch(`${baseUrl}/api/capabilities/${capabilityName}/start-research`, {
+      method: 'POST',
+    });
+    const data: APIResponse<{
+      workflow_state: 'domain_analysis' | 'comprehensive_research';
+      prompt_url: string;
+      next_steps: string[];
+    }> = await response.json();
+    
+    if (!data.success) {
+      throw new Error(data.error || 'Failed to start research workflow');
+    }
+    
+    return { capabilityName, ...data.data! };
+  }
+);
+
+const capabilitiesSlice = createSlice({
+  name: 'capabilities',
+  initialState,
+  reducers: {
+    setFilters: (state, action: PayloadAction<FilterOptions>) => {
+      state.filters = { ...state.filters, ...action.payload };
+    },
+    clearFilters: (state) => {
+      state.filters = {};
+    },
+    setSelectedCapabilities: (state, action: PayloadAction<string[]>) => {
+      state.selectedCapabilities = action.payload;
+    },
+    toggleCapabilitySelection: (state, action: PayloadAction<string>) => {
+      const index = state.selectedCapabilities.indexOf(action.payload);
+      if (index > -1) {
+        // If already selected, deselect it
+        state.selectedCapabilities.splice(index, 1);
+      } else {
+        // If not selected, clear previous selection and select this one only
+        state.selectedCapabilities = [action.payload];
+      }
+    },
+    clearSelection: (state) => {
+      state.selectedCapabilities = [];
+    },
+    setCurrentCapability: (state, action: PayloadAction<string | null>) => {
+      state.currentCapability = action.payload;
+    },
+    updateWorkflowStats: (state, action: PayloadAction<WorkflowStats>) => {
+      state.workflowStats = action.payload;
+    },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchCapabilities.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchCapabilities.fulfilled, (state, action) => {
+        state.loading = false;
+        state.capabilitySummaries = action.payload.capabilities;
+        state.workflowStats = action.payload.stats;
+      })
+      .addCase(fetchCapabilities.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || 'Failed to fetch capabilities';
+      })
+      .addCase(fetchCapabilityDetails.fulfilled, (state, action) => {
+        const index = state.capabilities.findIndex(c => c.id === action.payload.id);
+        if (index !== -1) {
+          state.capabilities[index] = action.payload;
+        } else {
+          state.capabilities.push(action.payload);
+        }
+      })
+      .addCase(fetchCapabilityStatus.fulfilled, (state, action) => {
+        const index = state.capabilityTrackers.findIndex(t => t.capability_name === action.payload.capability_name);
+        if (index !== -1) {
+          state.capabilityTrackers[index] = action.payload;
+        } else {
+          state.capabilityTrackers.push(action.payload);
+        }
+      })
+      .addCase(fetchVendorScores.fulfilled, (state, action) => {
+        state.vendorScores = action.payload;
+      })
+      .addCase(updateCapabilityStatus.fulfilled, (state, action) => {
+        const index = state.capabilities.findIndex(c => c.id === action.payload.id);
+        if (index !== -1) {
+          state.capabilities[index] = action.payload;
+        }
+        // Update summary as well
+        const summaryIndex = state.capabilitySummaries.findIndex(s => s.id === action.payload.id);
+        if (summaryIndex !== -1) {
+          state.capabilitySummaries[summaryIndex].status = action.payload.status as WorkflowState;
+        }
+      })
+      .addCase(startResearchWorkflow.fulfilled, (state, action) => {
+        // Update the capability tracker with new workflow state
+        const trackerIndex = state.capabilityTrackers.findIndex(t => t.capability_name === action.payload.capabilityName);
+        if (trackerIndex !== -1) {
+          const tracker = state.capabilityTrackers[trackerIndex];
+          if (action.payload.workflow_state === 'domain_analysis') {
+            tracker.review_completed = false;
+            tracker.comprehensive_ready = false;
+          } else if (action.payload.workflow_state === 'comprehensive_research') {
+            tracker.review_completed = true;
+            tracker.comprehensive_ready = true;
+          }
+          tracker.last_updated = new Date().toISOString();
+        }
+      });
+  },
+});
+
+export const {
+  setFilters,
+  clearFilters,
+  setSelectedCapabilities,
+  toggleCapabilitySelection,
+  clearSelection,
+  setCurrentCapability,
+  updateWorkflowStats,
+} = capabilitiesSlice.actions;
+
+export default capabilitiesSlice.reducer; 
