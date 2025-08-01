@@ -37,7 +37,7 @@ import {
 } from '@mui/icons-material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
-import { attributeAPI, domainAPI } from '../utils/api';
+import { attributeAPI, domainAPI, capabilityAPI } from '../utils/api';
 import { addNotification } from '../store/slices/uiSlice';
 import type { Attribute, Domain } from '../types';
 
@@ -48,6 +48,8 @@ const AttributeManagement: React.FC = () => {
 
   const [attributes, setAttributes] = useState<Attribute[]>([]);
   const [domains, setDomains] = useState<Domain[]>([]);
+  const [capabilityName, setCapabilityName] = useState<string>('');
+  const [capabilityVersion, setCapabilityVersion] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -65,9 +67,24 @@ const AttributeManagement: React.FC = () => {
 
   useEffect(() => {
     if (capabilityId) {
+      loadCapabilityName();
       loadData();
     }
   }, [capabilityId]);
+
+  const loadCapabilityName = async () => {
+    if (!capabilityId) return;
+    
+    try {
+      const response = await capabilityAPI.getById(parseInt(capabilityId));
+      if (response.success && response.data) {
+        setCapabilityName(response.data.name);
+        setCapabilityVersion(response.data.version_string || '1.0.0.0');
+      }
+    } catch (error: any) {
+      console.error('Failed to load capability name:', error);
+    }
+  };
 
   const loadData = async () => {
     if (!capabilityId) return;
@@ -238,7 +255,12 @@ const AttributeManagement: React.FC = () => {
       </Box>
 
       <Typography variant="h6" color="textSecondary" mb={3}>
-        Managing attributes for capability ID: <strong>{capabilityId}</strong>
+        Managing attributes for capability: <strong>{capabilityName || `ID: ${capabilityId}`}</strong>
+        {capabilityName && (
+          <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
+            Version: {capabilityVersion}
+          </Typography>
+        )}
       </Typography>
 
       {/* Error Display */}
@@ -337,6 +359,11 @@ const AttributeManagement: React.FC = () => {
                       {attribute.tm_forum_mapping && (
                         <Typography variant="body2" color="textSecondary" sx={{ mt: 0.5 }}>
                           TM Forum: {attribute.tm_forum_mapping}
+                        </Typography>
+                      )}
+                      {attribute.version && (
+                        <Typography variant="body2" color="textSecondary" sx={{ mt: 0.5 }}>
+                          Version: {attribute.version}
                         </Typography>
                       )}
                     </Box>

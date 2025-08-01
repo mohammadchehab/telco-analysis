@@ -31,12 +31,13 @@ import {
   Brightness4 as DarkModeIcon,
   Brightness7 as LightModeIcon,
   Logout as LogoutIcon,
-  Person as PersonIcon
+  Person as PersonIcon,
+  SmartToy as BotIcon
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import type { RootState } from '../../store';
-import { toggleSidebar, toggleDarkMode, addNotification } from '../../store/slices/uiSlice';
+import type { RootState, AppDispatch } from '../../store';
+import { toggleDarkMode, addNotification, updateUserPreferences } from '../../store/slices/uiSlice';
 import { authAPI } from '../../utils/api';
 
 const drawerWidth = 240;
@@ -48,8 +49,9 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const dispatch = useDispatch();
-  const { sidebarOpen, darkMode } = useSelector((state: RootState) => state.ui);
+  const dispatch = useDispatch<AppDispatch>();
+  const { darkMode } = useSelector((state: RootState) => state.ui);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Create theme based on dark mode preference
   const theme = createTheme({
@@ -93,14 +95,32 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     { text: 'Workflow', icon: <TimelineIcon />, path: '/workflow' },
     { text: 'Analysis', icon: <AnalyticsIcon />, path: '/analysis' },
     { text: 'Reports', icon: <AssessmentIcon />, path: '/reports' },
+    { text: 'Data Quality Chat', icon: <BotIcon />, path: '/data-quality-chat' },
   ];
 
   const handleDrawerToggle = () => {
-    dispatch(toggleSidebar());
+    setSidebarOpen(!sidebarOpen);
   };
 
-  const handleDarkModeToggle = () => {
-    dispatch(toggleDarkMode());
+  const handleDarkModeToggle = async () => {
+    try {
+      const newDarkMode = !darkMode;
+      dispatch(toggleDarkMode());
+      
+      // Save preference to database
+      await dispatch(updateUserPreferences({ dark_mode_preference: newDarkMode })).unwrap();
+      
+      dispatch(addNotification({
+        type: 'success',
+        message: `Switched to ${newDarkMode ? 'dark' : 'light'} mode`,
+      }));
+    } catch (error: any) {
+      console.error('Failed to update dark mode preference:', error);
+      dispatch(addNotification({
+        type: 'error',
+        message: 'Failed to save theme preference',
+      }));
+    }
   };
 
   const handleLogout = async () => {
@@ -135,7 +155,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     navigate(path);
     // Close sidebar on mobile after navigation
     if (window.innerWidth < 768) {
-      dispatch(toggleSidebar());
+      setSidebarOpen(false);
     }
   };
 

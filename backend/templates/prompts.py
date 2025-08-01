@@ -190,28 +190,35 @@ COMPREHENSIVE_RESEARCH_TEMPLATE = """# Comprehensive Research Prompt
 
 ## Capability: {capability_name}
 
+### Current Framework
+**Domains**: {domain_count}
+**Attributes**: {attribute_count}
+
+### Existing Domain Structure
+{domains_text}
+
 ### Research Objective
-Conduct comprehensive vendor research for the telecom capability **{capability_name}** to evaluate vendor capabilities and provide detailed scoring.
+Conduct comprehensive vendor research for the telecom capability **{capability_name}** to evaluate vendor capabilities and provide detailed scoring based on the existing domain and attribute framework.
 
 ### Research Requirements
 
 1. **Vendor Analysis**
    - Research primary vendors: **Comarch**, **ServiceNow**, **Salesforce**
-   - Evaluate each vendor's capabilities in this domain
-   - Assess strengths and weaknesses
+   - Evaluate each vendor's capabilities against the existing domains and attributes
+   - Assess strengths and weaknesses for each domain
 
 2. **Attribute Scoring**
-   - Identify key attributes for this capability
-   - Score each vendor on each attribute (1-5 scale)
-   - Provide detailed observations and evidence
+   - Score each vendor on each existing attribute (1-5 scale)
+   - Provide detailed observations and evidence for each attribute
+   - Consider how well each vendor supports the existing domain structure
 
 3. **Weight Analysis**
-   - Assign importance weights to attributes (1-100 scale)
-   - Justify weight assignments based on business impact
+   - Assign importance weights to existing attributes (1-100 scale)
+   - Justify weight assignments based on business impact and domain importance
 
 4. **Evidence Collection**
    - Provide specific evidence URLs for each score
-   - Include detailed observations for each vendor
+   - Include detailed observations for each vendor per attribute
 
 ### Expected Output Format
 
@@ -221,6 +228,11 @@ Please provide your research in the following JSON format:
 {{
   "capability": "{capability_name}",
   "research_date": "YYYY-MM-DD",
+  "current_framework": {{
+    "domains_count": {domain_count},
+    "attributes_count": {attribute_count},
+    "domains": {domains}
+  }},
   "market_analysis": {{
     "primary_vendors": [],
     "missing_capabilities": [
@@ -233,6 +245,7 @@ Please provide your research in the following JSON format:
   "attributes": [
     {{
       "attribute": "string",
+      "domain": "string",
       "weight": 50,
       "tm_capability": "string",
       "comarch": {{
@@ -265,17 +278,19 @@ Please provide your research in the following JSON format:
 
 ### Research Guidelines
 
+- **Use Existing Framework**: Base your research on the current domains and attributes
 - **Be objective**: Evaluate vendors fairly based on evidence
 - **Be specific**: Provide detailed observations and specific evidence
 - **Be current**: Use recent information and up-to-date sources
-- **Be comprehensive**: Cover all major aspects of the capability
+- **Be comprehensive**: Cover all existing attributes across all domains
 
 ### Submission Instructions
 
-1. Complete the research following the guidelines above
-2. Format your response as valid JSON
-3. Ensure all required fields are populated
-4. Validate the JSON structure before submission
+1. Review the existing domain and attribute structure
+2. Complete the research following the guidelines above
+3. Format your response as valid JSON
+4. Ensure all required fields are populated
+5. Validate the JSON structure before submission
 """
 
 def format_domains_summary(capability_data: dict) -> str:
@@ -312,7 +327,25 @@ def get_prompt_template(prompt_type: str, capability_name: str, capability_data:
             )
     
     elif prompt_type == "comprehensive_research":
-        return COMPREHENSIVE_RESEARCH_TEMPLATE.format(capability_name=capability_name)
+        if capability_data and capability_data.get("exists", False):
+            # Existing capability with domains
+            domains_text = format_domains_summary(capability_data)
+            return COMPREHENSIVE_RESEARCH_TEMPLATE.format(
+                capability_name=capability_name,
+                domain_count=capability_data.get("domain_count", 0),
+                attribute_count=capability_data.get("attribute_count", 0),
+                domains_text=domains_text,
+                domains=capability_data.get("domains", [])
+            )
+        else:
+            # New capability without domains
+            return COMPREHENSIVE_RESEARCH_TEMPLATE.format(
+                capability_name=capability_name,
+                domain_count=0,
+                attribute_count=0,
+                domains_text="No existing domains found. Research should focus on identifying key domains and attributes for this capability.",
+                domains=[]
+            )
     
     else:
         raise ValueError(f"Unknown prompt type: {prompt_type}") 

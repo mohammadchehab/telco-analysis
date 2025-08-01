@@ -10,11 +10,12 @@ export const API_CONFIG = {
     AUTH_LOGOUT: '/api/auth/logout',
     AUTH_ME: '/api/auth/me',
     AUTH_REFRESH: '/api/auth/refresh',
+    AUTH_PREFERENCES: '/api/auth/preferences',
     AUTH_USERS: '/api/auth/users',
     AUTH_CREATE_USER: '/api/auth/users',
-    AUTH_UPDATE_USER: (userId: number) => `/api/auth/users/${userId}`,
-    AUTH_DELETE_USER: (userId: number) => `/api/auth/users/${userId}`,
-    AUTH_UPDATE_USER_STATUS: (userId: number) => `/api/auth/users/${userId}/status`,
+    AUTH_UPDATE_USER: (id: number) => `/api/auth/users/${id}`,
+    AUTH_DELETE_USER: (id: number) => `/api/auth/users/${id}`,
+    AUTH_UPDATE_USER_STATUS: (id: number) => `/api/auth/users/${id}/status`,
     
     // Capabilities
     CAPABILITIES: '/api/capabilities',
@@ -25,6 +26,9 @@ export const API_CONFIG = {
     CAPABILITY_WORKFLOW_PROCESS: (id: number) => `/api/capabilities/${id}/workflow/process`,
     CAPABILITY_WORKFLOW_VALIDATE: (id: number) => `/api/capabilities/${id}/workflow/validate`,
     CAPABILITY_WORKFLOW_COMPLETE: (id: number) => `/api/capabilities/${id}/workflow/complete`,
+    CAPABILITY_STATUS: (id: number) => `/api/capabilities/${id}/status`,
+    CAPABILITY_VENDOR_SCORES: (id: number) => `/api/capabilities/${id}/vendor-scores`,
+    CAPABILITY_REPORTS: (id: number) => `/api/capabilities/${id}/reports`,
     
     // Attributes
     ATTRIBUTES: '/api/attributes',

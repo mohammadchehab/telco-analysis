@@ -96,7 +96,8 @@ class SimpleAuthProvider(AuthProvider):
             "username": user.username,
             "email": user.email,
             "role": user.role,
-            "is_active": user.is_active
+            "is_active": user.is_active,
+            "dark_mode_preference": user.dark_mode_preference
         }
     
     def validate_token(self, token: str) -> Optional[Dict[str, Any]]:

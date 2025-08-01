@@ -12,6 +12,17 @@ const getAuthHeaders = () => {
   };
 };
 
+// Helper function to handle authentication errors
+const handleAuthError = (response: Response) => {
+  if (response.status === 401) {
+    // Clear invalid token and redirect to login
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('user');
+    window.location.href = '/login';
+    throw new Error('Authentication failed. Please log in again.');
+  }
+};
+
 export const apiClient = {
   async get<T>(endpoint: string): Promise<T> {
     const url = endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}${endpoint}`;
@@ -21,6 +32,7 @@ export const apiClient = {
     });
 
     if (!response.ok) {
+      handleAuthError(response);
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
@@ -36,6 +48,7 @@ export const apiClient = {
     });
 
     if (!response.ok) {
+      handleAuthError(response);
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
@@ -57,6 +70,7 @@ export const apiClient = {
     });
 
     if (!response.ok) {
+      handleAuthError(response);
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
@@ -72,6 +86,7 @@ export const apiClient = {
     });
 
     if (!response.ok) {
+      handleAuthError(response);
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
@@ -87,6 +102,7 @@ export const apiClient = {
     });
 
     if (!response.ok) {
+      handleAuthError(response);
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
@@ -101,6 +117,7 @@ export const apiClient = {
     });
 
     if (!response.ok) {
+      handleAuthError(response);
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
@@ -435,6 +452,20 @@ export const vendorScoreAPI = {
     score_decision?: string;
   }[]): Promise<APIResponse<{ updated: number; errors: string[] }>> {
     return apiClient.put(`/api/capabilities/${capabilityId}/vendor-scores/bulk`, { scores });
+  },
+};
+
+// User preferences API
+export const userPreferencesAPI = {
+  getCurrentUser: async (): Promise<APIResponse<any>> => {
+    return apiClient.get(apiConfig.ENDPOINTS.AUTH_ME);
+  },
+  
+  updatePreferences: async (preferences: {
+    email?: string;
+    dark_mode_preference?: boolean;
+  }): Promise<APIResponse<any>> => {
+    return apiClient.put(apiConfig.ENDPOINTS.AUTH_PREFERENCES, preferences);
   },
 };
 

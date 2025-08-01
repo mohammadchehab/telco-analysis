@@ -43,9 +43,25 @@ async def get_capability(capability_id: int, db: Session = Depends(get_db)):
         if not capability:
             return APIResponse(success=False, error="Capability not found")
         
+        # Generate version string from version components
+        version_string = f"{capability.version_major}.{capability.version_minor}.{capability.version_patch}.{capability.version_build}"
+        
+        capability_dict = {
+            "id": capability.id,
+            "name": capability.name,
+            "description": capability.description,
+            "status": capability.status,
+            "created_at": capability.created_at.isoformat() if capability.created_at else None,
+            "version_major": capability.version_major,
+            "version_minor": capability.version_minor,
+            "version_patch": capability.version_patch,
+            "version_build": capability.version_build,
+            "version_string": version_string
+        }
+        
         return APIResponse(
             success=True,
-            data=CapabilityResponse.model_validate(capability).model_dump()
+            data=capability_dict
         )
     except Exception as e:
         return APIResponse(success=False, error=str(e))
@@ -58,9 +74,17 @@ async def get_capability_by_name(capability_name: str, db: Session = Depends(get
         if not capability:
             return APIResponse(success=False, error="Capability not found")
         
+        capability_dict = {
+            "id": capability.id,
+            "name": capability.name,
+            "description": capability.description,
+            "status": capability.status,
+            "created_at": capability.created_at.isoformat() if capability.created_at else None
+        }
+        
         return APIResponse(
             success=True,
-            data=CapabilityResponse.model_validate(capability).model_dump()
+            data=capability_dict
         )
     except Exception as e:
         return APIResponse(success=False, error=str(e))
@@ -70,9 +94,17 @@ async def create_capability(capability: CapabilityCreate, request: Request, db: 
     """Create new capability"""
     try:
         db_capability = CapabilityService.create_capability(db, capability)
+        capability_dict = {
+            "id": db_capability.id,
+            "name": db_capability.name,
+            "description": db_capability.description,
+            "status": db_capability.status,
+            "created_at": db_capability.created_at.isoformat() if db_capability.created_at else None
+        }
+        
         return APIResponse(
             success=True,
-            data=CapabilityResponse.model_validate(db_capability).model_dump(),
+            data=capability_dict,
             message="Capability created successfully"
         )
     except Exception as e:
@@ -86,9 +118,22 @@ async def update_capability(capability_id: int, capability: CapabilityUpdate, db
         if not db_capability:
             return APIResponse(success=False, error="Capability not found")
         
+        capability_dict = {
+            "id": db_capability.id,
+            "name": db_capability.name,
+            "description": db_capability.description,
+            "status": db_capability.status,
+            "created_at": db_capability.created_at.isoformat() if db_capability.created_at else None,
+            "version_major": db_capability.version_major,
+            "version_minor": db_capability.version_minor,
+            "version_patch": db_capability.version_patch,
+            "version_build": db_capability.version_build,
+            "version_string": f"{db_capability.version_major}.{db_capability.version_minor}.{db_capability.version_patch}.{db_capability.version_build}"
+        }
+        
         return APIResponse(
             success=True,
-            data=CapabilityResponse.model_validate(db_capability).model_dump(),
+            data=capability_dict,
             message="Capability updated successfully"
         )
     except Exception as e:
@@ -103,9 +148,22 @@ async def update_capability_by_name(capability_name: str, capability: Capability
             return APIResponse(success=False, error="Capability not found")
         
         db_capability = CapabilityService.update_capability(db, db_cap.id, capability)
+        capability_dict = {
+            "id": db_capability.id,
+            "name": db_capability.name,
+            "description": db_capability.description,
+            "status": db_capability.status,
+            "created_at": db_capability.created_at.isoformat() if db_capability.created_at else None,
+            "version_major": db_capability.version_major,
+            "version_minor": db_capability.version_minor,
+            "version_patch": db_capability.version_patch,
+            "version_build": db_capability.version_build,
+            "version_string": f"{db_capability.version_major}.{db_capability.version_minor}.{db_capability.version_patch}.{db_capability.version_build}"
+        }
+        
         return APIResponse(
             success=True,
-            data=CapabilityResponse.model_validate(db_capability).model_dump(),
+            data=capability_dict,
             message="Capability updated successfully"
         )
     except Exception as e:
@@ -429,14 +487,20 @@ async def validate_research_data_by_id(capability_id: int, request: Dict[str, An
         else:
             # New format - use request directly
             data = request
-            expected_type = "domain_analysis"  # Default to domain analysis
+            # Auto-detect the type based on content
+            if "attributes" in data and "market_analysis" in data:
+                expected_type = "comprehensive_research"
+            elif "enhanced_framework" in data or "gap_analysis" in data:
+                expected_type = "domain_analysis"
+            else:
+                expected_type = "domain_analysis"  # Default fallback
         
         if expected_type == "domain_analysis":
             if "capability" not in data:
                 errors.append("Missing capability field")
-            if "enhanced_framework" not in data:
-                errors.append("Missing enhanced_framework field")
-        else:
+            if "enhanced_framework" not in data and "gap_analysis" not in data:
+                errors.append("Missing enhanced_framework or gap_analysis field")
+        else:  # comprehensive_research
             if "attributes" not in data:
                 errors.append("Missing attributes field")
             if "market_analysis" not in data:
@@ -472,14 +536,20 @@ async def validate_research_data(capability_name: str, request: Dict[str, Any], 
         else:
             # New format - use request directly
             data = request
-            expected_type = "domain_analysis"  # Default to domain analysis
+            # Auto-detect the type based on content
+            if "attributes" in data and "market_analysis" in data:
+                expected_type = "comprehensive_research"
+            elif "enhanced_framework" in data or "gap_analysis" in data:
+                expected_type = "domain_analysis"
+            else:
+                expected_type = "domain_analysis"  # Default fallback
         
         if expected_type == "domain_analysis":
             if "capability" not in data:
                 errors.append("Missing capability field")
-            if "enhanced_framework" not in data:
-                errors.append("Missing enhanced_framework field")
-        else:
+            if "enhanced_framework" not in data and "gap_analysis" not in data:
+                errors.append("Missing enhanced_framework or gap_analysis field")
+        else:  # comprehensive_research
             if "attributes" not in data:
                 errors.append("Missing attributes field")
             if "market_analysis" not in data:
@@ -564,7 +634,12 @@ async def process_domain_results(
         return APIResponse(success=False, error=str(e))
 
 @router.post("/{capability_id}/workflow/process-comprehensive", response_model=APIResponse)
-async def process_comprehensive_results_by_id(capability_id: int, request: Dict[str, Any], db: Session = Depends(get_db)):
+async def process_comprehensive_results_by_id(
+    capability_id: int, 
+    request: Dict[str, Any], 
+    current_user: Dict[str, Any] = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
     """Process comprehensive results by capability ID"""
     try:
         capability = CapabilityService.get_capability(db, capability_id)
@@ -579,7 +654,7 @@ async def process_comprehensive_results_by_id(capability_id: int, request: Dict[
             # New format - use request directly
             data = request
         
-        result = CapabilityService.process_comprehensive_results(db, capability.name, data)
+        result = CapabilityService.process_comprehensive_results(db, capability.name, data, current_user.get("id"))
         
         return APIResponse(
             success=True,
@@ -594,7 +669,12 @@ async def process_comprehensive_results_by_id(capability_id: int, request: Dict[
         return APIResponse(success=False, error=str(e))
 
 @router.post("/name/{capability_name}/workflow/process-comprehensive", response_model=APIResponse)
-async def process_comprehensive_results(capability_name: str, request: Dict[str, Any], db: Session = Depends(get_db)):
+async def process_comprehensive_results(
+    capability_name: str, 
+    request: Dict[str, Any], 
+    current_user: Dict[str, Any] = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
     """Process comprehensive results by capability name"""
     try:
         # Check if it's the old format (wrapped in data) or new format (direct)
@@ -605,7 +685,7 @@ async def process_comprehensive_results(capability_name: str, request: Dict[str,
             # New format - use request directly
             data = request
         
-        result = CapabilityService.process_comprehensive_results(db, capability_name, data)
+        result = CapabilityService.process_comprehensive_results(db, capability_name, data, current_user.get("id"))
         
         return APIResponse(
             success=True,

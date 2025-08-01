@@ -73,7 +73,11 @@ const Capabilities: React.FC = () => {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    status: 'new' as string
+    status: 'new' as string,
+    version_major: 1,
+    version_minor: 0,
+    version_patch: 0,
+    version_build: 0
   });
 
   useEffect(() => {
@@ -126,7 +130,7 @@ const Capabilities: React.FC = () => {
           message: `Capability "${formData.name}" created successfully`,
         }));
         setShowCreateModal(false);
-        setFormData({ name: '', description: '', status: 'new' });
+        setFormData({ name: '', description: '', status: 'new', version_major: 1, version_minor: 0, version_patch: 0, version_build: 0 });
         dispatch(fetchCapabilities()); // Refresh the list
       } else {
         dispatch(addNotification({
@@ -153,16 +157,53 @@ const Capabilities: React.FC = () => {
       return;
     }
 
+    // Determine which version to increment based on changes
+    let versionIncrement = 'build'; // Default to build increment
+    
+    if (formData.name !== editingCapability.name) {
+      // Name change = major version increment
+      versionIncrement = 'major';
+    } else if (formData.description !== editingCapability.description) {
+      // Description change = minor version increment
+      versionIncrement = 'minor';
+    } else if (formData.status !== editingCapability.status) {
+      // Status change = patch version increment
+      versionIncrement = 'patch';
+    }
+
+    // Create updated form data with incremented version
+    const updatedFormData = { ...formData };
+    switch (versionIncrement) {
+      case 'major':
+        updatedFormData.version_major = (formData.version_major || 1) + 1;
+        updatedFormData.version_minor = 0;
+        updatedFormData.version_patch = 0;
+        updatedFormData.version_build = 0;
+        break;
+      case 'minor':
+        updatedFormData.version_minor = (formData.version_minor || 0) + 1;
+        updatedFormData.version_patch = 0;
+        updatedFormData.version_build = 0;
+        break;
+      case 'patch':
+        updatedFormData.version_patch = (formData.version_patch || 0) + 1;
+        updatedFormData.version_build = 0;
+        break;
+      case 'build':
+        updatedFormData.version_build = (formData.version_build || 0) + 1;
+        break;
+    }
+
     setCrudLoading(true);
     try {
-      const response = await capabilityAPI.update(editingCapability.id, formData);
+      const response = await capabilityAPI.update(editingCapability.id, updatedFormData);
       if (response.success) {
         dispatch(addNotification({
           type: 'success',
-          message: `Capability "${formData.name}" updated successfully`,
+          message: `Capability "${formData.name}" updated successfully (${versionIncrement} version incremented)`,
         }));
         setEditingCapability(null);
-        setFormData({ name: '', description: '', status: 'new' });
+        setFormData({ name: '', description: '', status: 'new', version_major: 1, version_minor: 0, version_patch: 0, version_build: 0 });
         dispatch(fetchCapabilities()); // Refresh the list
       } else {
         dispatch(addNotification({
@@ -220,12 +261,16 @@ const Capabilities: React.FC = () => {
     setFormData({
       name: capability.name,
       description: capability.description || '',
-      status: capability.status
+      status: capability.status,
+      version_major: capability.version_major || 1,
+      version_minor: capability.version_minor || 0,
+      version_patch: capability.version_patch || 0,
+      version_build: capability.version_build || 0
     });
   };
 
   const handleCreateClick = () => {
-    setFormData({ name: '', description: '', status: 'new' });
+    setFormData({ name: '', description: '', status: 'new', version_major: 1, version_minor: 0, version_patch: 0, version_build: 0 });
     setShowCreateModal(true);
   };
 
@@ -525,6 +570,11 @@ const Capabilities: React.FC = () => {
                 <Typography variant="body2" color="textSecondary">
                   Updated: {new Date(capability.last_updated).toLocaleDateString()}
                 </Typography>
+                {capability.version_string && (
+                  <Typography variant="body2" color="textSecondary">
+                    Version: {capability.version_string}
+                  </Typography>
+                )}
               </Box>
 
               <Box display="flex" gap={1} justifyContent="flex-end">
@@ -632,18 +682,22 @@ const Capabilities: React.FC = () => {
           onClick={() => {
             setShowCreateModal(false);
             setEditingCapability(null);
-            setFormData({ name: '', description: '', status: 'new' });
+            setFormData({ name: '', description: '', status: 'new', version_major: 1, version_minor: 0, version_patch: 0, version_build: 0 });
           }}
         >
           <Box
             sx={{
-              backgroundColor: 'white',
+              backgroundColor: 'background.paper',
+              color: 'text.primary',
               borderRadius: 2,
               p: 3,
               width: '90%',
               maxWidth: 500,
               maxHeight: '90vh',
               overflow: 'auto',
+              boxShadow: 3,
+              border: '1px solid',
+              borderColor: 'divider',
             }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -685,13 +739,48 @@ const Capabilities: React.FC = () => {
                 </Select>
               </FormControl>
               
+              <Box display="flex" gap={2} sx={{ mb: 2 }}>
+                <TextField
+                  label="Major Version"
+                  type="number"
+                  value={formData.version_major || ''}
+                  InputProps={{ readOnly: true }}
+                  sx={{ flex: 1 }}
+                  helperText="Auto-incremented on major changes"
+                />
+                <TextField
+                  label="Minor Version"
+                  type="number"
+                  value={formData.version_minor || ''}
+                  InputProps={{ readOnly: true }}
+                  sx={{ flex: 1 }}
+                  helperText="Auto-incremented on domain changes"
+                />
+                <TextField
+                  label="Patch Version"
+                  type="number"
+                  value={formData.version_patch || ''}
+                  InputProps={{ readOnly: true }}
+                  sx={{ flex: 1 }}
+                  helperText="Auto-incremented on attribute changes"
+                />
+                <TextField
+                  label="Build Version"
+                  type="number"
+                  value={formData.version_build || ''}
+                  InputProps={{ readOnly: true }}
+                  sx={{ flex: 1 }}
+                  helperText="Auto-incremented on minor updates"
+                />
+              </Box>
+              
               <Box display="flex" gap={2} justifyContent="flex-end">
                 <Button
                   variant="outlined"
                   onClick={() => {
                     setShowCreateModal(false);
                     setEditingCapability(null);
-                    setFormData({ name: '', description: '', status: 'new' });
+                    setFormData({ name: '', description: '', status: 'new', version_major: 1, version_minor: 0, version_patch: 0, version_build: 0 });
                   }}
                   disabled={crudLoading}
                 >
@@ -730,11 +819,15 @@ const Capabilities: React.FC = () => {
         >
           <Box
             sx={{
-              backgroundColor: 'white',
+              backgroundColor: 'background.paper',
+              color: 'text.primary',
               borderRadius: 2,
               p: 3,
               width: '90%',
               maxWidth: 400,
+              boxShadow: 3,
+              border: '1px solid',
+              borderColor: 'divider',
             }}
             onClick={(e) => e.stopPropagation()}
           >

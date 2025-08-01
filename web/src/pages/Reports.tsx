@@ -5,7 +5,6 @@ import {
   Typography,
   Card,
   CardContent,
-  Grid,
   Button,
   Select,
   MenuItem,
@@ -23,18 +22,13 @@ import {
   TableHead,
   TableRow,
   Chip,
-  IconButton,
-  Tooltip,
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogActions,
-  TextField,
-  Divider
+  DialogActions
 } from '@mui/material';
 import {
   Download as DownloadIcon,
-  Visibility as ViewIcon,
   Refresh as RefreshIcon,
   Assessment as AssessmentIcon,
   TrendingUp as TrendingUpIcon,
@@ -101,21 +95,7 @@ interface ScoreDistributionData {
   vendors: string[];
 }
 
-interface VendorScore {
-  id: number;
-  capability_id: number;
-  attribute_name: string;
-  vendor: string;
-  weight: number;
-  score: string;
-  score_numeric: number;
-  observation: string;
-  evidence_url: string;
-  score_decision: string;
-  research_type: string;
-  research_date: string;
-  created_at: string;
-}
+
 
 interface CapabilitySummary {
   capability_name: string;
@@ -212,10 +192,10 @@ const Reports: React.FC = () => {
 
       // Fetch all report types in parallel
       const [radarRes, vendorRes, distributionRes, summaryRes] = await Promise.all([
-        fetch(`http://localhost:8000/api/reports/${selectedCapability}/radar-chart`),
-        fetch(`http://localhost:8000/api/reports/${selectedCapability}/vendor-comparison`),
-        fetch(`http://localhost:8000/api/reports/${selectedCapability}/score-distribution`),
-        fetch(`http://localhost:8000/api/reports/${selectedCapability}/summary`)
+        fetch(`http://localhost:8000/api/capabilities/reports/${selectedCapability}/radar-chart`),
+        fetch(`http://localhost:8000/api/capabilities/reports/${selectedCapability}/vendor-comparison`),
+        fetch(`http://localhost:8000/api/capabilities/reports/${selectedCapability}/score-distribution`),
+        fetch(`http://localhost:8000/api/capabilities/reports/${selectedCapability}/summary`)
       ]);
 
       const [radarData, vendorData, distributionData, summaryData] = await Promise.all([
@@ -224,6 +204,17 @@ const Reports: React.FC = () => {
         distributionRes.json(),
         summaryRes.json()
       ]);
+
+      // Check if any of the reports failed due to incomplete research
+      const hasIncompleteResearch = [radarData, vendorData, distributionData].some(
+        data => !data.success && data.error && data.error.includes("not completed")
+      );
+
+      if (hasIncompleteResearch) {
+        setError('This capability research is not yet completed. Reports are only available for completed research.');
+        setReportData({});
+        return;
+      }
 
       setReportData({
         radar: radarData.success ? radarData.data : undefined,
@@ -245,7 +236,7 @@ const Reports: React.FC = () => {
     try {
       setLoading(true);
       const response = await fetch(
-        `http://localhost:8000/api/reports/${selectedCapability}/export/${exportFormat}?report_type=${exportType}`
+        `http://localhost:8000/api/capabilities/reports/${selectedCapability}/export/${exportFormat}?report_type=${exportType}`
       );
       const data = await response.json();
 
@@ -270,7 +261,11 @@ const Reports: React.FC = () => {
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
       } else {
-        setError(data.error || 'Export failed');
+        if (data.error && data.error.includes("not completed")) {
+          setError('Export failed: This capability research is not yet completed.');
+        } else {
+          setError(data.error || 'Export failed');
+        }
       }
     } catch (err) {
       setError('Export failed');
@@ -280,7 +275,7 @@ const Reports: React.FC = () => {
     }
   };
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
   };
 
@@ -357,7 +352,7 @@ const Reports: React.FC = () => {
   const getPieChartConfig = (data: ScoreDistributionData) => ({
     data: {
       labels: data.score_ranges,
-      datasets: data.vendors.map((vendor, index) => ({
+      datasets: data.vendors.map((vendor, _index) => ({
         label: vendor.charAt(0).toUpperCase() + vendor.slice(1),
         data: data.vendor_counts[vendor],
         backgroundColor: [
@@ -420,8 +415,13 @@ const Reports: React.FC = () => {
                 disabled={loading}
               >
                 {capabilities.map((capability) => (
-                  <MenuItem key={capability.id} value={capability.id}>
+                  <MenuItem 
+                    key={capability.id} 
+                    value={capability.id}
+                    disabled={capability.status !== "completed"}
+                  >
                     {capability.name} ({capability.status})
+                    {capability.status !== "completed" && " - Reports not available"}
                   </MenuItem>
                 ))}
               </Select>
@@ -431,7 +431,7 @@ const Reports: React.FC = () => {
                 variant="outlined"
                 startIcon={<RefreshIcon />}
                 onClick={fetchReportData}
-                disabled={!selectedCapability || loading}
+                disabled={!selectedCapability || loading || capabilities.find(c => c.id === selectedCapability)?.status !== "completed"}
               >
                 Refresh
               </Button>
@@ -439,12 +439,17 @@ const Reports: React.FC = () => {
                 variant="contained"
                 startIcon={<DownloadIcon />}
                 onClick={() => setExportDialogOpen(true)}
-                disabled={!selectedCapability || loading}
+                disabled={!selectedCapability || loading || capabilities.find(c => c.id === selectedCapability)?.status !== "completed"}
               >
                 Export Report
               </Button>
             </Box>
           </Box>
+          {capabilities.length > 0 && !capabilities.some(c => c.status === "completed") && (
+            <Alert severity="info" sx={{ mt: 2 }}>
+              No completed capabilities found. Reports are only available for capabilities with "completed" status.
+            </Alert>
+          )}
         </CardContent>
       </Card>
 

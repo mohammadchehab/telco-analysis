@@ -1,0 +1,272 @@
+{
+    "capability": "IT Service Management",
+    "analysis_date": "2025-08-01",
+    "capability_status": "existing",
+    "current_framework": {
+        "domains_count": 0,
+        "attributes_count": 0,
+        "domains": []
+    },
+    "gap_analysis": {
+        "missing_domains": [
+            {
+                "domain_name": "Service Desk & Support",
+                "description": "Central point of contact for users to report incidents and request services, handling logging, tracking and communication across channels.",
+                "importance": "high",
+                "reasoning": "A service desk is the primary point of contact in ITSM. Salesforce notes that a service desk manages incidents and service requests, coordinates changes and delivers IT services aligned with business objectives. Without this domain the framework lacks the basic interface for users and IT support."
+            },
+            {
+                "domain_name": "Incident Management",
+                "description": "Processes for detecting, classifying, prioritizing and restoring services when incidents occur, including routing and root‑cause analysis.",
+                "importance": "high",
+                "reasoning": "Comarch’s OSS Service Desk focuses on ITIL processes like incident management and uses correlation engines for root‑cause and impact analysis [oai_citation:0‡comarch.com](https://www.comarch.com/telecommunications/service-assurance/oss-service-desk/#:~:text=The%20comprehensive%20Comarch%20OSS%20Service,ITIL%C2%AE). ServiceNow also highlights incident management as a core capability to restore services faster [oai_citation:1‡servicenow.com](https://www.servicenow.com/products/itsm.html). This domain is fundamental to maintaining service continuity."
+            },
+            {
+                "domain_name": "Problem & Knowledge Management",
+                "description": "Root‑cause analysis of recurring issues, creation of known error records and maintenance of knowledge bases for effective troubleshooting.",
+                "importance": "high",
+                "reasoning": "Comarch’s tool supports problem management and promotes knowledge accumulation to improve operational efficiency [oai_citation:2‡comarch.com](https://www.comarch.com/telecommunications/service-assurance/oss-service-desk/#:~:text=The%20comprehensive%20Comarch%20OSS%20Service,ITIL%C2%AE) [oai_citation:3‡comarch.com](https://www.comarch.com/telecommunications/service-assurance/oss-service-desk/#:~:text=Accumulate%20your%20organization%E2%80%99s%20knowledge). ServiceNow lists problem management and knowledge management as separate capabilities [oai_citation:4‡servicenow.com](https://www.servicenow.com/products/itsm.html). Incorporating this domain enables proactive prevention and faster resolution."
+            },
+            {
+                "domain_name": "Change & Release Management",
+                "description": "Structured planning, approval, and implementation of changes and releases to IT services and infrastructure to minimize risk.",
+                "importance": "high",
+                "reasoning": "Both Comarch and ServiceNow emphasize change management as an ITIL process [oai_citation:5‡comarch.com](https://www.comarch.com/telecommunications/service-assurance/oss-service-desk/#:~:text=The%20comprehensive%20Comarch%20OSS%20Service,ITIL%C2%AE) [oai_citation:6‡servicenow.com](https://www.servicenow.com/products/itsm.html#:~:text=Incident%20Management%20%20Restore%20services,Virtual%20Agent%20%20Resolve%20issues). ServiceNow offers ‘Digital Product Release’ and DevOps change velocity to coordinate releases [oai_citation:7‡servicenow.com](https://www.servicenow.com/products/itsm.html#:~:text=with%20generative%20AI%20on%20the,Employee%20Center). This domain ensures controlled changes and avoids service disruptions."
+            },
+            {
+                "domain_name": "Request & Catalog Management",
+                "description": "Management of service requests through a catalog of standard offerings, with automated fulfillment and approvals.",
+                "importance": "medium",
+                "reasoning": "ServiceNow’s service catalog and request management allow employees to submit requests through a user‑friendly storefront and AI‑powered portal [oai_citation:8‡servicenow.com](https://www.servicenow.com/products/itsm.html#:~:text=proactively%20prevent%20future%20disruptions,customer%20commitments%20to%20meet). Without this domain, there is no structured way to handle routine service requests."
+            },
+            {
+                "domain_name": "Configuration & Asset Management",
+                "description": "Maintaining a configuration management database (CMDB), tracking IT assets and their relationships, and managing asset lifecycle and costs.",
+                "importance": "medium",
+                "reasoning": "ServiceNow includes a CMDB to track dependencies of supported services and an asset management core to oversee infrastructure and operations [oai_citation:9‡servicenow.com](https://www.servicenow.com/products/itsm.html). Proper configuration and asset management support incident resolution and financial control."
+            },
+            {
+                "domain_name": "Service Level & Performance Analytics",
+                "description": "Defining, monitoring and reporting on service‑level agreements (SLAs) and key performance indicators, including continual improvement and process mining.",
+                "importance": "medium",
+                "reasoning": "ServiceNow provides performance analytics and service level management to anticipate trends and manage commitments [oai_citation:10‡servicenow.com](https://www.servicenow.com/products/itsm.html), while Salesforce notes that analytics and reporting improve visibility and highlight areas for improvement. Including this domain ensures data‑driven service quality."
+            },
+            {
+                "domain_name": "Automation, AI & Self‑Service",
+                "description": "Use of AI, virtual agents, workflow automation and self‑service portals to streamline tasks and empower users.",
+                "importance": "medium",
+                "reasoning": "ServiceNow features generative AI (Now Assist), virtual agents and predictive intelligence [oai_citation:11‡servicenow.com](https://www.servicenow.com/products/itsm.html#:~:text=it%20easy%20to%20self,Workspace%20%20Manage%20incidents%20proactively). Salesforce highlights automation and workflow rules, self‑service portals and knowledge bases as key service desk software features. Automation reduces manual effort and improves user experience."
+            },
+            {
+                "domain_name": "Field Service & Workforce Management",
+                "description": "Managing field work orders, scheduling and dispatching technicians, and integrating field operations with the service desk.",
+                "importance": "low",
+                "reasoning": "Comarch’s OSS Service Desk integrates with Field Service Management to organize field engineers and support manual tasks needed to resolve incidents and changes [oai_citation:12‡comarch.com](https://www.comarch.com/telecommunications/service-assurance/oss-service-desk/#:~:text=Comarch%20OSS%20Service%20Desk%20is,in%20Comarch%20OSS%20Service%20Desk). Including this domain is particularly relevant for telecom operators with on‑site service requirements."
+            },
+            {
+                "domain_name": "Integration & Compliance",
+                "description": "Capabilities to integrate with other systems via APIs, support multi‑tenant architectures and ensure adherence to industry standards and governance.",
+                "importance": "low",
+                "reasoning": "Comarch’s portfolio supports TM Forum Open APIs and aligns with the Open Digital Architecture [oai_citation:13‡comarch.com](https://www.comarch.com/telecommunications/service-assurance/oss-service-desk/#:~:text=). ServiceNow offers certified integrations and connectors to other tools [oai_citation:14‡servicenow.com](https://www.servicenow.com/products/itsm.html#:~:text=Certified%20integrations%20%20ITSM%20seamlessly,Integration%20Hub%20connector%20to%20Jira). A dedicated domain ensures the framework can interoperate and meet compliance obligations."
+            }
+        ],
+        "missing_attributes": [
+            {
+                "domain": "Service Desk & Support",
+                "attribute_name": "Ticket Logging and Tracking",
+                "description": "Ability to log, assign, prioritize and monitor incidents and requests across their lifecycle.",
+                "importance": "high",
+                "reasoning": "Salesforce notes that a clear ticketing system is essential to log and manage all incidents and requests. This attribute forms the foundation of service desk operations."
+            },
+            {
+                "domain": "Service Desk & Support",
+                "attribute_name": "Multichannel and Multilingual Support",
+                "description": "Providing support via multiple channels (email, chat, phone, portal) and in various languages.",
+                "importance": "medium",
+                "reasoning": "Salesforce highlights omni‑channel support, allowing users to reach the service desk through their preferred channel. Multilingual support improves accessibility in global telecom operations."
+            },
+            {
+                "domain": "Service Desk & Support",
+                "attribute_name": "SLA Tracking and Notifications",
+                "description": "Monitoring service‑level agreements and sending automatic alerts when response or resolution thresholds are at risk.",
+                "importance": "medium",
+                "reasoning": "Salesforce recommends defining and enforcing SLAs to prioritize work and maintain accountability. SLA tracking ensures timely service delivery."
+            },
+            {
+                "domain": "Incident Management",
+                "attribute_name": "Incident Detection and Classification",
+                "description": "Automated detection, categorization and prioritization of incidents, with correlation to related events.",
+                "importance": "high",
+                "reasoning": "Comarch’s OSS Service Desk uses a flexible correlation engine for root‑cause and impact analysis of incidents [oai_citation:15‡comarch.com](https://www.comarch.com/telecommunications/service-assurance/oss-service-desk/#:~:text=This%20indispensable%20tool%20supports%20network,engine%20and%20unique%20checklist%20mechanisms), and ServiceNow emphasizes intelligent routing for faster restoration [oai_citation:16‡servicenow.com](https://www.servicenow.com/products/itsm.html#:~:text=Incident%20Management%20%20Restore%20services,change%20at%20DevOps%20speed%20by). Proper classification speeds resolution."
+            },
+            {
+                "domain": "Incident Management",
+                "attribute_name": "Routing and Assignment",
+                "description": "Intelligent routing of incidents to appropriate teams based on skills, workload or location.",
+                "importance": "high",
+                "reasoning": "ServiceNow notes that incident management uses intelligent routing and built‑in collaboration [oai_citation:17‡servicenow.com](https://www.servicenow.com/products/itsm.html#:~:text=Incident%20Management%20%20Restore%20services,that%20understands%20simple%2C%20human%20language). Efficient routing reduces response times."
+            },
+            {
+                "domain": "Incident Management",
+                "attribute_name": "Root‑Cause and Impact Analysis",
+                "description": "Tools to determine underlying causes and assess business impact to support resolution and prevention.",
+                "importance": "medium",
+                "reasoning": "Comarch’s correlation engine performs root‑cause and impact analysis [oai_citation:18‡comarch.com](https://www.comarch.com/telecommunications/service-assurance/oss-service-desk/#:~:text=This%20indispensable%20tool%20supports%20network,engine%20and%20unique%20checklist%20mechanisms). This capability helps prevent recurrence and prioritize fixes."
+            },
+            {
+                "domain": "Problem & Knowledge Management",
+                "attribute_name": "Known Error and Knowledge Database",
+                "description": "Maintenance of a database of known issues, resolutions and best practices accessible to support teams and users.",
+                "importance": "high",
+                "reasoning": "Comarch emphasizes accumulating organizational knowledge for machine‑learning‑based efficiency [oai_citation:19‡comarch.com](https://www.comarch.com/telecommunications/service-assurance/oss-service-desk/#:~:text=Accumulate%20your%20organization%E2%80%99s%20knowledge), while Salesforce recommends knowledge bases for standardized processes. A knowledge database accelerates resolution."
+            },
+            {
+                "domain": "Problem & Knowledge Management",
+                "attribute_name": "Root‑Cause Analysis Workflow",
+                "description": "Structured workflows to investigate recurring problems, identify underlying causes and recommend preventive actions.",
+                "importance": "high",
+                "reasoning": "ServiceNow lists problem management as identifying root causes and proactively preventing disruptions [oai_citation:20‡servicenow.com](https://www.servicenow.com/products/itsm.html#:~:text=interface,service). A formal root‑cause analysis process is needed for continuous improvement."
+            },
+            {
+                "domain": "Change & Release Management",
+                "attribute_name": "Change Planning and Impact Assessment",
+                "description": "Assessing the risk, impact and resource requirements of proposed changes before approval and deployment.",
+                "importance": "high",
+                "reasoning": "Comarch notes that change management plans network changes wisely to minimize customer impact [oai_citation:21‡comarch.com](https://www.comarch.com/telecommunications/service-assurance/oss-service-desk/#:~:text=This%20indispensable%20tool%20supports%20network,and%20impact%20analysis%20via%20a). Impact assessment reduces the likelihood of service disruption."
+            },
+            {
+                "domain": "Change & Release Management",
+                "attribute_name": "Approval Workflow and Risk Control",
+                "description": "Automated workflows for change approval, including risk assessment and segregation of duties.",
+                "importance": "high",
+                "reasoning": "ServiceNow accelerates change by automating approvals while maintaining control [oai_citation:22‡servicenow.com](https://www.servicenow.com/products/itsm.html#:~:text=Incident%20Management%20%20Restore%20services,Virtual%20Agent%20%20Resolve%20issues). Robust approval processes balance agility with governance."
+            },
+            {
+                "domain": "Change & Release Management",
+                "attribute_name": "Release Coordination and Scheduling",
+                "description": "Coordinating releases across teams, scheduling deployments and tracking readiness for new services or updates.",
+                "importance": "medium",
+                "reasoning": "ServiceNow provides ‘Digital Product Release’ and DevOps change velocity to manage releases [oai_citation:23‡servicenow.com](https://www.servicenow.com/products/itsm.html#:~:text=with%20generative%20AI%20on%20the,Employee%20Center). Coordinated releases ensure stability."
+            },
+            {
+                "domain": "Request & Catalog Management",
+                "attribute_name": "Service Catalog Management",
+                "description": "Creating and maintaining a catalog of standardized services and offerings available to users.",
+                "importance": "medium",
+                "reasoning": "ServiceNow’s service catalog improves self‑service by offering products and services through a modern storefront [oai_citation:24‡servicenow.com](https://www.servicenow.com/products/itsm.html#:~:text=proactively%20prevent%20future%20disruptions,friendly%20storefront). A structured catalog enables efficient request handling."
+            },
+            {
+                "domain": "Request & Catalog Management",
+                "attribute_name": "Request Fulfillment and Automation",
+                "description": "Automating the fulfillment of service requests with workflow orchestration and approvals.",
+                "importance": "medium",
+                "reasoning": "ServiceNow offers request management with an AI‑powered self‑service portal [oai_citation:25‡servicenow.com](https://www.servicenow.com/products/itsm.html#:~:text=configuration%20oversight%20within%20dev%20pipelines,customer%20commitments%20to%20meet). Automation accelerates delivery and reduces manual work."
+            },
+            {
+                "domain": "Configuration & Asset Management",
+                "attribute_name": "CMDB and Relationship Mapping",
+                "description": "Maintaining a configuration management database to record assets, services and their interdependencies.",
+                "importance": "medium",
+                "reasoning": "ServiceNow includes a CMDB to track dependencies of supported services [oai_citation:26‡servicenow.com](https://www.servicenow.com/products/itsm.html#:~:text=with%20generative%20AI%20on%20the,of%20supported%20IT%20services%20to). Accurate relationship mapping is critical for impact analysis and change planning."
+            },
+            {
+                "domain": "Configuration & Asset Management",
+                "attribute_name": "Asset Lifecycle and Inventory Management",
+                "description": "Tracking assets from acquisition through retirement, including inventory control and depreciation.",
+                "importance": "medium",
+                "reasoning": "ServiceNow’s asset management core oversees infrastructure and field service assets to inform decision‑making [oai_citation:27‡servicenow.com](https://www.servicenow.com/products/itsm.html#:~:text=Asset%20Management%20Core%20%20Oversee,Mining%20%20Improve%20outcomes%20by). Effective asset lifecycle management reduces costs."
+            },
+            {
+                "domain": "Service Level & Performance Analytics",
+                "attribute_name": "SLA Definition and Monitoring",
+                "description": "Defining service‑level agreements, monitoring compliance and triggering alerts for breaches.",
+                "importance": "medium",
+                "reasoning": "ServiceNow lists service level management to manage commitments [oai_citation:28‡servicenow.com](https://www.servicenow.com/products/itsm.html#:~:text=devices,Provide%20personalized%2C%20relevant%2C%20and). Salesforce recommends enforcing SLAs for accountability."
+            },
+            {
+                "domain": "Service Level & Performance Analytics",
+                "attribute_name": "Analytics and Reporting Dashboards",
+                "description": "Providing real‑time dashboards and reports on ticket volumes, resolution times and other KPIs.",
+                "importance": "medium",
+                "reasoning": "ServiceNow includes performance analytics to anticipate trends and continuously improve [oai_citation:29‡servicenow.com](https://www.servicenow.com/products/itsm.html#:~:text=needs%20change,Make). Salesforce notes that reporting and analytics give visibility into performance."
+            },
+            {
+                "domain": "Automation, AI & Self‑Service",
+                "attribute_name": "Virtual Agent and Chatbot",
+                "description": "AI‑powered chatbots that handle routine requests and provide immediate assistance to users.",
+                "importance": "medium",
+                "reasoning": "ServiceNow’s virtual agent resolves issues quickly with an intelligent chatbot that understands natural language [oai_citation:30‡servicenow.com](https://www.servicenow.com/products/itsm.html#:~:text=Incident%20Management%20%20Restore%20services,that%20understands%20simple%2C%20human%20language). Automated assistance reduces manual workload."
+            },
+            {
+                "domain": "Automation, AI & Self‑Service",
+                "attribute_name": "Predictive Intelligence and Machine Learning",
+                "description": "Using machine learning to classify, prioritize and route tickets and to recommend solutions.",
+                "importance": "medium",
+                "reasoning": "ServiceNow offers predictive intelligence to simplify and accelerate work using built‑in machine learning [oai_citation:31‡servicenow.com](https://www.servicenow.com/products/itsm.html#:~:text=Predictive%20Intelligence%20%20Simplify%20and,Workspace%20%20Manage%20incidents%20proactively). Intelligent prioritization improves efficiency."
+            },
+            {
+                "domain": "Automation, AI & Self‑Service",
+                "attribute_name": "Self‑Service Portal and Knowledge Access",
+                "description": "User‑facing portals enabling request submission, ticket status checks and access to knowledge articles without agent assistance.",
+                "importance": "medium",
+                "reasoning": "ServiceNow’s service portal and Now Mobile provide a responsive, unified portal for self‑service [oai_citation:32‡servicenow.com](https://www.servicenow.com/products/itsm.html#:~:text=with%20clear%20visibility%20when%20services,root%20cause%20of%20issues%20and), while Salesforce notes that self‑service portals allow users to submit tickets and access knowledge bases."
+            },
+            {
+                "domain": "Field Service & Workforce Management",
+                "attribute_name": "Work Order and Dispatch Management",
+                "description": "Creation, scheduling and tracking of field work orders with dispatching based on technician skills and availability.",
+                "importance": "low",
+                "reasoning": "Comarch integrates field service management to organize the work of field engineers and support manual tasks to resolve incidents and changes [oai_citation:33‡comarch.com](https://www.comarch.com/telecommunications/service-assurance/oss-service-desk/#:~:text=Comarch%20OSS%20Service%20Desk%20is,in%20Comarch%20OSS%20Service%20Desk). Managing field tasks is critical for telecom service restoration."
+            },
+            {
+                "domain": "Field Service & Workforce Management",
+                "attribute_name": "Mobile Field Application",
+                "description": "Mobile tools for field technicians to receive tasks, update statuses and access knowledge while on site.",
+                "importance": "low",
+                "reasoning": "ServiceNow’s Now Mobile app allows users to find answers and make requests from a mobile device [oai_citation:34‡servicenow.com](https://www.servicenow.com/products/itsm.html#:~:text=with%20clear%20visibility%20when%20services,a%20single%2C%20native%20mobile%20app), and similar mobile capability for technicians improves productivity."
+            },
+            {
+                "domain": "Integration & Compliance",
+                "attribute_name": "API Integration and Connectors",
+                "description": "Support for open APIs and connectors to integrate with external systems such as network management, CRM and ticketing tools.",
+                "importance": "low",
+                "reasoning": "Comarch’s portfolio supports TM Forum Open APIs and aligns with the Open Digital Architecture [oai_citation:35‡comarch.com](https://www.comarch.com/telecommunications/service-assurance/oss-service-desk/#:~:text=), and ServiceNow offers certified integrations and connectors to other tools [oai_citation:36‡servicenow.com](https://www.servicenow.com/products/itsm.html#:~:text=Certified%20integrations%20%20ITSM%20seamlessly,Integration%20Hub%20connector%20to%20Jira). Integration ensures interoperability."
+            },
+            {
+                "domain": "Integration & Compliance",
+                "attribute_name": "Security and Governance Controls",
+                "description": "Role‑based access, audit logging and compliance with regulatory standards to protect data and ensure governance.",
+                "importance": "low",
+                "reasoning": "ServiceNow emphasizes that data security and regulatory compliance are central to its platform [oai_citation:37‡servicenow.com](https://www.servicenow.com/products/itsm.html#:~:text=Security%20lives%20at%20the%20center,Out%20How%20%20Get%20Ebook). Governance controls are essential for telecom operators handling sensitive data."
+            }
+        ]
+    },
+    "market_research": {
+        "major_vendors": [
+            "ServiceNow",
+            "Comarch",
+            "Salesforce",
+            "BMC"
+        ],
+        "industry_standards": [
+            "ITIL",
+            "TM Forum Open Digital Architecture (ODA)",
+            "TM Forum Open APIs"
+        ],
+        "competitive_analysis": "Leading ITSM platforms such as ServiceNow, Comarch and Salesforce cover incident, problem and change management; provide knowledge bases, service catalogues and request fulfilment; include CMDB and asset management; offer performance analytics and SLA management; and leverage AI, chatbots and automation [oai_citation:38‡servicenow.com](https://www.servicenow.com/products/itsm.html) [oai_citation:39‡comarch.com](https://www.comarch.com/telecommunications/service-assurance/oss-service-desk/#:~:text=The%20comprehensive%20Comarch%20OSS%20Service,ITIL%C2%AE). Comarch integrates with field service management and supports TM Forum APIs [oai_citation:40‡comarch.com](https://www.comarch.com/telecommunications/service-assurance/oss-service-desk/#:~:text=Comarch%20OSS%20Service%20Desk%20is,in%20Comarch%20OSS%20Service%20Desk), while ServiceNow offers self‑service portals, virtual agents and integration hubs [oai_citation:41‡servicenow.com](https://www.servicenow.com/products/itsm.html#:~:text=Incident%20Management%20%20Restore%20services,root%20cause%20of%20issues%20and) [oai_citation:42‡servicenow.com](https://www.servicenow.com/products/itsm.html#:~:text=Certified%20integrations%20%20ITSM%20seamlessly,Integration%20Hub%20connector%20to%20Jira). Salesforce focuses on omni‑channel support, ticketing, SLAs, knowledge bases and analytics. BMC Helix ITSM (not cited due to access limits) is also widely recognized for AI‑powered incident, problem and change management, service catalogues and multi‑cloud integration."
+    },
+    "recommendations": {
+        "priority_domains": [
+            "Service Desk & Support",
+            "Incident Management",
+            "Change & Release Management"
+        ],
+        "priority_attributes": [
+            "Ticket Logging and Tracking",
+            "Incident Detection and Classification",
+            "Change Planning and Impact Assessment"
+        ],
+        "framework_completeness": "needs_major_updates",
+        "next_steps": "Develop a comprehensive ITSM framework by adopting the missing domains and attributes identified. Prioritize establishing a service desk with robust ticketing, followed by incident management and change management processes. Integrate knowledge management and automation capabilities to improve efficiency. Ensure alignment with ITIL and TM Forum ODA standards, and leverage vendor solutions (e.g., ServiceNow or Comarch) to accelerate implementation. Define SLAs and analytics to track performance and plan continual improvements."
+    }
+}

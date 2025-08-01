@@ -23,8 +23,15 @@ class UserResponse(Base):
     email: str
     role: str
     is_active: bool
+    dark_mode_preference: bool
     created_at: str
     last_login: Optional[str] = None
+
+class UserUpdate(Base):
+    email: Optional[str] = None
+    role: Optional[str] = None
+    is_active: Optional[bool] = None
+    dark_mode_preference: Optional[bool] = None
 
 class ActivityLogResponse(Base):
     id: int
@@ -52,10 +59,19 @@ class CapabilityUpdate(Base):
     name: Optional[str] = None
     description: Optional[str] = None
     status: Optional[str] = None
+    version_major: Optional[int] = None
+    version_minor: Optional[int] = None
+    version_patch: Optional[int] = None
+    version_build: Optional[int] = None
 
 class CapabilityResponse(CapabilityBase):
     id: int
     created_at: str
+    version_major: int
+    version_minor: int
+    version_patch: int
+    version_build: int
+    version_string: str
 
 class CapabilitySummary(Base):
     id: int
@@ -64,20 +80,30 @@ class CapabilitySummary(Base):
     domains_count: int
     attributes_count: int
     last_updated: str
+    version_string: Optional[str] = None
 
 # Domain schemas
 class DomainBase(Base):
     domain_name: str
+    description: Optional[str] = None
+    importance: Optional[str] = "medium"
 
 class DomainCreate(DomainBase):
     pass  # capability_id is passed as URL parameter
 
 class DomainUpdate(Base):
     domain_name: Optional[str] = None
+    description: Optional[str] = None
+    importance: Optional[str] = None
 
 class DomainResponse(DomainBase):
     id: int
     capability_id: int
+    content_hash: str
+    version: str
+    import_batch: Optional[str] = None
+    import_date: str
+    is_active: bool
 
 # Attribute schemas
 class AttributeBase(Base):
@@ -100,6 +126,35 @@ class AttributeResponse(AttributeBase):
     id: int
     capability_id: int
     domain_name: str
+    content_hash: str
+    version: str
+    import_batch: Optional[str] = None
+    import_date: str
+    is_active: bool
+
+# Import schemas
+class ImportRequest(Base):
+    source_file: Optional[str] = None
+
+class ImportResponse(Base):
+    success: bool
+    import_batch: str
+    import_date: str
+    total_domains: int
+    new_domains: int
+    updated_domains: int
+    skipped_domains: int
+    total_attributes: int
+    new_attributes: int
+    updated_attributes: int
+    skipped_attributes: int
+    capability_version: str
+
+class ImportHistoryItem(Base):
+    import_batch: str
+    import_date: str
+    domains_count: int
+    attributes_count: int
 
 # Workflow schemas
 class WorkflowStats(Base):

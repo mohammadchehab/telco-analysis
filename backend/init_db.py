@@ -74,16 +74,8 @@ def init_db():
         # Check if sample capabilities exist
         sample_capabilities = [
             {
-                "name": "Product Management",
-                "description": "Comprehensive product management capabilities for telco services"
-            },
-            {
-                "name": "Customer Experience",
-                "description": "Customer experience and engagement management"
-            },
-            {
-                "name": "Network Operations",
-                "description": "Network operations and management capabilities"
+                "name": "IT Service Management",
+                "description": "IT Service Management capabilities for telco services"
             }
         ]
         

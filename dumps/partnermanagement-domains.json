@@ -1,0 +1,319 @@
+{
+    "capability": "Partner Management",
+    "analysis_date": "2025-08-02",
+    "capability_status": "existing",
+    "current_framework": {
+        "domains_count": 0,
+        "attributes_count": 0,
+        "domains": []
+    },
+    "gap_analysis": {
+        "missing_domains": [
+            {
+                "domain_name": "Partner Lifecycle Management",
+                "description": "Manages the entire lifecycle of partners, from onboarding and verification to activation, role assignment, and offboarding.",
+                "importance": "high",
+                "reasoning": "Vendors emphasise that partner onboarding is a critical capability – Comarch’s partner management system includes partner onboarding and automates the process from quoting to ordering [oai_citation:0‡comarch.com](https://www.comarch.com/telecommunications/bss-solutions/partner-management/#:~:text=Comarch%20Partner%20Management%20system%20provides,features%20from%20partner%20onboarding%20to), and the TMF668 API identifies partnership types and role types needed during onboarding [oai_citation:1‡tmforum.org](https://www.tmforum.org/oda/open-apis/directory/partnership-management-api-TMF668/v4.0#:~:text=Standardized%20mechanisms%20for%20creating%20partnership,resources)."
+            },
+            {
+                "domain_name": "Partner Performance & Engagement",
+                "description": "Tracks partner activity, sales pipeline, performance metrics, and provides communication and training tools to engage partners.",
+                "importance": "high",
+                "reasoning": "Salesforce’s PRM emphasises real‑time tracking and pipeline inspection to help partners focus on the right leads [oai_citation:2‡salesforce.com](https://www.salesforce.com/sales/partner-relationship-management/#:~:text=Get%20data%20and%20AI,relationship%20management%20software) and recommends onboarding and training tools [oai_citation:3‡salesforce.com](https://www.salesforce.com/sales/partner-relationship-management/what-is-prm/#:~:text=,follow%2C%20and%20easy%20to%20update). ServiceNow’s TSM connects customers and partners across the value chain for seamless service resolution [oai_citation:4‡servicenow.com](https://www.servicenow.com/standard/resource-center/data-sheet/ds-servicenow-telecommunications-service-management.html#:~:text=guides%20for%20common%20tasks,products%20and%20services%2C%20notify%20customers), underscoring the need for partner engagement."
+            },
+            {
+                "domain_name": "Contract & Agreement Management",
+                "description": "Supports creation, negotiation, approval, and renewal of partner contracts and agreement templates, including digital signatures and compliance tracking.",
+                "importance": "high",
+                "reasoning": "The TMF668 partnership management API associates partnership types with role‑specific agreement specifications [oai_citation:5‡tmforum.org](https://www.tmforum.org/oda/open-apis/directory/partnership-management-api-TMF668/v4.0#:~:text=Standardized%20mechanisms%20for%20creating%20partnership,resources), and telecom partnerships often involve complex contracts that must be managed and renewed."
+            },
+            {
+                "domain_name": "Quoting & Ordering Management",
+                "description": "Provides catalog‑driven quote generation, pricing configuration, order capture, and conversion of accepted quotes into orders.",
+                "importance": "high",
+                "reasoning": "Comarch’s partner management system offers a catalog‑driven approach to quoting and converts accepted bids into customer orders [oai_citation:6‡comarch.com](https://www.comarch.com/telecommunications/bss-solutions/partner-management/#:~:text=Comarch%20Partner%20Management%20system%20provides,features%20from%20partner%20onboarding%20to), highlighting quoting and ordering as core partner management capabilities."
+            },
+            {
+                "domain_name": "Settlement & Revenue Management",
+                "description": "Handles commission calculation, revenue sharing, invoicing, multi‑currency support, tax rules, and partner settlements.",
+                "importance": "high",
+                "reasoning": "Comarch emphasises multi‑currency support and multi‑side settlements, providing a single platform to settle with partners and issue invoices [oai_citation:7‡comarch.com](https://www.comarch.com/telecommunications/bss-solutions/partner-management/#:~:text=Multi,deploy%20global) [oai_citation:8‡comarch.com](https://www.comarch.com/telecommunications/bss-solutions/partner-management/#:~:text=New%20pricing%20models%2C%20multi). Effective partner management must support these settlement processes."
+            },
+            {
+                "domain_name": "Partner Marketing & Enablement",
+                "description": "Provides marketing fund management, co‑branded campaigns, training materials, and self‑service resources to enable partners to generate demand.",
+                "importance": "medium",
+                "reasoning": "Salesforce’s partner marketing automation allows pre‑built marketing journeys and co‑branded assets while automating marketing fund and campaign requests [oai_citation:9‡salesforce.com](https://www.salesforce.com/sales/partner-relationship-management/#:~:text=Partner%20Marketing%20Automation). A PRM tool should also provide training and enablement materials [oai_citation:10‡salesforce.com](https://www.salesforce.com/sales/partner-relationship-management/what-is-prm/#:~:text=,follow%2C%20and%20easy%20to%20update)."
+            },
+            {
+                "domain_name": "Analytics & Reporting",
+                "description": "Delivers dashboards and reports with real‑time partner performance metrics, predictive insights, and KPI tracking.",
+                "importance": "medium",
+                "reasoning": "Salesforce’s PRM provides out‑of‑the‑box dashboards and AI‑generated insights about revenue potential [oai_citation:11‡salesforce.com](https://www.salesforce.com/sales/partner-relationship-management/#:~:text=Partner%20Analytics%20and%20Insights), while partners need analytics to assess performance and forecast results."
+            },
+            {
+                "domain_name": "Partner Support & Service",
+                "description": "Offers self‑service portals, knowledge bases, AI‑powered chatbots, ticketing, and escalation workflows for partner support.",
+                "importance": "medium",
+                "reasoning": "Salesforce PRM offers AI‑powered partner self‑service to give partners quick access to knowledge articles and bots [oai_citation:12‡salesforce.com](https://www.salesforce.com/sales/partner-relationship-management/#:~:text=AI). ServiceNow’s TSM empowers customers and partners with self‑service and provides proactive notifications and agent assistance [oai_citation:13‡servicenow.com](https://www.servicenow.com/standard/resource-center/data-sheet/ds-servicenow-telecommunications-service-management.html)."
+            },
+            {
+                "domain_name": "Data Integration & API Management",
+                "description": "Provides standardized APIs and integration mechanisms to synchronize data with external systems, CRMs, and partner platforms while ensuring security and privacy.",
+                "importance": "medium",
+                "reasoning": "The TMF668 API standardizes partnership management for onboarding and role types [oai_citation:14‡tmforum.org](https://www.tmforum.org/oda/open-apis/directory/partnership-management-api-TMF668/v4.0#:~:text=Standardized%20mechanisms%20for%20creating%20partnership,resources), and Salesforce’s Partner Connect enables partners to work across CRMs with real‑time updates and field synchronization [oai_citation:15‡salesforce.com](https://www.salesforce.com/sales/partner-relationship-management/#:~:text=Partner%20Selling%20Across%20CRMs). Integrating with TM Forum APIs (e.g., TMF620, TMF621) is also recommended [oai_citation:16‡servicenow.com](https://www.servicenow.com/standard/resource-center/data-sheet/ds-servicenow-telecommunications-service-management.html#:~:text=standard%20integrations%20Telecommunications%20Service%20Management,Learn%20more%20about%20ServiceNow)."
+            },
+            {
+                "domain_name": "Compliance & Risk Management",
+                "description": "Ensures partner KYC/due‑diligence, regulatory compliance, risk scoring, and audit tracking across the partner ecosystem.",
+                "importance": "low",
+                "reasoning": "Telecom partnerships require compliance with regulations and contract terms. While vendors do not explicitly highlight this, the domain is necessary to manage risk and ensure adherence to agreements and regulatory requirements."
+            }
+        ],
+        "missing_attributes": [
+            {
+                "domain": "Partner Lifecycle Management",
+                "attribute_name": "Partner Onboarding & Verification",
+                "description": "Capture partner information, verify credentials (KYC), perform due diligence, and approve partner registration.",
+                "importance": "high",
+                "reasoning": "Comarch’s partner management highlights partner onboarding as a critical step [oai_citation:17‡comarch.com](https://www.comarch.com/telecommunications/bss-solutions/partner-management/#:~:text=Comarch%20Partner%20Management%20system%20provides,features%20from%20partner%20onboarding%20to), and the TMF668 API identifies partnership types and role types that must be established during onboarding [oai_citation:18‡tmforum.org](https://www.tmforum.org/oda/open-apis/directory/partnership-management-api-TMF668/v4.0#:~:text=Standardized%20mechanisms%20for%20creating%20partnership,resources)."
+            },
+            {
+                "domain": "Partner Lifecycle Management",
+                "attribute_name": "Role & Access Management",
+                "description": "Define partner roles (e.g., buyer, seller, developer), assign permissions, and manage access to systems and resources.",
+                "importance": "high",
+                "reasoning": "The TMF668 API provides a list of role types permitted within partnership types, such as Buyer, Seller and Developer [oai_citation:19‡tmforum.org](https://www.tmforum.org/oda/open-apis/directory/partnership-management-api-TMF668/v4.0#:~:text=Standardized%20mechanisms%20for%20creating%20partnership,resources), highlighting the need to manage role definitions and permissions."
+            },
+            {
+                "domain": "Partner Lifecycle Management",
+                "attribute_name": "Partner Offboarding",
+                "description": "Manage partner termination, including revoking access, settling accounts, and archiving data.",
+                "importance": "medium",
+                "reasoning": "A comprehensive lifecycle must include offboarding to ensure security and proper settlement when partnerships end."
+            },
+            {
+                "domain": "Partner Performance & Engagement",
+                "attribute_name": "Performance Metrics & Scoring",
+                "description": "Measure partner sales performance, pipeline progress, customer satisfaction, and compliance metrics.",
+                "importance": "high",
+                "reasoning": "Salesforce PRM provides real‑time tracking of leads and opportunities and AI‑generated insights into which deals are most likely to close [oai_citation:20‡salesforce.com](https://www.salesforce.com/sales/partner-relationship-management/#:~:text=Sales%20Tracking), underscoring the need for performance metrics."
+            },
+            {
+                "domain": "Partner Performance & Engagement",
+                "attribute_name": "Training & Certification Tracking",
+                "description": "Provide training modules, certification programs, and track completion and proficiency for partner users.",
+                "importance": "high",
+                "reasoning": "Salesforce recommends that PRM tools include onboarding and training capabilities to ensure partners have access to demos, product references and case studies [oai_citation:21‡salesforce.com](https://www.salesforce.com/sales/partner-relationship-management/what-is-prm/#:~:text=,follow%2C%20and%20easy%20to%20update)."
+            },
+            {
+                "domain": "Partner Performance & Engagement",
+                "attribute_name": "Communication & Collaboration Tools",
+                "description": "Enable notifications, messaging, forums, and shared workspaces to facilitate collaboration between CSP staff and partners.",
+                "importance": "medium",
+                "reasoning": "ServiceNow TSM connects customers and partners across the value chain for seamless service and issue resolution [oai_citation:22‡servicenow.com](https://www.servicenow.com/standard/resource-center/data-sheet/ds-servicenow-telecommunications-service-management.html#:~:text=guides%20for%20common%20tasks,products%20and%20services%2C%20notify%20customers), indicating the need for collaboration tools."
+            },
+            {
+                "domain": "Contract & Agreement Management",
+                "attribute_name": "Contract Templates & Terms",
+                "description": "Maintain standardized contract templates and define partner‑specific terms, including service levels, payment terms, and roles.",
+                "importance": "high",
+                "reasoning": "TMF668 associates partnership types with agreement specifications [oai_citation:23‡tmforum.org](https://www.tmforum.org/oda/open-apis/directory/partnership-management-api-TMF668/v4.0#:~:text=Standardized%20mechanisms%20for%20creating%20partnership,resources). Having templates ensures consistent agreements and faster negotiations."
+            },
+            {
+                "domain": "Contract & Agreement Management",
+                "attribute_name": "Negotiation & Approval Workflow",
+                "description": "Track negotiation activities, versioning, approvals and sign‑offs for partner agreements.",
+                "importance": "high",
+                "reasoning": "Telecom contracts often involve multiple parties and require formal approvals; a workflow ensures transparency and compliance."
+            },
+            {
+                "domain": "Contract & Agreement Management",
+                "attribute_name": "Renewal & Compliance Monitoring",
+                "description": "Monitor agreement expirations, trigger renewal processes, and ensure partners adhere to contractual obligations and regulatory requirements.",
+                "importance": "medium",
+                "reasoning": "Agreements must be renewed periodically; tracking renewals and compliance helps avoid lapses and ensures partners meet obligations."
+            },
+            {
+                "domain": "Quoting & Ordering Management",
+                "attribute_name": "Quote Generation & Pricing",
+                "description": "Allow partners to generate quotes based on catalogue items, pricing rules, discounts, and multi‑currency options.",
+                "importance": "high",
+                "reasoning": "Comarch’s system supports quick, catalog‑driven quotations that are automated and accurate [oai_citation:24‡comarch.com](https://www.comarch.com/telecommunications/bss-solutions/partner-management/#:~:text=Comarch%20Partner%20Management%20system%20provides,features%20from%20partner%20onboarding%20to), demonstrating the importance of quote generation capabilities."
+            },
+            {
+                "domain": "Quoting & Ordering Management",
+                "attribute_name": "Order Capture & Management",
+                "description": "Capture orders from accepted quotes, track order status, coordinate fulfillment, and handle partial orders.",
+                "importance": "high",
+                "reasoning": "Comarch notes that accepted bids are converted into customer orders [oai_citation:25‡comarch.com](https://www.comarch.com/telecommunications/bss-solutions/partner-management/#:~:text=first%20quotation%20is%20carried%20out,converted%20into%20a%20customer%20order); managing orders is a core partner management function."
+            },
+            {
+                "domain": "Quoting & Ordering Management",
+                "attribute_name": "Pricing & Discount Management",
+                "description": "Manage partner‑specific pricing, discounts, and promotions to support various business models.",
+                "importance": "medium",
+                "reasoning": "Telecom partners may require custom pricing and discount schemes; Comarch’s support for various business models [oai_citation:26‡comarch.com](https://www.comarch.com/telecommunications/bss-solutions/partner-management/#:~:text=Comarch%20Partner%20Management%20system%20provides,features%20from%20partner%20onboarding%20to) implies the need for flexible pricing."
+            },
+            {
+                "domain": "Settlement & Revenue Management",
+                "attribute_name": "Commission & Revenue Share Calculation",
+                "description": "Calculate partner commissions, revenue shares, and settlements based on sales performance and agreement terms.",
+                "importance": "high",
+                "reasoning": "Comarch provides multi‑side settlements and a single platform to settle with partners and issue invoices [oai_citation:27‡comarch.com](https://www.comarch.com/telecommunications/bss-solutions/partner-management/#:~:text=New%20pricing%20models%2C%20multi); accurate commission calculation is essential."
+            },
+            {
+                "domain": "Settlement & Revenue Management",
+                "attribute_name": "Invoicing & Payment Processing",
+                "description": "Generate invoices, process payments, handle tax rules and ensure timely settlement with partners.",
+                "importance": "high",
+                "reasoning": "The Comarch system emphasises issuing invoices to end customers and settling with partners [oai_citation:28‡comarch.com](https://www.comarch.com/telecommunications/bss-solutions/partner-management/#:~:text=New%20pricing%20models%2C%20multi), requiring robust invoicing and payment processing."
+            },
+            {
+                "domain": "Settlement & Revenue Management",
+                "attribute_name": "Multi‑Currency & Tax Support",
+                "description": "Support transactions in multiple currencies and automatically apply relevant tax rules based on jurisdiction.",
+                "importance": "high",
+                "reasoning": "Comarch’s partner management supports multi‑currency operations and tax rules [oai_citation:29‡comarch.com](https://www.comarch.com/telecommunications/bss-solutions/partner-management/#:~:text=Multi,access%20only%20to%20their%20own) [oai_citation:30‡comarch.com](https://www.comarch.com/telecommunications/bss-solutions/partner-management/#:~:text=Simplified%20day%20to%C2%A0day%20business%20processes,currencies%2C%20tax%20rules%2C%20and%20languages), reflecting the global nature of telecom partnerships."
+            },
+            {
+                "domain": "Partner Marketing & Enablement",
+                "attribute_name": "Marketing Fund & Campaign Management",
+                "description": "Manage marketing development funds (MDF), co‑funded campaigns, approval workflows, and performance tracking.",
+                "importance": "high",
+                "reasoning": "Salesforce’s partner marketing automation simplifies marketing fund and campaign requests and uses prebuilt, approved marketing journeys [oai_citation:31‡salesforce.com](https://www.salesforce.com/sales/partner-relationship-management/#:~:text=Partner%20Marketing%20Automation)."
+            },
+            {
+                "domain": "Partner Marketing & Enablement",
+                "attribute_name": "Co‑branded Asset Management",
+                "description": "Provide partners with templates and tools to create co‑branded marketing materials and resources.",
+                "importance": "medium",
+                "reasoning": "Co‑branded assets help ensure consistent brand representation in partner campaigns; Salesforce’s marketing automation emphasises co‑branded assets [oai_citation:32‡salesforce.com](https://www.salesforce.com/sales/partner-relationship-management/#:~:text=Partner%20Marketing%20Automation)."
+            },
+            {
+                "domain": "Partner Marketing & Enablement",
+                "attribute_name": "Self‑Service Training & Resources",
+                "description": "Offer a portal where partners can access training materials, knowledge bases, AI‑powered bots and request support.",
+                "importance": "medium",
+                "reasoning": "Salesforce provides AI‑powered partner self‑service with knowledge articles and bots [oai_citation:33‡salesforce.com](https://www.salesforce.com/sales/partner-relationship-management/#:~:text=AI), and ServiceNow TSM encourages self‑service to empower partners [oai_citation:34‡servicenow.com](https://www.servicenow.com/standard/resource-center/data-sheet/ds-servicenow-telecommunications-service-management.html)."
+            },
+            {
+                "domain": "Analytics & Reporting",
+                "attribute_name": "Real‑Time Dashboards & KPIs",
+                "description": "Display key metrics such as sales pipeline, revenue, partner engagement and service performance in real time.",
+                "importance": "high",
+                "reasoning": "Salesforce’s PRM offers dashboards and AI‑generated insights about revenue potential and next steps [oai_citation:35‡salesforce.com](https://www.salesforce.com/sales/partner-relationship-management/#:~:text=Partner%20Analytics%20and%20Insights), indicating the need for real‑time analytics."
+            },
+            {
+                "domain": "Analytics & Reporting",
+                "attribute_name": "Forecasting & Predictive Insights",
+                "description": "Use AI/ML to predict partner performance, revenue trends and customer churn to inform strategy.",
+                "importance": "medium",
+                "reasoning": "Predictive insights help CSPs and partners plan resources and optimise engagement; Salesforce emphasises AI‑generated insights [oai_citation:36‡salesforce.com](https://www.salesforce.com/sales/partner-relationship-management/#:~:text=Partner%20Analytics%20and%20Insights)."
+            },
+            {
+                "domain": "Analytics & Reporting",
+                "attribute_name": "Commission & Compliance Reporting",
+                "description": "Generate reports on commissions, settlements, contract compliance and operational KPIs for internal and regulatory stakeholders.",
+                "importance": "medium",
+                "reasoning": "Reporting on financials and compliance supports transparency and helps meet audit requirements."
+            },
+            {
+                "domain": "Partner Support & Service",
+                "attribute_name": "Support Portal & Ticketing",
+                "description": "Provide partners with a portal to log issues, track tickets, interact with support teams and monitor resolution status.",
+                "importance": "medium",
+                "reasoning": "ServiceNow’s TSM offers service operations workspace and proactive service experience workflows that unify customer and network context [oai_citation:37‡servicenow.com](https://www.servicenow.com/standard/resource-center/data-sheet/ds-servicenow-telecommunications-service-management.html); a support portal applies similar concepts to partners."
+            },
+            {
+                "domain": "Partner Support & Service",
+                "attribute_name": "Knowledge Base & AI Assistant",
+                "description": "Offer searchable knowledge articles and AI chatbots to answer partner queries and provide guidance.",
+                "importance": "medium",
+                "reasoning": "Salesforce PRM supplies AI‑powered self‑service capabilities with knowledge articles and bots [oai_citation:38‡salesforce.com](https://www.salesforce.com/sales/partner-relationship-management/#:~:text=AI), ensuring partners can quickly find answers."
+            },
+            {
+                "domain": "Partner Support & Service",
+                "attribute_name": "SLA & Escalation Management",
+                "description": "Define and monitor service level agreements for partner support, automatically escalating unresolved issues.",
+                "importance": "medium",
+                "reasoning": "Managing service performance and escalations ensures partners receive timely support and maintains quality of service."
+            },
+            {
+                "domain": "Data Integration & API Management",
+                "attribute_name": "Open API Integration",
+                "description": "Support TM Forum APIs (e.g., TMF668) and other standard interfaces to integrate partner data and processes.",
+                "importance": "medium",
+                "reasoning": "TMF668 standardises partnership management and defines APIs for creating and updating partnership types [oai_citation:39‡tmforum.org](https://www.tmforum.org/oda/open-apis/directory/partnership-management-api-TMF668/v4.0#:~:text=Standardized%20mechanisms%20for%20creating%20partnership,resources); integrating with TM Forum APIs (e.g., TMF620 Product Catalog, TMF621 Trouble Ticket) is recommended [oai_citation:40‡servicenow.com](https://www.servicenow.com/standard/resource-center/data-sheet/ds-servicenow-telecommunications-service-management.html#:~:text=standard%20integrations%20Telecommunications%20Service%20Management,Learn%20more%20about%20ServiceNow)."
+            },
+            {
+                "domain": "Data Integration & API Management",
+                "attribute_name": "Cross‑CRM & System Integration",
+                "description": "Enable partners to work from their own systems while synchronising data across CRM, billing, and OSS/BSS platforms.",
+                "importance": "medium",
+                "reasoning": "Salesforce’s Partner Connect allows partners to securely work and track deals from any CRM with real‑time updates and field synchronization [oai_citation:41‡salesforce.com](https://www.salesforce.com/sales/partner-relationship-management/#:~:text=Partner%20Selling%20Across%20CRMs), highlighting the importance of cross‑system integration."
+            },
+            {
+                "domain": "Data Integration & API Management",
+                "attribute_name": "Data Security & Privacy",
+                "description": "Ensure secure access to partner data, apply encryption, and enforce privacy rules across integrations.",
+                "importance": "medium",
+                "reasoning": "Integrating multiple systems requires robust data security; partners and customers expect their data to be protected and compliant with regulations."
+            },
+            {
+                "domain": "Compliance & Risk Management",
+                "attribute_name": "KYC & Due Diligence",
+                "description": "Perform know‑your‑customer/know‑your‑partner checks, assess financial and legal risk, and record verification results.",
+                "importance": "medium",
+                "reasoning": "Telecom partnerships involve financial transactions; performing due diligence reduces risk and aligns with regulatory requirements."
+            },
+            {
+                "domain": "Compliance & Risk Management",
+                "attribute_name": "Regulatory Compliance Tracking",
+                "description": "Monitor partner adherence to telecom regulations, data privacy laws, and contract terms.",
+                "importance": "medium",
+                "reasoning": "CSPs operate in heavily regulated environments; tracking compliance ensures that partners meet legal obligations and reduces liability."
+            },
+            {
+                "domain": "Compliance & Risk Management",
+                "attribute_name": "Audit & Risk Reporting",
+                "description": "Generate audit trails, risk scores and compliance reports for internal governance and external regulators.",
+                "importance": "low",
+                "reasoning": "Audit trails support transparency and help identify potential risks; while important, it may be prioritised after core operational attributes are in place."
+            }
+        ]
+    },
+    "market_research": {
+        "major_vendors": [
+            "Comarch Partner Management",
+            "ServiceNow Telecommunications Service Management",
+            "Salesforce Partner Relationship Management"
+        ],
+        "industry_standards": [
+            "TMF668 Partnership Management API",
+            "TMF620 Product Catalog",
+            "TMF621 Trouble Ticket",
+            "TMF633 Service Catalog",
+            "TMF637 Product Inventory",
+            "TMF639 Resource Inventory Management"
+        ],
+        "competitive_analysis": "Comarch’s Partner Management system models various types of partnerships and supports partner onboarding, quoting, ordering, and settlements with catalog‑driven processes and multi‑currency/multi‑tenancy support [oai_citation:42‡comarch.com](https://www.comarch.com/telecommunications/bss-solutions/partner-management/#:~:text=Modern%20telecom%20systems%20fit%20for,enrich%20the%20CSP%27s%20service%20portfolio). ServiceNow’s Telecommunications Service Management unifies service and network operations, provides AI‑powered self‑service and agent assistance, and rapidly onboards customers and partners while connecting the entire value chain for seamless issue resolution [oai_citation:43‡servicenow.com](https://www.servicenow.com/standard/resource-center/data-sheet/ds-servicenow-telecommunications-service-management.html). Salesforce’s Partner Relationship Management offers sales tracking, partner selling across CRMs, partner analytics and insights, marketing automation, AI‑powered partner self‑service, and centralized channel management [oai_citation:44‡salesforce.com](https://www.salesforce.com/sales/partner-relationship-management/#:~:text=Get%20data%20and%20AI,relationship%20management%20software)."
+    },
+    "recommendations": {
+        "priority_domains": [
+            "Partner Lifecycle Management",
+            "Quoting & Ordering Management",
+            "Settlement & Revenue Management",
+            "Contract & Agreement Management"
+        ],
+        "priority_attributes": [
+            "Partner Onboarding & Verification",
+            "Quote Generation & Pricing",
+            "Commission & Revenue Share Calculation",
+            "Contract Templates & Terms",
+            "Performance Metrics & Scoring"
+        ],
+        "framework_completeness": "needs_major_updates",
+        "next_steps": "Define and implement the recommended domains and attributes to build a comprehensive Partner Management capability. Prioritise high‑importance domains such as partner lifecycle, quoting and ordering, settlements, and contract management, and ensure alignment with TM Forum standards like TMF668. Assess existing systems and integrate vendor solutions (e.g., Comarch, ServiceNow or Salesforce) to expedite capability delivery. Establish governance processes for compliance and data integration, and develop analytics and marketing modules as subsequent phases."
+    }
+}

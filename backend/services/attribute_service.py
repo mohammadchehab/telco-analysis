@@ -1,7 +1,9 @@
 from sqlalchemy.orm import Session
 from typing import List, Optional
+from datetime import datetime
 from models.models import Attribute, Capability, Domain
 from schemas.schemas import AttributeCreate, AttributeUpdate, AttributeResponse
+from utils.version_manager import VersionManager
 
 class AttributeService:
     
@@ -13,7 +15,10 @@ class AttributeService:
         if not capability:
             raise ValueError("Capability not found")
         
-        attributes = db.query(Attribute).filter(Attribute.capability_id == capability_id).order_by(Attribute.attribute_name).all()
+        attributes = db.query(Attribute).filter(
+            Attribute.capability_id == capability_id,
+            Attribute.is_active == True
+        ).order_by(Attribute.attribute_name).all()
         
         return [
             AttributeResponse(
@@ -23,7 +28,12 @@ class AttributeService:
                 attribute_name=attr.attribute_name,
                 definition=attr.definition,
                 tm_forum_mapping=attr.tm_forum_mapping,
-                importance=attr.importance
+                importance=attr.importance,
+                content_hash=getattr(attr, 'content_hash', ''),
+                version=getattr(attr, 'version', '1.0'),
+                import_batch=getattr(attr, 'import_batch', None),
+                import_date=attr.import_date.isoformat() if attr.import_date else None,
+                is_active=getattr(attr, 'is_active', True)
             )
             for attr in attributes
         ]
@@ -46,7 +56,8 @@ class AttributeService:
         
         attributes = db.query(Attribute).filter(
             Attribute.capability_id == capability_id,
-            Attribute.domain_name == domain_name
+            Attribute.domain_name == domain_name,
+            Attribute.is_active == True
         ).order_by(Attribute.attribute_name).all()
         
         return [
@@ -57,7 +68,12 @@ class AttributeService:
                 attribute_name=attr.attribute_name,
                 definition=attr.definition,
                 tm_forum_mapping=attr.tm_forum_mapping,
-                importance=attr.importance
+                importance=attr.importance,
+                content_hash=getattr(attr, 'content_hash', ''),
+                version=getattr(attr, 'version', '1.0'),
+                import_batch=getattr(attr, 'import_batch', None),
+                import_date=attr.import_date.isoformat() if attr.import_date else None,
+                is_active=getattr(attr, 'is_active', True)
             )
             for attr in attributes
         ]
@@ -93,17 +109,36 @@ class AttributeService:
         if existing_attribute:
             raise ValueError("Attribute with this name already exists for this domain")
         
+        # Generate content hash
+        attribute_data = {
+            'domain_name': attribute.domain_name,
+            'attribute_name': attribute.attribute_name,
+            'definition': attribute.definition or '',
+            'tm_forum_mapping': attribute.tm_forum_mapping or '',
+            'importance': attribute.importance or '50'
+        }
+        content_hash = VersionManager.generate_attribute_hash(attribute_data)
+        
         db_attribute = Attribute(
             capability_id=capability_id,
             domain_name=attribute.domain_name,
             attribute_name=attribute.attribute_name,
             definition=attribute.definition,
             tm_forum_mapping=attribute.tm_forum_mapping,
-            importance=attribute.importance
+            importance=attribute.importance,
+            content_hash=content_hash,
+            version=VersionManager.get_version_string(capability),
+            import_batch=None,
+            import_date=datetime.now(),
+            is_active=True
         )
         db.add(db_attribute)
         db.commit()
         db.refresh(db_attribute)
+        
+        # Update capability version
+        VersionManager.update_capability_version(db, capability_id, "attribute")
+        
         return db_attribute
     
     @staticmethod

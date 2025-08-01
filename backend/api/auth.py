@@ -5,7 +5,7 @@ from datetime import datetime
 
 from core.database import get_db
 from core.auth import auth_manager, get_current_user, get_current_active_user, require_role
-from schemas.schemas import UserLogin, UserCreate, UserResponse, APIResponse
+from schemas.schemas import UserLogin, UserCreate, UserResponse, UserUpdate, APIResponse
 from models.models import User
 import hashlib
 
@@ -53,7 +53,8 @@ async def login(user_credentials: UserLogin, request: Request, db: Session = Dep
                     "username": user_data.get("username"),
                     "email": user_data.get("email"),
                     "role": user_data.get("role"),
-                    "is_active": user_data.get("is_active", True)
+                    "is_active": user_data.get("is_active", True),
+                    "dark_mode_preference": user_data.get("dark_mode_preference", True)
                 }
             },
             message="Login successful"
@@ -62,20 +63,74 @@ async def login(user_credentials: UserLogin, request: Request, db: Session = Dep
         return APIResponse(success=False, error=str(e))
 
 @router.get("/me", response_model=APIResponse)
-async def get_current_user_info(current_user: Dict[str, Any] = Depends(get_current_active_user)):
+async def get_current_user_info(current_user: Dict[str, Any] = Depends(get_current_active_user), db: Session = Depends(get_db)):
     """Get current user information"""
     try:
+        # Get full user data from database
+        user = db.query(User).filter(User.id == current_user.get("id")).first()
+        if not user:
+            return APIResponse(success=False, error="User not found")
+        
         return APIResponse(
             success=True,
             data={
                 "user": {
-                    "id": current_user.get("id"),
-                    "username": current_user.get("username"),
-                    "email": current_user.get("email"),
-                    "role": current_user.get("role"),
-                    "is_active": current_user.get("is_active", True)
+                    "id": user.id,
+                    "username": user.username,
+                    "email": user.email,
+                    "role": user.role,
+                    "is_active": user.is_active,
+                    "dark_mode_preference": user.dark_mode_preference,
+                    "created_at": user.created_at.isoformat() if user.created_at else None,
+                    "last_login": user.last_login.isoformat() if user.last_login else None
                 }
             }
+        )
+    except Exception as e:
+        return APIResponse(success=False, error=str(e))
+
+@router.put("/preferences", response_model=APIResponse)
+async def update_user_preferences(
+    preferences: UserUpdate,
+    current_user: Dict[str, Any] = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Update current user preferences"""
+    try:
+        user = db.query(User).filter(User.id == current_user.get("id")).first()
+        if not user:
+            return APIResponse(success=False, error="User not found")
+        
+        # Update only allowed fields
+        if preferences.email is not None:
+            # Check if email is already taken by another user
+            existing_user = db.query(User).filter(
+                (User.email == preferences.email) & (User.id != user.id)
+            ).first()
+            if existing_user:
+                return APIResponse(success=False, error="Email already exists")
+            user.email = preferences.email
+        
+        if preferences.dark_mode_preference is not None:
+            user.dark_mode_preference = preferences.dark_mode_preference
+        
+        db.commit()
+        
+        return APIResponse(
+            success=True,
+            data={
+                "user": {
+                    "id": user.id,
+                    "username": user.username,
+                    "email": user.email,
+                    "role": user.role,
+                    "is_active": user.is_active,
+                    "dark_mode_preference": user.dark_mode_preference,
+                    "created_at": user.created_at.isoformat() if user.created_at else None,
+                    "last_login": user.last_login.isoformat() if user.last_login else None
+                }
+            },
+            message="Preferences updated successfully"
         )
     except Exception as e:
         return APIResponse(success=False, error=str(e))

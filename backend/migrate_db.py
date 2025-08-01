@@ -3,135 +3,107 @@
 Database migration script to update vendor_scores table schema
 """
 import sqlite3
+import os
 from pathlib import Path
 
-def migrate_vendor_scores():
-    """Migrate vendor_scores table to new schema"""
-    db_path = Path("telco_analysis.db")
+def migrate_database():
+    """Migrate the database to add version fields"""
+    db_path = Path(__file__).parent / "telco_analysis.db"
     
     if not db_path.exists():
-        print("❌ Database file not found")
+        print("❌ Database file not found. Please run the application first to create the database.")
         return
     
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
+    print("🔄 Starting database migration...")
     
     try:
-        print("🔄 Starting vendor_scores table migration...")
+        # Connect to the database
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
         
-        # Check if migration is needed
-        cursor.execute("PRAGMA table_info(vendor_scores)")
-        columns = [col[1] for col in cursor.fetchall()]
+        # Check if version columns already exist
+        cursor.execute("PRAGMA table_info(capabilities)")
+        capability_columns = [column[1] for column in cursor.fetchall()]
         
-        if 'capability_id' in columns and 'attribute_id' in columns:
-            print("✅ Migration already completed")
-            return
+        cursor.execute("PRAGMA table_info(domains)")
+        domain_columns = [column[1] for column in cursor.fetchall()]
         
-        print("📋 Current columns:", columns)
+        cursor.execute("PRAGMA table_info(attributes)")
+        attribute_columns = [column[1] for column in cursor.fetchall()]
         
-        # Create new table with correct schema
+        # Add version fields to capabilities table
+        if 'version_major' not in capability_columns:
+            print("📝 Adding version fields to capabilities table...")
+            cursor.execute("ALTER TABLE capabilities ADD COLUMN version_major INTEGER DEFAULT 1")
+            cursor.execute("ALTER TABLE capabilities ADD COLUMN version_minor INTEGER DEFAULT 0")
+            cursor.execute("ALTER TABLE capabilities ADD COLUMN version_patch INTEGER DEFAULT 0")
+            cursor.execute("ALTER TABLE capabilities ADD COLUMN version_build INTEGER DEFAULT 0")
+            print("✅ Version fields added to capabilities table")
+        
+        # Add version and hash fields to domains table
+        if 'content_hash' not in domain_columns:
+            print("📝 Adding version and hash fields to domains table...")
+            cursor.execute("ALTER TABLE domains ADD COLUMN content_hash TEXT")
+            cursor.execute("ALTER TABLE domains ADD COLUMN version TEXT")
+            cursor.execute("ALTER TABLE domains ADD COLUMN import_batch TEXT")
+            cursor.execute("ALTER TABLE domains ADD COLUMN import_date TIMESTAMP")
+            cursor.execute("ALTER TABLE domains ADD COLUMN is_active BOOLEAN")
+            cursor.execute("ALTER TABLE domains ADD COLUMN description TEXT")
+            cursor.execute("ALTER TABLE domains ADD COLUMN importance TEXT")
+            print("✅ Version and hash fields added to domains table")
+        
+        # Add version and hash fields to attributes table
+        if 'content_hash' not in attribute_columns:
+            print("📝 Adding version and hash fields to attributes table...")
+            cursor.execute("ALTER TABLE attributes ADD COLUMN content_hash TEXT")
+            cursor.execute("ALTER TABLE attributes ADD COLUMN version TEXT")
+            cursor.execute("ALTER TABLE attributes ADD COLUMN import_batch TEXT")
+            cursor.execute("ALTER TABLE attributes ADD COLUMN import_date TIMESTAMP")
+            cursor.execute("ALTER TABLE attributes ADD COLUMN is_active BOOLEAN")
+            print("✅ Version and hash fields added to attributes table")
+        
+        # Update existing records with default values
+        print("🔄 Updating existing records...")
+        
+        # Update capabilities with default version
         cursor.execute("""
-            CREATE TABLE vendor_scores_new (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                capability_id INTEGER NOT NULL,
-                attribute_id INTEGER NOT NULL,
-                vendor TEXT NOT NULL,
-                weight INTEGER DEFAULT 50,
-                score TEXT NOT NULL,
-                score_numeric REAL NOT NULL,
-                observation TEXT,
-                evidence_url TEXT,
-                score_decision TEXT,
-                research_type TEXT DEFAULT 'capability_research',
-                research_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (capability_id) REFERENCES capabilities (id),
-                FOREIGN KEY (attribute_id) REFERENCES attributes (id)
-            )
+            UPDATE capabilities 
+            SET version_major = 1, version_minor = 0, version_patch = 0, version_build = 0
+            WHERE version_major IS NULL
         """)
         
-        # Migrate existing data
-        print("🔄 Migrating existing data...")
+        # Check if we added new columns and update them
+        cursor.execute("PRAGMA table_info(domains)")
+        updated_domain_columns = [column[1] for column in cursor.fetchall()]
         
-        # Get all capabilities for name-to-id mapping
-        cursor.execute("SELECT id, name FROM capabilities")
-        capability_map = {row[1]: row[0] for row in cursor.fetchall()}
+        if 'is_active' in updated_domain_columns:
+            # Update domains with default values
+            cursor.execute("""
+                UPDATE domains 
+                SET content_hash = '', version = '1.0', is_active = 1, importance = 'medium'
+                WHERE content_hash IS NULL OR content_hash = ''
+            """)
         
-        # Get all attributes for name-to-id mapping
-        cursor.execute("SELECT id, attribute_name, capability_id FROM attributes")
-        attribute_map = {}
-        for row in cursor.fetchall():
-            attr_id, attr_name, cap_id = row
-            key = (cap_id, attr_name)
-            attribute_map[key] = attr_id
+        cursor.execute("PRAGMA table_info(attributes)")
+        updated_attribute_columns = [column[1] for column in cursor.fetchall()]
         
-        # Migrate vendor scores
-        cursor.execute("SELECT * FROM vendor_scores")
-        old_records = cursor.fetchall()
+        if 'is_active' in updated_attribute_columns:
+            # Update attributes with default values
+            cursor.execute("""
+                UPDATE attributes 
+                SET content_hash = '', version = '1.0', is_active = 1
+                WHERE content_hash IS NULL OR content_hash = ''
+            """)
         
-        migrated_count = 0
-        skipped_count = 0
-        
-        for record in old_records:
-            try:
-                # Extract old data
-                (id, capability_name, attribute_name, vendor, weight, score, 
-                 score_numeric, observation, evidence_url, score_decision, 
-                 research_type, created_at) = record
-                
-                # Find capability_id
-                capability_id = capability_map.get(capability_name)
-                if not capability_id:
-                    print(f"⚠️ Skipping record {id}: Capability '{capability_name}' not found")
-                    skipped_count += 1
-                    continue
-                
-                # Find attribute_id
-                attribute_id = attribute_map.get((capability_id, attribute_name))
-                if not attribute_id:
-                    print(f"⚠️ Skipping record {id}: Attribute '{attribute_name}' not found for capability {capability_id}")
-                    skipped_count += 1
-                    continue
-                
-                # Insert into new table
-                cursor.execute("""
-                    INSERT INTO vendor_scores_new (
-                        capability_id, attribute_id, vendor, weight, score, 
-                        score_numeric, observation, evidence_url, score_decision, 
-                        research_type, created_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """, (
-                    capability_id, attribute_id, vendor, weight, score,
-                    score_numeric, observation, evidence_url, score_decision,
-                    research_type, created_at
-                ))
-                
-                migrated_count += 1
-                
-            except Exception as e:
-                print(f"❌ Error migrating record {id}: {e}")
-                skipped_count += 1
-        
-        # Drop old table and rename new table
-        cursor.execute("DROP TABLE vendor_scores")
-        cursor.execute("ALTER TABLE vendor_scores_new RENAME TO vendor_scores")
-        
-        # Create indexes
-        cursor.execute("CREATE INDEX idx_vendor_scores_capability_id ON vendor_scores(capability_id)")
-        cursor.execute("CREATE INDEX idx_vendor_scores_attribute_id ON vendor_scores(attribute_id)")
-        
+        # Commit changes
         conn.commit()
-        
-        print(f"✅ Migration completed successfully!")
-        print(f"📊 Migrated: {migrated_count} records")
-        print(f"⚠️ Skipped: {skipped_count} records")
+        print("✅ Database migration completed successfully!")
         
     except Exception as e:
         print(f"❌ Migration failed: {e}")
         conn.rollback()
-        raise
     finally:
         conn.close()
 
 if __name__ == "__main__":
-    migrate_vendor_scores() 
+    migrate_database() 

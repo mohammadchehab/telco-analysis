@@ -1,7 +1,9 @@
 from sqlalchemy.orm import Session
 from typing import List, Optional
+from datetime import datetime
 from models.models import Domain, Capability
 from schemas.schemas import DomainCreate, DomainUpdate, DomainResponse
+from utils.version_manager import VersionManager
 
 class DomainService:
     
@@ -13,13 +15,23 @@ class DomainService:
         if not capability:
             raise ValueError("Capability not found")
         
-        domains = db.query(Domain).filter(Domain.capability_id == capability_id).order_by(Domain.domain_name).all()
+        domains = db.query(Domain).filter(
+            Domain.capability_id == capability_id,
+            Domain.is_active == True
+        ).order_by(Domain.domain_name).all()
         
         return [
             DomainResponse(
                 id=domain.id,
                 capability_id=domain.capability_id,
-                domain_name=domain.domain_name
+                domain_name=domain.domain_name,
+                description=getattr(domain, 'description', ''),
+                importance=getattr(domain, 'importance', 'medium'),
+                content_hash=domain.content_hash,
+                version=domain.version,
+                import_batch=domain.import_batch,
+                import_date=domain.import_date.isoformat() if domain.import_date else None,
+                is_active=domain.is_active
             )
             for domain in domains
         ]
@@ -38,7 +50,14 @@ class DomainService:
             {
                 "id": domain.id,
                 "domain_name": domain.domain_name,
-                "capability_id": domain.capability_id
+                "capability_id": domain.capability_id,
+                "description": getattr(domain, 'description', ''),
+                "importance": getattr(domain, 'importance', 'medium'),
+                "content_hash": getattr(domain, 'content_hash', ''),
+                "version": getattr(domain, 'version', '1.0'),
+                "import_batch": getattr(domain, 'import_batch', None),
+                "import_date": domain.import_date.isoformat() if domain.import_date else None,
+                "is_active": getattr(domain, 'is_active', True)
             }
             for domain in domains
         ]
@@ -59,19 +78,39 @@ class DomainService:
         # Check if domain already exists for this capability
         existing_domain = db.query(Domain).filter(
             Domain.capability_id == capability_id,
-            Domain.domain_name == domain.domain_name
+            Domain.domain_name == domain.domain_name,
+            Domain.is_active == True
         ).first()
         
         if existing_domain:
             raise ValueError("Domain with this name already exists for this capability")
         
+        # Generate content hash
+        domain_data = {
+            'domain_name': domain.domain_name,
+            'description': domain.description or '',
+            'importance': domain.importance or 'medium'
+        }
+        content_hash = VersionManager.generate_domain_hash(domain_data)
+        
         db_domain = Domain(
             capability_id=capability_id,
-            domain_name=domain.domain_name
+            domain_name=domain.domain_name,
+            description=domain.description,
+            importance=domain.importance,
+            content_hash=content_hash,
+            version=VersionManager.get_version_string(capability),
+            import_batch=None,
+            import_date=datetime.now(),
+            is_active=True
         )
         db.add(db_domain)
         db.commit()
         db.refresh(db_domain)
+        
+        # Update capability version
+        VersionManager.update_capability_version(db, capability_id, "domain")
+        
         return db_domain
     
     @staticmethod

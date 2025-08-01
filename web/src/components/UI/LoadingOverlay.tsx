@@ -4,9 +4,9 @@ import { Backdrop, CircularProgress, Typography, Box } from '@mui/material';
 import type { RootState } from '../../store';
 
 const LoadingOverlay: React.FC = () => {
-  const { loadingOverlay } = useSelector((state: RootState) => state.ui);
+  const { loading } = useSelector((state: RootState) => state.ui);
 
-  if (!loadingOverlay.visible) return null;
+  if (!loading) return null;
 
   return (
     <Backdrop
@@ -15,16 +15,14 @@ const LoadingOverlay: React.FC = () => {
         zIndex: (theme) => theme.zIndex.drawer + 2,
         flexDirection: 'column',
       }}
-      open={loadingOverlay.visible}
+      open={loading}
     >
       <CircularProgress color="inherit" size={60} />
-      {loadingOverlay.message && (
-        <Box sx={{ mt: 2 }}>
-          <Typography variant="h6" color="inherit">
-            {loadingOverlay.message}
-          </Typography>
-        </Box>
-      )}
+      <Box sx={{ mt: 2 }}>
+        <Typography variant="h6" color="inherit">
+          Loading...
+        </Typography>
+      </Box>
     </Backdrop>
   );
 };

@@ -5,12 +5,22 @@ export interface Capability {
   description?: string;
   status: 'new' | 'review' | 'ready' | 'completed';
   created_at: string;
+  version_major?: number;
+  version_minor?: number;
+  version_patch?: number;
+  version_build?: number;
+  version_string?: string;
 }
 
 export interface Domain {
   id: number;
   capability_id: number;
   domain_name: string;
+  content_hash?: string;
+  version?: string;
+  import_batch?: string;
+  import_date?: string;
+  is_active?: boolean;
 }
 
 export interface Attribute {
@@ -21,6 +31,11 @@ export interface Attribute {
   definition?: string;
   tm_forum_mapping?: string;
   importance?: string;
+  content_hash?: string;
+  version?: string;
+  import_batch?: string;
+  import_date?: string;
+  is_active?: boolean;
 }
 
 export interface VendorScore {
@@ -128,6 +143,7 @@ export interface CapabilitySummary {
   domains_count: number;
   attributes_count: number;
   last_updated: string;
+  version_string?: string;
 }
 
 export interface WorkflowStats {

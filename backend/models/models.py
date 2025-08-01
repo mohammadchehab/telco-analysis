@@ -12,6 +12,12 @@ class Capability(Base):
     status = Column(String, default="new")
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     
+    # Version fields for hierarchical versioning
+    version_major = Column(Integer, default=1)  # Capability structure changes
+    version_minor = Column(Integer, default=0)  # Domain changes
+    version_patch = Column(Integer, default=0)  # Attribute changes
+    version_build = Column(Integer, default=0)  # Minor updates
+    
     # Relationships
     domains = relationship("Domain", back_populates="capability", cascade="all, delete-orphan")
     attributes = relationship("Attribute", back_populates="capability", cascade="all, delete-orphan")
@@ -24,6 +30,15 @@ class Domain(Base):
     id = Column(Integer, primary_key=True, index=True)
     capability_id = Column(Integer, ForeignKey("capabilities.id"), nullable=False)
     domain_name = Column(String, nullable=False)
+    description = Column(Text)  # Domain description
+    importance = Column(String, default="medium")  # Domain importance level
+    
+    # Version and import tracking fields
+    content_hash = Column(String, nullable=False)  # Hash of domain content for deduplication
+    version = Column(String, default="1.0")  # Version when this domain was created/updated
+    import_batch = Column(String)  # Track which import created this
+    import_date = Column(DateTime(timezone=True), server_default=func.now())
+    is_active = Column(Boolean, default=True)  # Soft delete for versioning
     
     # Relationships
     capability = relationship("Capability", back_populates="domains")
@@ -41,6 +56,13 @@ class Attribute(Base):
     definition = Column(Text)
     tm_forum_mapping = Column(String)
     importance = Column(String, default="50")
+    
+    # Version and import tracking fields
+    content_hash = Column(String, nullable=False)  # Hash of attribute content for deduplication
+    version = Column(String, default="1.0")  # Version when this attribute was created/updated
+    import_batch = Column(String)  # Track which import created this
+    import_date = Column(DateTime(timezone=True), server_default=func.now())
+    is_active = Column(Boolean, default=True)  # Soft delete for versioning
     
     # Relationships
     capability = relationship("Capability", back_populates="attributes")
@@ -98,8 +120,9 @@ class User(Base):
     username = Column(String, unique=True, index=True, nullable=False)
     email = Column(String, unique=True, index=True, nullable=False)
     password_hash = Column(String, nullable=False)
-    role = Column(String, default="viewer")
+    role = Column(String, default="viewer")  # admin, editor, both, viewer
     is_active = Column(Boolean, default=True)
+    dark_mode_preference = Column(Boolean, default=True)  # True for dark mode, False for light mode
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     last_login = Column(DateTime(timezone=True))
 

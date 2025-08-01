@@ -26,6 +26,8 @@ import {
   Select,
   MenuItem,
   OutlinedInput,
+  Tabs,
+  Tab,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -36,10 +38,11 @@ import {
   Cancel as CancelIcon,
   Settings as SettingsIcon,
   List as ListIcon,
+  Upload as UploadIcon,
 } from '@mui/icons-material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
-import { domainAPI, attributeAPI } from '../utils/api';
+import { domainAPI, attributeAPI, capabilityAPI } from '../utils/api';
 import { addNotification } from '../store/slices/uiSlice';
 import type { Domain, Attribute } from '../types';
 
@@ -50,6 +53,8 @@ const DomainManagement: React.FC = () => {
 
   const [domains, setDomains] = useState<Domain[]>([]);
   const [attributes, setAttributes] = useState<Attribute[]>([]);
+  const [capabilityName, setCapabilityName] = useState<string>('');
+  const [capabilityVersion, setCapabilityVersion] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -64,13 +69,31 @@ const DomainManagement: React.FC = () => {
     tm_forum_mapping: '',
     importance: 'medium',
   });
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [importing, setImporting] = useState(false);
 
   useEffect(() => {
     if (capabilityId) {
+      loadCapabilityName();
       loadDomains();
       loadAttributes();
     }
   }, [capabilityId]);
+
+  const loadCapabilityName = async () => {
+    if (!capabilityId) return;
+    
+    try {
+      const response = await capabilityAPI.getById(parseInt(capabilityId));
+      if (response.success && response.data) {
+        setCapabilityName(response.data.name);
+        setCapabilityVersion(response.data.version_string || '1.0.0.0');
+      }
+    } catch (error: any) {
+      console.error('Failed to load capability name:', error);
+    }
+  };
 
   const loadDomains = async () => {
     if (!capabilityId) return;
@@ -96,10 +119,15 @@ const DomainManagement: React.FC = () => {
     try {
       const response = await attributeAPI.getByCapabilityId(parseInt(capabilityId));
       if (response.success && response.data) {
-        setAttributes(response.data || []);
+        // Handle both array and object with attributes property
+        const attributesArray = Array.isArray(response.data) ? response.data : (response.data as any).attributes || [];
+        setAttributes(attributesArray);
+      } else {
+        setAttributes([]);
       }
     } catch (error: any) {
       console.error('Failed to load attributes:', error);
+      setAttributes([]);
     }
   };
 
@@ -241,6 +269,68 @@ const DomainManagement: React.FC = () => {
     setShowAttributeModal(true);
   };
 
+  const handleImportFile = async () => {
+    if (!importFile || !capabilityId) return;
+
+    try {
+      setImporting(true);
+      const formData = new FormData();
+      formData.append('file', importFile);
+
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:8000/api/imports/capabilities/${capabilityId}/domains`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        let message = `Import completed successfully! ${data.data.new_domains} new domains, ${data.data.new_attributes} new attributes. Version: ${data.data.capability_version}`;
+        
+        // Add research-specific information if available
+        if (data.data.file_type === 'research_file') {
+          if (data.data.capability_name) {
+            message += `\nCapability: ${data.data.capability_name}`;
+          }
+          if (data.data.market_vendors && data.data.market_vendors.length > 0) {
+            message += `\nMarket Vendors: ${data.data.market_vendors.join(', ')}`;
+          }
+          if (data.data.priority_domains && data.data.priority_domains.length > 0) {
+            message += `\nPriority Domains: ${data.data.priority_domains.join(', ')}`;
+          }
+          if (data.data.framework_completeness) {
+            message += `\nFramework Status: ${data.data.framework_completeness}`;
+          }
+        }
+        
+        dispatch(addNotification({
+          type: 'success',
+          message: message,
+        }));
+        setShowImportModal(false);
+        setImportFile(null);
+        loadDomains();
+        loadAttributes();
+      } else {
+        dispatch(addNotification({
+          type: 'error',
+          message: data.error || 'Import failed',
+        }));
+      }
+    } catch (error: any) {
+      dispatch(addNotification({
+        type: 'error',
+        message: `Import failed: ${error.message || error}`,
+      }));
+    } finally {
+      setImporting(false);
+    }
+  };
+
   const getDomainAttributes = (domainName: string) => {
     return attributes.filter(attr => attr.domain_name === domainName);
   };
@@ -271,7 +361,12 @@ const DomainManagement: React.FC = () => {
       </Box>
 
       <Typography variant="h6" color="textSecondary" mb={3}>
-        Managing domains for capability ID: <strong>{capabilityId}</strong>
+        Managing domains for capability: <strong>{capabilityName || `ID: ${capabilityId}`}</strong>
+        {capabilityName && (
+          <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
+            Version: {capabilityVersion}
+          </Typography>
+        )}
       </Typography>
 
       {/* Error Display */}
@@ -287,13 +382,22 @@ const DomainManagement: React.FC = () => {
           <Typography variant="h6">
             Domains ({domains.length})
           </Typography>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => setShowCreateModal(true)}
-          >
-            Add Domain
-          </Button>
+          <Box display="flex" gap={2}>
+            <Button
+              variant="outlined"
+              startIcon={<UploadIcon />}
+              onClick={() => setShowImportModal(true)}
+            >
+              Import JSON
+            </Button>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => setShowCreateModal(true)}
+            >
+              Add Domain
+            </Button>
+          </Box>
         </Box>
       </Paper>
 
@@ -328,7 +432,18 @@ const DomainManagement: React.FC = () => {
                       />
                     </Box>
                   }
-                  secondary={`Domain ID: ${domain.id}`}
+                  secondary={
+                    <Box>
+                      <Typography variant="body2" color="textSecondary">
+                        Domain ID: {domain.id}
+                      </Typography>
+                      {domain.version && (
+                        <Typography variant="body2" color="textSecondary">
+                          Version: {domain.version}
+                        </Typography>
+                      )}
+                    </Box>
+                  }
                 />
                 <ListItemSecondaryAction>
                   <Tooltip title="Edit Domain">
@@ -546,6 +661,133 @@ const DomainManagement: React.FC = () => {
               startIcon={<SaveIcon />}
             >
               Add Attribute
+            </Button>
+          </DialogActions>
+        </Dialog>
+      )}
+
+      {/* Import Modal */}
+      {showImportModal && (
+        <Dialog
+          open={true}
+          onClose={() => setShowImportModal(false)}
+          maxWidth="md"
+          fullWidth
+        >
+          <DialogTitle>
+            Import Domains and Attributes
+          </DialogTitle>
+          <DialogContent>
+            <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
+              Upload a JSON file with domains and attributes. The system supports two formats:
+            </Typography>
+            
+            <Tabs value={0} sx={{ mb: 2 }}>
+              <Tab label="Simple Domains Format" />
+              <Tab label="Research File Format" />
+            </Tabs>
+            
+            <Box component="pre" sx={{ 
+              backgroundColor: 'background.paper',
+              color: 'text.primary',
+              p: 2, 
+              borderRadius: 1, 
+              fontSize: '0.75rem',
+              overflow: 'auto',
+              mb: 2,
+              border: '1px solid',
+              borderColor: 'divider',
+              fontFamily: 'monospace',
+              maxHeight: '300px'
+            }}>
+{`// Simple Domains Format
+{
+  "domains": [
+    {
+      "domain_name": "Domain Name",
+      "description": "Domain description",
+      "importance": "high|medium|low",
+      "attributes": [
+        {
+          "attribute_name": "Attribute Name",
+          "definition": "Attribute definition",
+          "tm_forum_mapping": "TMF620",
+          "importance": "critical|high|medium|low"
+        }
+      ]
+    }
+  ]
+}
+
+// Research File Format (with gap analysis)
+{
+  "capability": "IT Service Management",
+  "analysis_date": "2025-08-01",
+  "capability_status": "existing",
+  "gap_analysis": {
+    "missing_domains": [
+      {
+        "domain_name": "Service Desk & Support",
+        "description": "Central point of contact...",
+        "importance": "high",
+        "reasoning": "A service desk is the primary..."
+      }
+    ],
+    "missing_attributes": [
+      {
+        "domain": "Service Desk & Support",
+        "attribute_name": "Ticket Logging and Tracking",
+        "description": "Ability to log, assign...",
+        "importance": "high",
+        "reasoning": "Salesforce notes that..."
+      }
+    ]
+  },
+  "market_research": {
+    "major_vendors": ["ServiceNow", "Comarch"],
+    "industry_standards": ["ITIL", "TM Forum"]
+  },
+  "recommendations": {
+    "priority_domains": ["Service Desk & Support"],
+    "priority_attributes": ["Ticket Logging and Tracking"],
+    "framework_completeness": "needs_major_updates"
+  }
+}`}
+            </Box>
+            <input
+              accept=".json"
+              style={{ display: 'none' }}
+              id="import-file-input"
+              type="file"
+              onChange={(e) => setImportFile(e.target.files?.[0] || null)}
+            />
+            <label htmlFor="import-file-input">
+              <Button
+                variant="outlined"
+                component="span"
+                fullWidth
+                startIcon={<UploadIcon />}
+              >
+                {importFile ? importFile.name : 'Choose JSON File'}
+              </Button>
+            </label>
+            {importFile && (
+              <Typography variant="body2" color="primary" sx={{ mt: 1 }}>
+                Selected: {importFile.name}
+              </Typography>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setShowImportModal(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="contained"
+              onClick={handleImportFile}
+              disabled={!importFile || importing}
+              startIcon={importing ? <CircularProgress size={16} /> : <UploadIcon />}
+            >
+              {importing ? 'Importing...' : 'Import'}
             </Button>
           </DialogActions>
         </Dialog>

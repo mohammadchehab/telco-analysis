@@ -21,6 +21,11 @@ import {
   Chip,
   IconButton,
   Tooltip,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemSecondaryAction,
+  IconButton as MuiIconButton,
 } from '@mui/material';
 import {
   CloudUpload as UploadIcon,
@@ -31,6 +36,8 @@ import {
   Visibility as ViewIcon,
   ArrowBack as BackIcon,
   ContentCopy as CopyIcon,
+  Delete as DeleteIcon,
+  FileUpload as FileUploadIcon,
 } from '@mui/icons-material';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -49,6 +56,16 @@ import { fetchCapabilities } from '../store/slices/capabilitiesSlice';
 import { addNotification } from '../store/slices/uiSlice';
 import type { WorkflowState, DomainAnalysisResponse, ComprehensiveResearchResponse } from '../types';
 import MarkdownViewer from '../components/UI/MarkdownViewer';
+
+interface UploadedFile {
+  file: File;
+  type: 'domain_analysis' | 'comprehensive_research';
+  data: any;
+  uploaded: boolean;
+  validated: boolean;
+  processed: boolean;
+  error?: string;
+}
 
 const Workflow: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -73,11 +90,48 @@ const Workflow: React.FC = () => {
   // Get capability name from ID
   const capabilityName = capabilityId ? capabilitySummaries.find(c => c.id === parseInt(capabilityId))?.name : undefined;
 
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [expectedType, setExpectedType] = useState<'domain_analysis' | 'comprehensive_research'>('domain_analysis');
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [jsonData, setJsonData] = useState<any>(null);
   const [markdownViewerOpen, setMarkdownViewerOpen] = useState(false);
   const [selectedCapability, setSelectedCapability] = useState<string>(capabilityName || '');
+  const [promptType, setPromptType] = useState<'domain_analysis' | 'comprehensive_research'>('domain_analysis');
+
+  // Auto-detect file type based on content
+  const detectFileType = (data: any): 'domain_analysis' | 'comprehensive_research' => {
+    if (data.attributes && data.market_analysis) {
+      return 'comprehensive_research';
+    } else if (data.gap_analysis || data.enhanced_framework) {
+      return 'domain_analysis';
+    } else {
+      // Default fallback - try to guess based on structure
+      if (data.capability && (data.gap_analysis || data.enhanced_framework)) {
+        return 'domain_analysis';
+      } else if (data.attributes && data.vendors) {
+        return 'comprehensive_research';
+      }
+      return 'domain_analysis'; // Default
+    }
+  };
+
+  // Check if workflow is complete
+  const isWorkflowComplete = () => {
+    const hasDomainAnalysis = uploadedFiles.some(f => f.type === 'domain_analysis' && f.processed);
+    const hasComprehensiveResearch = uploadedFiles.some(f => f.type === 'comprehensive_research' && f.processed);
+    return hasDomainAnalysis && hasComprehensiveResearch;
+  };
+
+  // Get missing file types
+  const getMissingFileTypes = () => {
+    const uploadedTypes = uploadedFiles.map(f => f.type);
+    const missing = [];
+    if (!uploadedTypes.includes('domain_analysis')) {
+      missing.push('Domain Analysis');
+    }
+    if (!uploadedTypes.includes('comprehensive_research')) {
+      missing.push('Comprehensive Research');
+    }
+    return missing;
+  };
 
   useEffect(() => {
     console.log('Workflow component mounted');
@@ -98,139 +152,185 @@ const Workflow: React.FC = () => {
     } else {
       console.log('No capability name or ID provided');
     }
-    
+  }, [dispatch, capabilityId, capabilityName, capabilitySummaries.length]);
+
+  useEffect(() => {
     return () => {
       console.log('Workflow component unmounting');
-      dispatch(clearWorkflow());
     };
-  }, [dispatch, capabilityName, capabilityId, capabilitySummaries.length]);
+  }, []);
 
   const handleCapabilityChange = (event: any) => {
     const newCapabilityName = event.target.value;
     setSelectedCapability(newCapabilityName);
     
-    if (newCapabilityName) {
-      // Find the capability ID for the selected name
-      const selectedCapability = capabilitySummaries.find(c => c.name === newCapabilityName);
-      if (selectedCapability) {
-        // Update URL to reflect the selected capability ID
-        navigate(`/workflow/${selectedCapability.id}`);
-        dispatch(initializeWorkflow(selectedCapability.id));
-      }
+    // Find the capability ID and navigate to it
+    const capability = capabilitySummaries.find(c => c.name === newCapabilityName);
+    if (capability) {
+      navigate(`/workflow/${capability.id}`);
     }
   };
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      setSelectedFile(file);
+    const files = event.target.files;
+    if (!files) return;
+
+    // Limit to 2 files
+    const fileArray = Array.from(files).slice(0, 2);
+    
+    fileArray.forEach(file => {
+      // Check if file is already uploaded
+      if (uploadedFiles.some(f => f.file.name === file.name)) {
+        dispatch(addNotification({
+          type: 'error',
+          message: `File ${file.name} is already uploaded`,
+        }));
+        return;
+      }
+
       // Read and parse JSON file
       const reader = new FileReader();
       reader.onload = (e) => {
         try {
           const data = JSON.parse(e.target?.result as string);
-          setJsonData(data);
+          const fileType = detectFileType(data);
+          
+          const newFile: UploadedFile = {
+            file,
+            type: fileType,
+            data,
+            uploaded: false,
+            validated: false,
+            processed: false,
+          };
+          
+          setUploadedFiles(prev => [...prev, newFile]);
+          
+          dispatch(addNotification({
+            type: 'success',
+            message: `File ${file.name} detected as ${fileType.replace('_', ' ')}`,
+          }));
         } catch (error) {
           dispatch(addNotification({
             type: 'error',
-            message: 'Invalid JSON file',
+            message: `Invalid JSON file: ${file.name}`,
           }));
         }
       };
       reader.readAsText(file);
-    }
+    });
   };
 
-  const handleUpload = async () => {
-    if (!selectedFile || !selectedCapability || !capabilityId) return;
+  const handleUploadFile = async (uploadedFile: UploadedFile) => {
+    if (!selectedCapability || !capabilityId) return;
 
     try {
-      // Find the capability ID for the selected capability name
       const selectedCapabilityObj = capabilitySummaries.find(c => c.name === selectedCapability);
       if (!selectedCapabilityObj) {
         throw new Error('Capability not found');
       }
 
+      // Upload file
       await dispatch(uploadResearchFile({
         capabilityId: selectedCapabilityObj.id,
-        file: selectedFile,
-        expectedType,
+        file: uploadedFile.file,
+        expectedType: uploadedFile.type,
       })).unwrap();
 
       // Validate the uploaded data
-      if (jsonData) {
-        await dispatch(validateResearchData({
-          capabilityId: selectedCapabilityObj.id,
-          jsonData,
-          expectedType,
-        })).unwrap();
-      }
+      await dispatch(validateResearchData({
+        capabilityId: selectedCapabilityObj.id,
+        jsonData: uploadedFile.data,
+        expectedType: uploadedFile.type,
+      })).unwrap();
+
+      // Update file status
+      setUploadedFiles(prev => prev.map(f => 
+        f.file.name === uploadedFile.file.name 
+          ? { ...f, uploaded: true, validated: true }
+          : f
+      ));
 
       dispatch(addNotification({
         type: 'success',
-        message: 'File uploaded and validated successfully',
+        message: `${uploadedFile.file.name} uploaded and validated successfully`,
       }));
     } catch (error: any) {
+      // Update file status with error
+      setUploadedFiles(prev => prev.map(f => 
+        f.file.name === uploadedFile.file.name 
+          ? { ...f, error: error.message || 'Upload failed' }
+          : f
+      ));
+
       dispatch(addNotification({
         type: 'error',
-        message: `Upload failed: ${error.message || error}`,
+        message: `Upload failed for ${uploadedFile.file.name}: ${error.message || error}`,
       }));
     }
   };
 
-  const handleProcessResults = async () => {
-    if (!selectedCapability || !jsonData || !capabilityId) return;
+  const handleProcessFile = async (uploadedFile: UploadedFile) => {
+    if (!selectedCapability || !capabilityId) return;
 
     try {
-      // Find the capability ID for the selected capability name
       const selectedCapabilityObj = capabilitySummaries.find(c => c.name === selectedCapability);
       if (!selectedCapabilityObj) {
         throw new Error('Capability not found');
       }
 
-      if (expectedType === 'domain_analysis') {
+      if (uploadedFile.type === 'domain_analysis') {
         await dispatch(processDomainResults({
           capabilityId: selectedCapabilityObj.id,
-          jsonData: jsonData as any,
+          jsonData: uploadedFile.data,
         })).unwrap();
       } else {
         await dispatch(processComprehensiveResults({
           capabilityId: selectedCapabilityObj.id,
-          jsonData: jsonData as any,
+          jsonData: uploadedFile.data,
         })).unwrap();
       }
 
+      // Update file status
+      setUploadedFiles(prev => prev.map(f => 
+        f.file.name === uploadedFile.file.name 
+          ? { ...f, processed: true }
+          : f
+      ));
+
       dispatch(addNotification({
         type: 'success',
-        message: 'Results processed successfully',
+        message: `${uploadedFile.file.name} processed successfully`,
       }));
     } catch (error: any) {
       dispatch(addNotification({
         type: 'error',
-        message: `Processing failed: ${error.message || error}`,
+        message: `Processing failed for ${uploadedFile.file.name}: ${error.message || error}`,
       }));
     }
+  };
+
+  const handleRemoveFile = (fileName: string) => {
+    setUploadedFiles(prev => prev.filter(f => f.file.name !== fileName));
   };
 
   const handleGeneratePrompt = async () => {
     if (!selectedCapability || !capabilityId) return;
 
     try {
-      // Find the capability ID for the selected capability name
       const selectedCapabilityObj = capabilitySummaries.find(c => c.name === selectedCapability);
       if (!selectedCapabilityObj) {
         throw new Error('Capability not found');
       }
 
-      const result = await dispatch(generatePrompt({
+      await dispatch(generatePrompt({
         capabilityId: selectedCapabilityObj.id,
-        promptType: expectedType,
+        promptType: promptType,
       })).unwrap();
 
-      // setGeneratedPrompt(result.prompt); // This line was removed from the new_code, so it's removed here.
       dispatch(addNotification({
         type: 'success',
-        message: 'Prompt generated successfully',
+        message: 'Research prompt generated successfully',
       }));
     } catch (error: any) {
       dispatch(addNotification({
@@ -245,13 +345,16 @@ const Workflow: React.FC = () => {
   };
 
   const handleDownloadPrompt = () => {
-    if (promptResponse) {
-      const blob = new Blob([promptResponse.prompt_content], { type: 'text/plain' });
+    if (promptResponse?.prompt_content) {
+      const blob = new Blob([promptResponse.prompt_content], { type: 'text/markdown' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${selectedCapability}_${expectedType}_prompt.txt`;
+      a.download = `research_prompt_${selectedCapability}.md`;
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
     }
   };
 
@@ -261,13 +364,12 @@ const Workflow: React.FC = () => {
         await navigator.clipboard.writeText(promptResponse.prompt_content);
         dispatch(addNotification({
           type: 'success',
-          message: 'Prompt copied to clipboard!',
+          message: 'Prompt copied to clipboard',
         }));
       } catch (error) {
-        console.error('Failed to copy to clipboard:', error);
         dispatch(addNotification({
           type: 'error',
-          message: 'Failed to copy to clipboard',
+          message: 'Failed to copy prompt',
         }));
       }
     }
@@ -281,14 +383,9 @@ const Workflow: React.FC = () => {
 
   const getStepIcon = (stepIndex: number) => {
     const status = getStepStatus(stepIndex);
-    switch (status) {
-      case 'completed':
-        return <CheckIcon color="success" />;
-      case 'active':
-        return <CircularProgress size={20} />;
-      default:
-        return null;
-    }
+    if (status === 'completed') return <CheckIcon />;
+    if (status === 'active') return <StartIcon />;
+    return <ErrorIcon />;
   };
 
   // If no capability is selected, show the capability selector
@@ -430,26 +527,30 @@ const Workflow: React.FC = () => {
                 {/* Step-specific content */}
                 {step.name === 'Generate Research Prompt' && (
                   <Box>
-                    <FormControl fullWidth sx={{ mb: 2 }}>
-                      <InputLabel>Research Type</InputLabel>
+                    <FormControl sx={{ mb: 2 }}>
+                      <InputLabel>Prompt Type</InputLabel>
                       <Select
-                        value={expectedType}
-                        label="Research Type"
-                        onChange={(e) => setExpectedType(e.target.value as any)}
+                        value={promptType}
+                        label="Prompt Type"
+                        onChange={(e) => {
+                          const newPromptType = e.target.value as 'domain_analysis' | 'comprehensive_research';
+                          setPromptType(newPromptType);
+                          // Auto-generate prompt when type is selected
+                          if (selectedCapability && capabilityId) {
+                            const selectedCapabilityObj = capabilitySummaries.find(c => c.name === selectedCapability);
+                            if (selectedCapabilityObj) {
+                              dispatch(generatePrompt({
+                                capabilityId: selectedCapabilityObj.id,
+                                promptType: newPromptType,
+                              }));
+                            }
+                          }
+                        }}
                       >
-                        <MenuItem value="domain_analysis">Domain Analysis</MenuItem>
-                        <MenuItem value="comprehensive_research">Comprehensive Research</MenuItem>
+                        <MenuItem value="domain_analysis">Domain Analysis Prompt</MenuItem>
+                        <MenuItem value="comprehensive_research">Comprehensive Research Prompt</MenuItem>
                       </Select>
                     </FormControl>
-                    
-                    <Button
-                      variant="contained"
-                      startIcon={<StartIcon />}
-                      onClick={handleGeneratePrompt}
-                      disabled={loading}
-                    >
-                      Generate Prompt
-                    </Button>
                     
                     {promptResponse && (
                       <Card sx={{ mt: 2 }}>
@@ -491,77 +592,124 @@ const Workflow: React.FC = () => {
 
                 {step.name === 'Upload Research Results' && (
                   <Box>
-                    <FormControl fullWidth sx={{ mb: 2 }}>
-                      <InputLabel>Expected Result Type</InputLabel>
-                      <Select
-                        value={expectedType}
-                        label="Expected Result Type"
-                        onChange={(e) => setExpectedType(e.target.value as any)}
+                    <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
+                      Upload your research results in JSON format. You can upload up to 2 files - one for domain analysis and one for comprehensive research.
+                    </Typography>
+                    
+                    <input
+                      accept=".json"
+                      style={{ display: 'none' }}
+                      id="file-upload"
+                      type="file"
+                      multiple // Allow multiple files
+                      onChange={handleFileSelect}
+                    />
+                    <label htmlFor="file-upload">
+                      <Button
+                        variant="outlined"
+                        component="span"
+                        startIcon={<UploadIcon />}
+                        disabled={loading}
                       >
-                        <MenuItem value="domain_analysis">Domain Analysis Results</MenuItem>
-                        <MenuItem value="comprehensive_research">Comprehensive Research Results</MenuItem>
-                      </Select>
-                    </FormControl>
+                        Select JSON Files (Max 2)
+                      </Button>
+                    </label>
                     
-                    <Box sx={{ mb: 2 }}>
-                      <input
-                        accept=".json"
-                        style={{ display: 'none' }}
-                        id="file-upload"
-                        type="file"
-                        onChange={handleFileSelect}
-                      />
-                      <label htmlFor="file-upload">
-                        <Button
-                          variant="outlined"
-                          component="span"
-                          startIcon={<UploadIcon />}
-                        >
-                          Select JSON File
-                        </Button>
-                      </label>
-                      {selectedFile && (
-                        <Typography variant="body2" sx={{ mt: 1 }}>
-                          Selected: {selectedFile.name} ({(selectedFile.size / 1024).toFixed(1)} KB)
+                    {uploadedFiles.length > 0 && (
+                      <Box sx={{ mt: 2 }}>
+                        <Typography variant="h6" gutterBottom>
+                          Selected Files:
                         </Typography>
-                      )}
-                    </Box>
+                        <List dense>
+                          {uploadedFiles.map((file, index) => (
+                            <ListItem
+                              key={index}
+                              secondaryAction={
+                                <Box sx={{ display: 'flex', gap: 1 }}>
+                                  {!file.uploaded && (
+                                    <Button
+                                      size="small"
+                                      variant="contained"
+                                      onClick={() => handleUploadFile(file)}
+                                      disabled={loading}
+                                    >
+                                      Upload
+                                    </Button>
+                                  )}
+                                  {file.uploaded && file.validated && !file.processed && (
+                                    <Button
+                                      size="small"
+                                      variant="contained"
+                                      onClick={() => handleProcessFile(file)}
+                                      disabled={loading}
+                                    >
+                                      Process
+                                    </Button>
+                                  )}
+                                  <IconButton 
+                                    edge="end" 
+                                    aria-label="delete" 
+                                    onClick={() => handleRemoveFile(file.file.name)}
+                                  >
+                                    <DeleteIcon />
+                                  </IconButton>
+                                </Box>
+                              }
+                            >
+                              <ListItemText
+                                primary={file.file.name}
+                                secondary={
+                                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
+                                    <Chip
+                                      label={file.type.replace('_', ' ')}
+                                      size="small"
+                                      color="primary"
+                                    />
+                                    {!file.uploaded && (
+                                      <Chip label="Ready to Upload" size="small" color="default" />
+                                    )}
+                                    {file.uploaded && !file.validated && (
+                                      <Chip label="Uploaded" size="small" color="warning" />
+                                    )}
+                                    {file.uploaded && file.validated && !file.processed && (
+                                      <Chip label="Validated" size="small" color="info" />
+                                    )}
+                                    {file.processed && (
+                                      <Chip label="Processed" size="small" color="success" />
+                                    )}
+                                    {file.error && (
+                                      <Chip label={`Error: ${file.error}`} size="small" color="error" />
+                                    )}
+                                  </Box>
+                                }
+                              />
+                            </ListItem>
+                          ))}
+                        </List>
+                      </Box>
+                    )}
                     
-                    <Button
-                      variant="contained"
-                      onClick={handleUpload}
-                      disabled={!selectedFile || loading}
-                    >
-                      Upload & Validate
-                    </Button>
-                    
-                    {uploadedFile && (
-                      <Alert severity="success" sx={{ mt: 2 }}>
-                        File uploaded successfully: {uploadedFile.filename}
+                    {/* Show missing file types */}
+                    {uploadedFiles.length > 0 && getMissingFileTypes().length > 0 && (
+                      <Alert severity="info" sx={{ mt: 2 }}>
+                        <Typography variant="body2">
+                          Still need to upload: {getMissingFileTypes().join(', ')}
+                        </Typography>
                       </Alert>
                     )}
                     
-                    {validationResult && (
+                    {/* Show completion status */}
+                    {uploadedFiles.length > 0 && (
                       <Alert 
-                        severity={validationResult.valid ? 'success' : 'error'} 
+                        severity={isWorkflowComplete() ? 'success' : 'warning'} 
                         sx={{ mt: 2 }}
                       >
-                        {validationResult.valid ? 'Validation passed' : 'Validation failed'}
-                        <Typography variant="body2" sx={{ mt: 1 }}>
-                          Debug: valid={String(validationResult.valid)}, errors={validationResult.errors?.length || 0}
+                        <Typography variant="body2">
+                          {isWorkflowComplete() 
+                            ? '✅ All required files have been uploaded and processed. Workflow is complete!'
+                            : `⚠️ Workflow incomplete. Missing: ${getMissingFileTypes().join(', ')}`
+                          }
                         </Typography>
-                        {validationResult.errors && validationResult.errors.length > 0 && (
-                          <Box sx={{ mt: 1 }}>
-                            <Typography variant="body2" fontWeight="bold">
-                              Errors:
-                            </Typography>
-                            <ul style={{ margin: 0, paddingLeft: 20 }}>
-                              {validationResult.errors.map((error, i) => (
-                                <li key={i}>{error}</li>
-                              ))}
-                            </ul>
-                          </Box>
-                        )}
                       </Alert>
                     )}
                   </Box>
@@ -573,28 +721,42 @@ const Workflow: React.FC = () => {
                       Process the uploaded research results to update the database and generate analysis.
                     </Typography>
                     
-                    <Button
-                      variant="contained"
-                      onClick={handleProcessResults}
-                      disabled={!jsonData || loading}
-                    >
-                      Process Results
-                    </Button>
-                    
-                    {processingResult && (
-                      <Alert severity="success" sx={{ mt: 2 }}>
-                        Results processed successfully!
-                        {expectedType === 'domain_analysis' && (
-                          <Typography variant="body2">
-                            Processed {processingResult.processed_attributes} attributes
-                          </Typography>
-                        )}
-                        {expectedType === 'comprehensive_research' && (
-                          <Typography variant="body2">
-                            Processed {processingResult.processed_vendors} vendors
-      </Typography>
-                        )}
+                    {uploadedFiles.length === 0 ? (
+                      <Alert severity="info">
+                        No files uploaded yet. Please upload research files first.
                       </Alert>
+                    ) : (
+                      <Box>
+                        {uploadedFiles.map((file, index) => (
+                          <Box key={index} sx={{ mb: 2, p: 2, border: '1px solid #ddd', borderRadius: 1 }}>
+                            <Typography variant="subtitle2" gutterBottom>
+                              {file.file.name} ({file.type.replace('_', ' ')})
+                            </Typography>
+                            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                              {file.processed ? (
+                                <Chip label="✅ Processed" color="success" size="small" />
+                              ) : file.uploaded && file.validated ? (
+                                <Button
+                                  size="small"
+                                  variant="contained"
+                                  onClick={() => handleProcessFile(file)}
+                                  disabled={loading}
+                                >
+                                  Process
+                                </Button>
+                              ) : (
+                                <Chip label="❌ Not ready" color="error" size="small" />
+                              )}
+                            </Box>
+                          </Box>
+                        ))}
+                        
+                        {uploadedFiles.every(f => f.processed) && (
+                          <Alert severity="success" sx={{ mt: 2 }}>
+                            All files have been processed successfully!
+                          </Alert>
+                        )}
+                      </Box>
                     )}
                   </Box>
                 )}
@@ -602,8 +764,27 @@ const Workflow: React.FC = () => {
                 <Box sx={{ mt: 2 }}>
                   <Button
                     variant="contained"
-                    onClick={() => dispatch(setCurrentStep(index + 1))}
-                    disabled={index === workflowSteps.length - 1}
+                    onClick={() => {
+                      if (index === workflowSteps.length - 1) {
+                        // Finish workflow - only if complete
+                        if (isWorkflowComplete()) {
+                          dispatch(clearWorkflow());
+                          navigate('/capabilities');
+                        } else {
+                          dispatch(addNotification({
+                            type: 'warning',
+                            message: `Cannot finish workflow. Missing: ${getMissingFileTypes().join(', ')}`,
+                          }));
+                        }
+                      } else {
+                        // Continue to next step
+                        dispatch(setCurrentStep(index + 1));
+                      }
+                    }}
+                    disabled={
+                      (index === workflowSteps.length - 1 && !isWorkflowComplete()) ||
+                      (step.name === 'Upload Research Results' && uploadedFiles.length === 0)
+                    }
                   >
                     {index === workflowSteps.length - 1 ? 'Finish' : 'Continue'}
                   </Button>
@@ -636,19 +817,43 @@ const Workflow: React.FC = () => {
               label={`Capability: ${selectedCapability}`}
               variant="outlined"
             />
-            {expectedType && (
+            {uploadedFiles.length > 0 && (
               <Chip
-                label={`Type: ${expectedType.replace('_', ' ')}`}
+                label={`Files: ${uploadedFiles.length}/2`}
+                variant="outlined"
+                color={uploadedFiles.length === 2 ? 'success' : 'default'}
+              />
+            )}
+            {uploadedFiles.length > 0 && (
+              <Chip
+                label={`Processed: ${uploadedFiles.filter(f => f.processed).length}/${uploadedFiles.length}`}
+                variant="outlined"
+                color={uploadedFiles.every(f => f.processed) ? 'success' : 'default'}
+              />
+            )}
+            {uploadedFiles.length > 0 && uploadedFiles.some(f => f.error) && (
+              <Chip
+                label={`Errors: ${uploadedFiles.filter(f => f.error).length}`}
+                color="error"
                 variant="outlined"
               />
             )}
-            {uploadedFile && (
+            {isWorkflowComplete() && (
               <Chip
-                label={`File: ${uploadedFile.filename}`}
+                label="✅ Complete"
                 color="success"
               />
             )}
           </Box>
+          
+          {/* Show missing requirements */}
+          {uploadedFiles.length > 0 && getMissingFileTypes().length > 0 && (
+            <Alert severity="info" sx={{ mt: 2 }}>
+              <Typography variant="body2">
+                <strong>Missing:</strong> {getMissingFileTypes().join(', ')}
+              </Typography>
+            </Alert>
+          )}
         </CardContent>
       </Card>
 

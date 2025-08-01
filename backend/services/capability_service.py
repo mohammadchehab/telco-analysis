@@ -1,16 +1,13 @@
+from datetime import datetime
+from typing import List, Optional, Dict, Any
 from sqlalchemy.orm import Session
 from sqlalchemy import text
-from typing import List, Optional, Dict, Any
-from datetime import datetime
+import hashlib
 import json
-import uuid
-from models.models import Capability, Domain, Attribute, VendorScore, CapabilityTracker
-from schemas.schemas import (
-    CapabilityCreate, CapabilityUpdate, CapabilityResponse, CapabilitySummary, 
-    WorkflowStats, WorkflowStep, PromptRequest, ProcessRequest, VendorScoreResponse,
-    CapabilityTrackerResponse, RadarChartData, VendorComparisonData, ScoreDistributionData
-)
+from models.models import Capability, Domain, Attribute, VendorScore, ResearchResult, User, ActivityLog, CapabilityTracker
+from schemas.schemas import CapabilityCreate, CapabilityUpdate, CapabilitySummary, WorkflowStats, CapabilityTrackerResponse, VendorScoreResponse, RadarChartData, VendorComparisonData, ScoreDistributionData, WorkflowStep
 from templates.prompts import get_prompt_template
+from utils.version_manager import VersionManager
 
 class CapabilityService:
     
@@ -68,6 +65,7 @@ class CapabilityService:
         query = text("""
             SELECT 
                 c.id, c.name, c.status, c.created_at,
+                c.version_major, c.version_minor, c.version_patch, c.version_build,
                 COUNT(DISTINCT d.domain_name) as domains_count,
                 COUNT(DISTINCT a.attribute_name) as attributes_count,
                 COALESCE(ct.last_updated, c.created_at) as last_updated
@@ -75,7 +73,7 @@ class CapabilityService:
             LEFT JOIN domains d ON c.id = d.capability_id
             LEFT JOIN attributes a ON c.id = a.capability_id
             LEFT JOIN capability_tracker ct ON c.name = ct.capability_name
-            GROUP BY c.id, c.name, c.status, c.created_at
+            GROUP BY c.id, c.name, c.status, c.created_at, c.version_major, c.version_minor, c.version_patch, c.version_build
             ORDER BY c.name
         """)
         
@@ -83,13 +81,17 @@ class CapabilityService:
         capabilities = []
         
         for row in result:
+            # Generate version string from version components
+            version_string = f"{row.version_major}.{row.version_minor}.{row.version_patch}.{row.version_build}"
+            
             capabilities.append(CapabilitySummary(
                 id=row.id,
                 name=row.name,
                 status=row.status,
                 domains_count=row.domains_count,
                 attributes_count=row.attributes_count,
-                last_updated=row.last_updated
+                last_updated=row.last_updated,
+                version_string=version_string
             ))
         
         return capabilities
@@ -111,7 +113,7 @@ class CapabilityService:
             name=capability.name,
             description=capability.description,
             status=capability.status,
-            created_at=datetime.now().isoformat()
+            created_at=datetime.now()
         )
         db.add(db_capability)
         db.commit()
@@ -132,20 +134,54 @@ class CapabilityService:
         if capability.status is not None:
             db_capability.status = capability.status
         
+        # Update version fields if provided
+        if capability.version_major is not None:
+            db_capability.version_major = capability.version_major
+        if capability.version_minor is not None:
+            db_capability.version_minor = capability.version_minor
+        if capability.version_patch is not None:
+            db_capability.version_patch = capability.version_patch
+        if capability.version_build is not None:
+            db_capability.version_build = capability.version_build
+        
         db.commit()
         db.refresh(db_capability)
         return db_capability
     
     @staticmethod
     def delete_capability(db: Session, capability_id: int) -> bool:
-        """Delete capability"""
+        """Hard delete capability and all related records"""
         db_capability = db.query(Capability).filter(Capability.id == capability_id).first()
         if not db_capability:
             return False
         
-        db.delete(db_capability)
-        db.commit()
-        return True
+        try:
+            # Delete related records first (in reverse order of dependencies)
+            
+            # Delete vendor scores
+            db.query(VendorScore).filter(VendorScore.capability_id == capability_id).delete()
+            
+            # Delete research results
+            db.query(ResearchResult).filter(ResearchResult.capability_id == capability_id).delete()
+            
+            # Delete attributes
+            db.query(Attribute).filter(Attribute.capability_id == capability_id).delete()
+            
+            # Delete domains
+            db.query(Domain).filter(Domain.capability_id == capability_id).delete()
+            
+            # Delete capability tracker
+            db.query(CapabilityTracker).filter(CapabilityTracker.capability_name == db_capability.name).delete()
+            
+            # Finally delete the capability
+            db.delete(db_capability)
+            db.commit()
+            return True
+            
+        except Exception as e:
+            db.rollback()
+            print(f"Error deleting capability {capability_id}: {e}")
+            return False
     
     @staticmethod
     def get_workflow_stats(db: Session) -> WorkflowStats:
@@ -173,7 +209,7 @@ class CapabilityService:
                 capability_name=capability_name,
                 review_completed=False,
                 comprehensive_ready=False,
-                last_updated=datetime.now().isoformat(),
+                last_updated=datetime.now(),
                 notes=None
             )
             db.add(tracker)
@@ -206,13 +242,17 @@ class CapabilityService:
         if not capability:
             return []
         
+        # Only return scores if capability is completed
+        if capability.status != "completed":
+            return []
+        
         scores = db.query(VendorScore).filter(VendorScore.capability_id == capability.id).all()
         
         return [
             VendorScoreResponse(
                 id=score.id,
                 capability_id=score.capability_id,
-                attribute_name=score.attribute_name,
+                attribute_name=score.attribute.attribute_name if score.attribute else "Unknown",
                 vendor=score.vendor,
                 weight=score.weight,
                 score=score.score,
@@ -260,12 +300,11 @@ class CapabilityService:
     @staticmethod
     def generate_prompt(capability_name: str, prompt_type: str, db: Session) -> str:
         """Generate research prompt based on type using templates"""
-        if prompt_type == "domain_analysis":
-            # Load capability data to determine if it's new or existing
-            capability_data = CapabilityService.load_capability_data(capability_name, db)
-            return get_prompt_template(prompt_type, capability_name, capability_data)
-        else:
-            return get_prompt_template(prompt_type, capability_name)
+        # Load capability data to determine if it's new or existing
+        capability_data = CapabilityService.load_capability_data(capability_name, db)
+        print(f"DEBUG: Generating {prompt_type} prompt for {capability_name}")
+        print(f"DEBUG: Capability data: {capability_data}")
+        return get_prompt_template(prompt_type, capability_name, capability_data)
     
     @staticmethod
     def process_domain_results(db: Session, capability_name: str, data: Dict[str, Any], user_id: int = None) -> Dict[str, Any]:
@@ -277,51 +316,109 @@ class CapabilityService:
         processed_domains = 0
         skipped_domains = 0
         
+        # Handle both enhanced_framework and gap_analysis formats
+        domains_data = []
+        
+        # Check for enhanced_framework format (old format)
         if "enhanced_framework" in data and "domains" in data["enhanced_framework"]:
-            for domain_data in data["enhanced_framework"]["domains"]:
-                domain_name = domain_data["domain_name"]
+            domains_data = data["enhanced_framework"]["domains"]
+        # Check for gap_analysis format (new format)
+        elif "gap_analysis" in data and "missing_domains" in data["gap_analysis"]:
+            # Convert gap_analysis format to the expected format
+            for domain_info in data["gap_analysis"]["missing_domains"]:
+                domain_data = {
+                    "domain_name": domain_info["domain_name"],
+                    "description": domain_info.get("description", ""),
+                    "importance": domain_info.get("importance", "medium"),
+                    "attributes": []
+                }
                 
-                # Check if domain already exists
-                existing_domain = db.query(Domain).filter(
-                    Domain.capability_id == capability.id,
-                    Domain.domain_name == domain_name
+                # Find attributes for this domain
+                if "missing_attributes" in data["gap_analysis"]:
+                    for attr_info in data["gap_analysis"]["missing_attributes"]:
+                        if attr_info.get("domain") == domain_info["domain_name"]:
+                            domain_data["attributes"].append({
+                                "attribute_name": attr_info["attribute_name"],
+                                "definition": attr_info.get("description", ""),
+                                "tm_forum_mapping": "",
+                                "importance": attr_info.get("importance", "50")
+                            })
+                
+                domains_data.append(domain_data)
+        
+        # Process domains
+        for domain_data in domains_data:
+            domain_name = domain_data["domain_name"]
+            
+            # Check if domain already exists
+            existing_domain = db.query(Domain).filter(
+                Domain.capability_id == capability.id,
+                Domain.domain_name == domain_name
+            ).first()
+            
+            if existing_domain:
+                skipped_domains += 1
+                continue
+            
+            # Create domain with new fields
+            domain = Domain(
+                capability_id=capability.id,
+                domain_name=domain_name,
+                description=domain_data.get("description", ""),
+                importance=domain_data.get("importance", "medium"),
+                content_hash=VersionManager.generate_domain_hash(domain_data),
+                version="1.0",
+                import_batch=None,
+                import_date=datetime.now(),
+                is_active=True
+            )
+            db.add(domain)
+            db.flush()  # Get domain ID
+            
+            # Create attributes
+            for attr_data in domain_data.get("attributes", []):
+                attribute_name = attr_data["attribute_name"]
+                
+                # Check if attribute already exists
+                existing_attribute = db.query(Attribute).filter(
+                    Attribute.capability_id == capability.id,
+                    Attribute.domain_name == domain_name,
+                    Attribute.attribute_name == attribute_name
                 ).first()
                 
-                if existing_domain:
-                    skipped_domains += 1
-                    continue
-                
-                # Create domain
-                domain = Domain(
-                    capability_id=capability.id,
-                    domain_name=domain_name
-                )
-                db.add(domain)
-                db.flush()  # Get domain ID
-                
-                # Create attributes
-                for attr_data in domain_data.get("attributes", []):
-                    attribute_name = attr_data["attribute_name"]
+                if not existing_attribute:
+                    # Generate content hash for the attribute
+                    attr_hash_data = {
+                        'domain_name': domain_name,
+                        'attribute_name': attribute_name,
+                        'definition': attr_data.get("definition", ""),
+                        'tm_forum_mapping': attr_data.get("tm_forum_mapping", ""),
+                        'importance': attr_data.get("importance", "medium")
+                    }
+                    content_hash = VersionManager.generate_attribute_hash(attr_hash_data)
                     
-                    # Check if attribute already exists
-                    existing_attribute = db.query(Attribute).filter(
-                        Attribute.capability_id == capability.id,
-                        Attribute.domain_name == domain_name,
-                        Attribute.attribute_name == attribute_name
-                    ).first()
-                    
-                    if not existing_attribute:
-                        attribute = Attribute(
-                            capability_id=capability.id,
-                            domain_name=domain_name,
-                            attribute_name=attribute_name,
-                            definition=attr_data.get("definition", ""),
-                            tm_forum_mapping=attr_data.get("tm_forum_mapping", ""),
-                            importance=attr_data.get("importance", "medium")
-                        )
-                        db.add(attribute)
-                
-                processed_domains += 1
+                    attribute = Attribute(
+                        capability_id=capability.id,
+                        domain_name=domain_name,
+                        attribute_name=attribute_name,
+                        definition=attr_data.get("definition", ""),
+                        tm_forum_mapping=attr_data.get("tm_forum_mapping", ""),
+                        importance=attr_data.get("importance", "medium"),
+                        content_hash=content_hash,
+                        version=VersionManager.get_version_string(capability),
+                        import_batch=None,
+                        import_date=datetime.now(),
+                        is_active=True
+                    )
+                    db.add(attribute)
+            
+            processed_domains += 1
+        
+        # Auto-increment minor version when domains are added
+        if processed_domains > 0:
+            capability.version_minor = (capability.version_minor or 0) + 1
+            capability.version_patch = 0
+            capability.version_build = 0
         
         # Update capability tracker
         tracker = db.query(CapabilityTracker).filter(CapabilityTracker.capability_name == capability_name).first()
@@ -342,7 +439,6 @@ class CapabilityService:
         
         # Log activity if user_id provided
         if user_id:
-            from models.models import ActivityLog
             activity = ActivityLog(
                 user_id=user_id,
                 username="system",  # Will be updated by the API layer
@@ -364,18 +460,57 @@ class CapabilityService:
         }
     
     @staticmethod
-    def process_comprehensive_results(db: Session, capability_name: str, data: Dict[str, Any]) -> Dict[str, Any]:
+    def process_comprehensive_results(db: Session, capability_name: str, data: Dict[str, Any], user_id: int = None) -> Dict[str, Any]:
         """Process comprehensive research results"""
         capability = db.query(Capability).filter(Capability.name == capability_name).first()
         if not capability:
             return {"error": "Capability not found"}
         
         processed_vendors = 0
+        created_attributes = 0
         
         if "attributes" in data:
             for attr_data in data["attributes"]:
                 attribute_name = attr_data.get("attribute")
                 weight = attr_data.get("weight", 50)
+                
+                # Find the attribute by name for this capability
+                attribute = db.query(Attribute).filter(
+                    Attribute.capability_id == capability.id,
+                    Attribute.attribute_name == attribute_name
+                ).first()
+                
+                # Create attribute if it doesn't exist
+                if not attribute:
+                    # Determine domain name from the attribute
+                    domain_name = attr_data.get("domain", "General") or "General"
+                    
+                    # Generate content hash for the attribute
+                    attr_hash_data = {
+                        'domain_name': domain_name,
+                        'attribute_name': attribute_name,
+                        'definition': attr_data.get("definition", ""),
+                        'tm_forum_mapping': attr_data.get("tm_capability", ""),
+                        'importance': str(weight)
+                    }
+                    content_hash = VersionManager.generate_attribute_hash(attr_hash_data)
+                    
+                    attribute = Attribute(
+                        capability_id=capability.id,
+                        domain_name=domain_name,
+                        attribute_name=attribute_name,
+                        definition=attr_data.get("definition", ""),
+                        tm_forum_mapping=attr_data.get("tm_capability", ""),
+                        importance=str(weight),
+                        content_hash=content_hash,
+                        version="1.0",
+                        import_batch=None,
+                        import_date=datetime.now(),
+                        is_active=True
+                    )
+                    db.add(attribute)
+                    db.flush()  # Get the attribute ID
+                    created_attributes += 1
                 
                 # Process vendor scores
                 for vendor in ["comarch", "servicenow", "salesforce"]:
@@ -385,7 +520,7 @@ class CapabilityService:
                         # Create vendor score
                         score = VendorScore(
                             capability_id=capability.id,
-                            attribute_name=attribute_name,
+                            attribute_id=attribute.id,
                             vendor=vendor,
                             weight=weight,
                             score=vendor_data.get("score", ""),
@@ -394,7 +529,7 @@ class CapabilityService:
                             evidence_url=json.dumps(vendor_data.get("evidence", [])),
                             score_decision=vendor_data.get("score_decision", ""),
                             research_type="capability_research",
-                            research_date=data.get("research_date", datetime.now()),
+                            research_date=datetime.fromisoformat(data.get("research_date", datetime.now().isoformat())),
                             created_at=datetime.now()
                         )
                         db.add(score)
@@ -414,13 +549,32 @@ class CapabilityService:
             )
             db.add(tracker)
         
+        # Auto-increment patch version when comprehensive research is completed
+        if processed_vendors > 0:
+            capability.version_patch = (capability.version_patch or 0) + 1
+            capability.version_build = 0
+        
         # Update capability status
         capability.status = "completed"
+        
+        # Log activity if user_id provided
+        if user_id:
+            activity = ActivityLog(
+                user_id=user_id,
+                username="system",  # Will be updated by the API layer
+                action="processed_comprehensive_results",
+                entity_type="capability",
+                entity_id=capability.id,
+                entity_name=capability_name,
+                details=f"Processed {processed_vendors} vendor scores, created {created_attributes} attributes"
+            )
+            db.add(activity)
         
         db.commit()
         
         return {
             "processed_vendors": processed_vendors,
+            "created_attributes": created_attributes,
             "capability_name": capability_name,
             "analysis_ready": True
         }
@@ -431,6 +585,10 @@ class CapabilityService:
         capability = db.query(Capability).filter(Capability.id == capability_id).first()
         if not capability:
             raise ValueError("Capability not found")
+        
+        # Only proceed if capability is completed
+        if capability.status != "completed":
+            raise ValueError("Capability research is not completed")
         
         # Get all attributes for this capability
         attributes = db.query(Attribute).filter(Attribute.capability_id == capability_id).all()
@@ -445,7 +603,7 @@ class CapabilityService:
             for attr in attributes:
                 score = db.query(VendorScore).filter(
                     VendorScore.capability_id == capability_id,
-                    VendorScore.attribute_name == attr.attribute_name,
+                    VendorScore.attribute_id == attr.id,
                     VendorScore.vendor == vendor
                 ).order_by(VendorScore.created_at.desc()).first()
                 
@@ -466,6 +624,10 @@ class CapabilityService:
         if not capability:
             raise ValueError("Capability not found")
         
+        # Only proceed if capability is completed
+        if capability.status != "completed":
+            raise ValueError("Capability research is not completed")
+        
         # Get all attributes with weights
         attributes = db.query(Attribute).filter(Attribute.capability_id == capability_id).all()
         attribute_names = [attr.attribute_name for attr in attributes]
@@ -480,7 +642,7 @@ class CapabilityService:
             for attr in attributes:
                 score = db.query(VendorScore).filter(
                     VendorScore.capability_id == capability_id,
-                    VendorScore.attribute_name == attr.attribute_name,
+                    VendorScore.attribute_id == attr.id,
                     VendorScore.vendor == vendor
                 ).order_by(VendorScore.created_at.desc()).first()
                 
@@ -501,6 +663,10 @@ class CapabilityService:
         capability = db.query(Capability).filter(Capability.id == capability_id).first()
         if not capability:
             raise ValueError("Capability not found")
+        
+        # Only proceed if capability is completed
+        if capability.status != "completed":
+            raise ValueError("Capability research is not completed")
         
         # Get all vendor scores
         scores_data = db.query(VendorScore).filter(VendorScore.capability_id == capability_id).all()

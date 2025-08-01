@@ -2,7 +2,12 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from core.database import engine
 from models import models
-from api import capabilities, domains, auth, attributes
+from api import capabilities, domains, auth, attributes, imports, data_quality, reports
+import os
+from dotenv import load_dotenv
+
+# Load environment variables from config.env
+load_dotenv("config.env")
 
 print("🚀 Starting Telco Capability Analysis API...")
 
@@ -39,6 +44,9 @@ app.include_router(capabilities.router)
 app.include_router(domains.router)
 app.include_router(auth.router)
 app.include_router(attributes.router)
+app.include_router(imports.router)
+app.include_router(data_quality.router)
+app.include_router(reports.router)
 print("✅ Routers included successfully")
 
 @app.get("/")
