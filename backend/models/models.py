@@ -27,7 +27,6 @@ class Domain(Base):
     
     # Relationships
     capability = relationship("Capability", back_populates="domains")
-    attributes = relationship("Attribute", back_populates="domain", cascade="all, delete-orphan")
     
     # Unique constraint
     __table_args__ = ()
@@ -45,7 +44,6 @@ class Attribute(Base):
     
     # Relationships
     capability = relationship("Capability", back_populates="attributes")
-    domain = relationship("Domain", back_populates="attributes")
     vendor_scores = relationship("VendorScore", back_populates="attribute", cascade="all, delete-orphan")
     
     # Unique constraint

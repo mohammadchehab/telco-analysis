@@ -15,80 +15,64 @@ fi
 
 echo "✅ Prerequisites check passed"
 
-# Kill any existing processes on our ports
-echo "🔍 Checking for existing processes..."
-lsof -ti:8000 | xargs kill -9 2>/dev/null || true
-lsof -ti:5173 | xargs kill -9 2>/dev/null || true
-lsof -ti:3000 | xargs kill -9 2>/dev/null || true
-
-# Kill any existing Python/Node processes
-pkill -f "python.*app.py" 2>/dev/null || true
-pkill -f "python.*main.py" 2>/dev/null || true
-pkill -f "npm.*dev" 2>/dev/null || true
-pkill -f "vite" 2>/dev/null || true
-
-echo "🧹 Cleaned up existing processes"
-
-# Function to cleanup background processes
+# Cleanup function
 cleanup() {
-    echo ""
     echo "🛑 Shutting down services..."
-    
-    # Kill backend process
-    if [ ! -z "$BACKEND_PID" ]; then
-        echo "🛑 Stopping backend (PID: $BACKEND_PID)..."
-        kill $BACKEND_PID 2>/dev/null
-        wait $BACKEND_PID 2>/dev/null
-    fi
-    
-    # Kill frontend process
     if [ ! -z "$FRONTEND_PID" ]; then
         echo "🛑 Stopping frontend (PID: $FRONTEND_PID)..."
-        kill $FRONTEND_PID 2>/dev/null
-        wait $FRONTEND_PID 2>/dev/null
+        kill $FRONTEND_PID 2>/dev/null || true
     fi
-    
-    # Final cleanup - kill any remaining processes
+    if [ ! -z "$BACKEND_PID" ]; then
+        echo "🛑 Stopping backend (PID: $BACKEND_PID)..."
+        kill $BACKEND_PID 2>/dev/null || true
+    fi
     echo "🧹 Final cleanup..."
-    lsof -ti:8000 | xargs kill -9 2>/dev/null || true
-    lsof -ti:5173 | xargs kill -9 2>/dev/null || true
+    pkill -f "npm.*dev" 2>/dev/null || true
     pkill -f "python.*app.py" 2>/dev/null || true
     pkill -f "python.*main.py" 2>/dev/null || true
-    pkill -f "npm.*dev" 2>/dev/null || true
-    pkill -f "vite" 2>/dev/null || true
-    
     echo "✅ All services stopped"
     exit 0
 }
 
 # Set up signal handlers
-trap cleanup SIGINT SIGTERM EXIT
+trap cleanup SIGINT SIGTERM
 
-# Install frontend dependencies if needed
-if [ ! -d "web/node_modules" ]; then
-    echo "📦 Installing frontend dependencies..."
-    cd web
-    npm install
-    cd ..
-fi
+echo "🔍 Checking for existing processes..."
+pkill -f "npm.*dev" 2>/dev/null || true
+pkill -f "python.*app.py" 2>/dev/null || true
+pkill -f "python.*main.py" 2>/dev/null || true
+echo "🧹 Cleaned up existing processes"
 
-# Check if virtual environment exists and activate it
+# Install frontend dependencies
+echo "📦 Installing frontend dependencies..."
+cd web
+npm install
+cd ..
+
+# Set up Python virtual environment
+echo "🐍 Activating virtual environment..."
 if [ ! -d "venv" ]; then
-    echo "🐍 Creating Python virtual environment..."
+    echo "📦 Creating virtual environment..."
     python3 -m venv venv
 fi
 
 # Activate virtual environment
-echo "🐍 Activating virtual environment..."
 source venv/bin/activate
 
-# Install backend dependencies if needed
-if ! python -c "import fastapi" 2>/dev/null; then
-    echo "📦 Installing backend dependencies..."
-    pip install -r backend/requirements.txt
+# Install backend dependencies
+echo "📦 Installing backend dependencies..."
+cd backend
+pip install --upgrade pip
+pip install -r requirements.txt
+cd ..
+
+# Load environment variables
+if [ -f "backend/config.env" ]; then
+    echo "📋 Loading environment configuration..."
+    export $(cat backend/config.env | grep -v '^#' | xargs)
 fi
 
-# Start backend in background
+# Start backend
 echo "🔧 Starting modular backend API server..."
 cd backend
 python app.py &
@@ -101,12 +85,10 @@ sleep 3
 # Check if backend started successfully
 if ! kill -0 $BACKEND_PID 2>/dev/null; then
     echo "❌ Backend failed to start"
-    exit 1
+    cleanup
 fi
 
-echo "✅ Backend started (PID: $BACKEND_PID)"
-
-# Start frontend in background
+# Start frontend
 echo "🌐 Starting frontend development server..."
 cd web
 npm run dev &
@@ -114,25 +96,23 @@ FRONTEND_PID=$!
 cd ..
 
 # Wait a moment for frontend to start
-sleep 5
+sleep 3
 
 # Check if frontend started successfully
 if ! kill -0 $FRONTEND_PID 2>/dev/null; then
     echo "❌ Frontend failed to start"
     cleanup
-    exit 1
 fi
 
-echo "✅ Frontend started (PID: $FRONTEND_PID)"
-
-echo ""
-echo "🎉 Telco Capability Analysis System is running!"
-echo "📊 Frontend: http://localhost:5173"
-echo "🔧 Backend API: http://localhost:8000"
+echo "✅ All services started successfully!"
+echo "🌐 Frontend: http://localhost:5173"
+echo "🔧 Backend: http://localhost:8000"
 echo "📚 API Docs: http://localhost:8000/docs"
 echo ""
-echo "Press Ctrl+C to stop all services"
-echo ""
+echo "🔐 Default Users:"
+echo "  👤 Admin: admin/admin123"
+echo "  👤 Analyst: analyst/analyst123"
+echo "  👤 Viewer: viewer/viewer123"
 
-# Wait for user to stop
+# Keep script running
 wait 

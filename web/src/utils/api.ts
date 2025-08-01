@@ -3,14 +3,21 @@ import apiConfig from '../config/api';
 
 const API_BASE_URL = apiConfig.BASE_URL;
 
+// Helper function to get auth headers
+const getAuthHeaders = () => {
+  const token = localStorage.getItem('authToken');
+  return {
+    'Content-Type': 'application/json',
+    ...(token && { 'Authorization': `Bearer ${token}` }),
+  };
+};
+
 export const apiClient = {
   async get<T>(endpoint: string): Promise<T> {
     const url = endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}${endpoint}`;
     const response = await fetch(url, {
       method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: getAuthHeaders(),
     });
 
     if (!response.ok) {
@@ -24,9 +31,7 @@ export const apiClient = {
     const url = endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}${endpoint}`;
     const response = await fetch(url, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: getAuthHeaders(),
       body: data ? JSON.stringify(data) : undefined,
     });
 
@@ -39,8 +44,15 @@ export const apiClient = {
 
   async postFormData<T>(endpoint: string, formData: FormData): Promise<T> {
     const url = endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}${endpoint}`;
+    const token = localStorage.getItem('authToken');
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    
     const response = await fetch(url, {
       method: 'POST',
+      headers,
       body: formData,
     });
 
@@ -55,9 +67,7 @@ export const apiClient = {
     const url = endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}${endpoint}`;
     const response = await fetch(url, {
       method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: getAuthHeaders(),
       body: JSON.stringify(data),
     });
 
@@ -72,9 +82,7 @@ export const apiClient = {
     const url = endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}${endpoint}`;
     const response = await fetch(url, {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: getAuthHeaders(),
       body: JSON.stringify(data),
     });
 
@@ -89,9 +97,7 @@ export const apiClient = {
     const url = endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}${endpoint}`;
     const response = await fetch(url, {
       method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: getAuthHeaders(),
     });
 
     if (!response.ok) {
@@ -103,6 +109,98 @@ export const apiClient = {
 };
 
 export default apiClient;
+
+// Authentication API Services
+export const authAPI = {
+  // Login user
+  async login(credentials: { username: string; password: string }): Promise<APIResponse<{
+    access_token: string;
+    token_type: string;
+    user: {
+      id: number;
+      username: string;
+      email: string;
+      role: string;
+      is_active: boolean;
+    };
+  }>> {
+    return apiClient.post(apiConfig.ENDPOINTS.AUTH_LOGIN, credentials);
+  },
+
+  // Logout user
+  async logout(): Promise<APIResponse<{ message: string }>> {
+    return apiClient.post(apiConfig.ENDPOINTS.AUTH_LOGOUT);
+  },
+
+  // Get current user info
+  async getCurrentUser(): Promise<APIResponse<{
+    user: {
+      id: number;
+      username: string;
+      email: string;
+      role: string;
+      is_active: boolean;
+    };
+  }>> {
+    return apiClient.get(apiConfig.ENDPOINTS.AUTH_ME);
+  },
+
+  // Refresh token
+  async refreshToken(): Promise<APIResponse<{
+    access_token: string;
+    token_type: string;
+  }>> {
+    return apiClient.post(apiConfig.ENDPOINTS.AUTH_REFRESH);
+  },
+
+  // Get all users (admin only)
+  async getUsers(): Promise<APIResponse<{
+    users: Array<{
+      id: number;
+      username: string;
+      email: string;
+      role: string;
+      is_active: boolean;
+      created_at: string;
+      last_login: string | null;
+    }>;
+  }>> {
+    return apiClient.get(apiConfig.ENDPOINTS.AUTH_USERS);
+  },
+
+  // Create new user (admin only)
+  async createUser(userData: {
+    username: string;
+    email: string;
+    password: string;
+    role: string;
+  }): Promise<APIResponse<{
+    message: string;
+    user_id: number;
+  }>> {
+    return apiClient.post(apiConfig.ENDPOINTS.AUTH_CREATE_USER, userData);
+  },
+
+  // Update user (admin only)
+  async updateUser(userId: number, userData: {
+    username: string;
+    email: string;
+    password?: string;
+    role: string;
+  }): Promise<APIResponse<{ message: string }>> {
+    return apiClient.put(apiConfig.ENDPOINTS.AUTH_UPDATE_USER(userId), userData);
+  },
+
+  // Delete user (admin only)
+  async deleteUser(userId: number): Promise<APIResponse<{ message: string }>> {
+    return apiClient.delete(apiConfig.ENDPOINTS.AUTH_DELETE_USER(userId));
+  },
+
+  // Update user status (admin only)
+  async updateUserStatus(userId: number, status: { is_active: boolean }): Promise<APIResponse<{ message: string }>> {
+    return apiClient.patch(apiConfig.ENDPOINTS.AUTH_UPDATE_USER_STATUS(userId), status);
+  },
+};
 
 // CRUD API Services
 export const capabilityAPI = {
@@ -118,7 +216,7 @@ export const capabilityAPI = {
 
   // Get single capability by name
   async getByName(name: string): Promise<APIResponse<Capability>> {
-    return apiClient.get(`/capabilities/${encodeURIComponent(name)}`);
+    return apiClient.get(`/api/capabilities/${encodeURIComponent(name)}`);
   },
 
   // Create new capability
@@ -138,22 +236,22 @@ export const capabilityAPI = {
 
   // Update capability status by ID
   async updateStatus(id: number, status: string): Promise<APIResponse<{ message: string }>> {
-    return apiClient.patch(`/capabilities/${id}/status`, { status });
+    return apiClient.patch(`/api/capabilities/${id}/status`, { status });
   },
 
   // Get capability status tracker by ID
   async getStatus(id: number): Promise<APIResponse<CapabilityTracker>> {
-    return apiClient.get(`/capabilities/${id}/status`);
+    return apiClient.get(`/api/capabilities/${id}/status`);
   },
 
   // Get vendor scores for capability by ID
   async getVendorScores(id: number): Promise<APIResponse<VendorScore[]>> {
-    return apiClient.get(`/capabilities/${id}/vendor-scores`);
+    return apiClient.get(`/api/capabilities/${id}/vendor-scores`);
   },
 
   // Start research workflow by ID
   async startResearch(id: number): Promise<APIResponse<{ message: string }>> {
-    return apiClient.post(`/capabilities/${id}/start-research`);
+    return apiClient.post(`/api/capabilities/${id}/start-research`);
   },
 
   // Initialize workflow by ID
@@ -171,7 +269,7 @@ export const capabilityAPI = {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('expected_type', expectedType);
-    return apiClient.postFormData(`/capabilities/${id}/workflow/upload`, formData);
+    return apiClient.postFormData(`/api/capabilities/${id}/workflow/upload`, formData);
   },
 
   // Validate research data by ID
@@ -181,12 +279,12 @@ export const capabilityAPI = {
 
   // Process domain results by ID
   async processDomainResults(id: number, data: any): Promise<APIResponse<{ message: string }>> {
-    return apiClient.post(`/capabilities/${id}/workflow/process-domain`, { data });
+    return apiClient.post(`/api/capabilities/${id}/workflow/process-domain`, { data });
   },
 
   // Process comprehensive results by ID
   async processComprehensiveResults(id: number, data: any): Promise<APIResponse<{ message: string }>> {
-    return apiClient.post(`/capabilities/${id}/workflow/process-comprehensive`, { data });
+    return apiClient.post(`/api/capabilities/${id}/workflow/process-comprehensive`, { data });
   },
 };
 
@@ -198,12 +296,12 @@ export const domainAPI = {
 
   // Get all domains for a capability by name (deprecated - use getByCapabilityId)
   async getByCapabilityName(capabilityName: string): Promise<APIResponse<Domain[]>> {
-    return apiClient.get(`/capabilities/name/${encodeURIComponent(capabilityName)}/domains`);
+    return apiClient.get(`/api/capabilities/name/${encodeURIComponent(capabilityName)}/domains`);
   },
 
   // Create new domain by capability ID
   async create(capabilityId: number, data: { domain_name: string }): Promise<APIResponse<Domain>> {
-    return apiClient.post(`/capabilities/${capabilityId}/domains`, data);
+    return apiClient.post(`/api/capabilities/${capabilityId}/domains`, data);
   },
 
   // Update domain
@@ -218,7 +316,7 @@ export const domainAPI = {
 
   // Bulk create domains by capability ID
   async bulkCreate(capabilityId: number, domains: { domain_name: string }[]): Promise<APIResponse<Domain[]>> {
-    return apiClient.post(`/capabilities/${capabilityId}/domains/bulk`, { domains });
+    return apiClient.post(`/api/capabilities/${capabilityId}/domains/bulk`, { domains });
   },
 };
 
@@ -230,12 +328,12 @@ export const attributeAPI = {
 
   // Get all attributes for a capability by name (deprecated - use getByCapabilityId)
   async getByCapabilityName(capabilityName: string): Promise<APIResponse<Attribute[]>> {
-    return apiClient.get(`/capabilities/name/${encodeURIComponent(capabilityName)}/attributes`);
+    return apiClient.get(`/api/capabilities/name/${encodeURIComponent(capabilityName)}/attributes`);
   },
 
   // Get attributes by domain (deprecated - use ID-based approach)
   async getByDomain(capabilityName: string, domainName: string): Promise<APIResponse<Attribute[]>> {
-    return apiClient.get(`/capabilities/name/${encodeURIComponent(capabilityName)}/domains/${encodeURIComponent(domainName)}/attributes`);
+    return apiClient.get(`/api/capabilities/name/${encodeURIComponent(capabilityName)}/domains/${encodeURIComponent(domainName)}/attributes`);
   },
 
   // Create new attribute by capability ID
@@ -246,7 +344,7 @@ export const attributeAPI = {
     tm_forum_mapping?: string;
     importance?: string;
   }): Promise<APIResponse<Attribute>> {
-    return apiClient.post(`/capabilities/${capabilityId}/attributes`, data);
+    return apiClient.post(`/api/capabilities/${capabilityId}/attributes`, data);
   },
 
   // Update attribute
@@ -273,24 +371,24 @@ export const attributeAPI = {
     tm_forum_mapping?: string;
     importance?: string;
   }[]): Promise<APIResponse<Attribute[]>> {
-    return apiClient.post(`/capabilities/${capabilityId}/attributes/bulk`, { attributes });
+    return apiClient.post(`/api/capabilities/${capabilityId}/attributes/bulk`, { attributes });
   },
 
   // Import attributes from JSON by capability ID
   async importFromJSON(capabilityId: number, jsonData: any): Promise<APIResponse<{ imported: number; errors: string[] }>> {
-    return apiClient.post(`/capabilities/${capabilityId}/attributes/import`, { json_data: jsonData });
+    return apiClient.post(`/api/capabilities/${capabilityId}/attributes/import`, { json_data: jsonData });
   },
 };
 
 export const vendorScoreAPI = {
   // Get vendor scores for capability by ID
   async getByCapability(capabilityId: number): Promise<APIResponse<VendorScore[]>> {
-    return apiClient.get(`/capabilities/${capabilityId}/vendor-scores`);
+    return apiClient.get(`/api/capabilities/${capabilityId}/vendor-scores`);
   },
 
   // Get vendor scores by attribute
   async getByAttribute(capabilityId: number, attributeName: string): Promise<APIResponse<VendorScore[]>> {
-    return apiClient.get(`/capabilities/${capabilityId}/attributes/${encodeURIComponent(attributeName)}/vendor-scores`);
+    return apiClient.get(`/api/capabilities/${capabilityId}/attributes/${encodeURIComponent(attributeName)}/vendor-scores`);
   },
 
   // Create vendor score
@@ -306,7 +404,7 @@ export const vendorScoreAPI = {
     research_type?: string;
     research_date?: string;
   }): Promise<APIResponse<VendorScore>> {
-    return apiClient.post(`/capabilities/${capabilityId}/vendor-scores`, data);
+    return apiClient.post(`/api/capabilities/${capabilityId}/vendor-scores`, data);
   },
 
   // Update vendor score
@@ -318,12 +416,12 @@ export const vendorScoreAPI = {
     evidence_url?: string;
     score_decision?: string;
   }): Promise<APIResponse<VendorScore>> {
-    return apiClient.put(`/capabilities/${capabilityId}/vendor-scores/${scoreId}`, data);
+    return apiClient.put(`/api/capabilities/${capabilityId}/vendor-scores/${scoreId}`, data);
   },
 
   // Delete vendor score
   async delete(capabilityId: number, scoreId: number): Promise<APIResponse<{ message: string }>> {
-    return apiClient.delete(`/capabilities/${capabilityId}/vendor-scores/${scoreId}`);
+    return apiClient.delete(`/api/capabilities/${capabilityId}/vendor-scores/${scoreId}`);
   },
 
   // Bulk update vendor scores
@@ -336,7 +434,7 @@ export const vendorScoreAPI = {
     evidence_url?: string;
     score_decision?: string;
   }[]): Promise<APIResponse<{ updated: number; errors: string[] }>> {
-    return apiClient.put(`/capabilities/${capabilityId}/vendor-scores/bulk`, { scores });
+    return apiClient.put(`/api/capabilities/${capabilityId}/vendor-scores/bulk`, { scores });
   },
 };
 

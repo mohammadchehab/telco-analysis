@@ -1,15 +1,12 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import type { PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import type { 
   WorkflowStep, 
-  WorkflowState as WorkflowStateType,
-  DomainAnalysisResponse,
-  ComprehensiveResearchResponse,
-  FileUploadResult,
+  PromptResponse, 
+  FileUploadResult, 
   ValidationResult,
-  PromptResponse,
   APIResponse
 } from '../../types';
+import { capabilityAPI } from '../../utils/api';
 
 interface WorkflowState {
   currentCapability: string | null;
@@ -63,109 +60,62 @@ const initialState: WorkflowState = {
 // Async thunks
 export const initializeWorkflow = createAsyncThunk(
   'workflow/initializeWorkflow',
-  async (capabilityName: string) => {
-    console.log('Initializing workflow for capability:', capabilityName);
-    const baseUrl = import.meta.env.VITE_API_BASE_URL;
-    if (!baseUrl) {
-      throw new Error('VITE_API_BASE_URL environment variable is required');
+  async (capabilityId: number) => {
+    console.log('Initializing workflow for capability ID:', capabilityId);
+    const response = await capabilityAPI.initializeWorkflow(capabilityId);
+    
+    console.log('Workflow initialization response:', response);
+    
+    if (!response.success) {
+      throw new Error(response.error || 'Failed to initialize workflow');
     }
     
-    const response = await fetch(`${baseUrl}/api/capabilities/${capabilityName}/workflow/initialize`, {
-      method: 'POST',
-    });
-    const data: APIResponse<{
-      workflow_steps: WorkflowStep[];
-      current_state: WorkflowState;
-    }> = await response.json();
-    
-    console.log('Workflow initialization response:', data);
-    
-    if (!data.success) {
-      throw new Error(data.error || 'Failed to initialize workflow');
-    }
-    
-    return { capabilityName, ...data.data! };
+    return { capabilityId, ...response.data! };
   }
 );
 
 export const generatePrompt = createAsyncThunk(
   'workflow/generatePrompt',
-  async ({ capabilityName, promptType }: { capabilityName: string; promptType: 'domain_analysis' | 'comprehensive_research' }) => {
-    const baseUrl = import.meta.env.VITE_API_BASE_URL;
-    if (!baseUrl) {
-      throw new Error('VITE_API_BASE_URL environment variable is required');
+  async ({ capabilityId, promptType }: { capabilityId: number; promptType: 'domain_analysis' | 'comprehensive_research' }) => {
+    const response = await capabilityAPI.generatePrompt(capabilityId, promptType);
+    
+    if (!response.success) {
+      throw new Error(response.error || 'Failed to generate prompt');
     }
     
-    const response = await fetch(`${baseUrl}/api/capabilities/${capabilityName}/workflow/generate-prompt`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt_type: promptType }),
-    });
-    const data: APIResponse<PromptResponse> = await response.json();
-    
-    if (!data.success) {
-      throw new Error(data.error || 'Failed to generate prompt');
-    }
-    
-    return data.data!;
+    return response.data!;
   }
 );
 
 export const uploadResearchFile = createAsyncThunk(
   'workflow/uploadResearchFile',
-  async ({ capabilityName, file, expectedType }: { capabilityName: string; file: File; expectedType: 'domain_analysis' | 'comprehensive_research' }) => {
-    const baseUrl = import.meta.env.VITE_API_BASE_URL;
-    if (!baseUrl) {
-      throw new Error('VITE_API_BASE_URL environment variable is required');
+  async ({ capabilityId, file, expectedType }: { capabilityId: number; file: File; expectedType: 'domain_analysis' | 'comprehensive_research' }) => {
+    const response = await capabilityAPI.uploadResearchFile(capabilityId, file, expectedType);
+    
+    if (!response.success) {
+      throw new Error(response.error || 'Failed to upload file');
     }
     
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('expected_type', expectedType);
-    
-    const response = await fetch(`${baseUrl}/api/capabilities/${capabilityName}/workflow/upload`, {
-      method: 'POST',
-      body: formData,
-    });
-    const data: APIResponse<FileUploadResult> = await response.json();
-    
-    if (!data.success) {
-      throw new Error(data.error || 'Failed to upload file');
-    }
-    
-    return data.data!;
+    return response.data!;
   }
 );
 
 export const validateResearchData = createAsyncThunk(
   'workflow/validateResearchData',
-  async ({ capabilityName, jsonData, expectedType }: { capabilityName: string; jsonData: any; expectedType: 'domain_analysis' | 'comprehensive_research' }) => {
-    const baseUrl = import.meta.env.VITE_API_BASE_URL;
-    if (!baseUrl) {
-      throw new Error('VITE_API_BASE_URL environment variable is required');
+  async ({ capabilityId, jsonData, expectedType }: { capabilityId: number; jsonData: any; expectedType: 'domain_analysis' | 'comprehensive_research' }) => {
+    const response = await capabilityAPI.validateResearchData(capabilityId, jsonData);
+    
+    if (!response.success) {
+      throw new Error(response.error || 'Failed to validate data');
     }
     
-    const response = await fetch(`${baseUrl}/api/capabilities/${capabilityName}/workflow/validate`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        data: jsonData, 
-        expected_type: expectedType 
-      }),
-    });
-    const data: APIResponse<ValidationResult> = await response.json();
-    
-    if (!data.success) {
-      throw new Error(data.error || 'Failed to validate data');
-    }
-    
-    return data.data!;
+    return response.data!;
   }
 );
 
 export const processDomainResults = createAsyncThunk(
   'workflow/processDomainResults',
-  async ({ capabilityName, jsonData }: { capabilityName: string; jsonData: DomainAnalysisResponse }) => {
+  async ({ capabilityName, jsonData }: { capabilityName: string; jsonData: any }) => {
     const baseUrl = import.meta.env.VITE_API_BASE_URL;
     if (!baseUrl) {
       throw new Error('VITE_API_BASE_URL environment variable is required');
@@ -192,7 +142,7 @@ export const processDomainResults = createAsyncThunk(
 
 export const processComprehensiveResults = createAsyncThunk(
   'workflow/processComprehensiveResults',
-  async ({ capabilityName, jsonData }: { capabilityName: string; jsonData: ComprehensiveResearchResponse }) => {
+  async ({ capabilityName, jsonData }: { capabilityName: string; jsonData: any }) => {
     const baseUrl = import.meta.env.VITE_API_BASE_URL;
     if (!baseUrl) {
       throw new Error('VITE_API_BASE_URL environment variable is required');

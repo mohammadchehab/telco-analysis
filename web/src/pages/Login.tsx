@@ -13,6 +13,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { addNotification } from '../store/slices/uiSlice';
+import { authAPI } from '../utils/api';
 
 interface LoginForm {
   username: string;
@@ -36,38 +37,33 @@ const Login: React.FC = () => {
     setError(null);
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(loginForm),
-      });
+      const response = await authAPI.login(loginForm);
 
-      const data = await response.json();
-
-      if (data.success) {
-        // Store user data in localStorage (in production, use proper session management)
-        localStorage.setItem('user', JSON.stringify(data.data.user));
+      if (response.success && response.data) {
+        // Store token and user data
+        localStorage.setItem('authToken', response.data.access_token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
         localStorage.setItem('isAuthenticated', 'true');
+        
+        // Dispatch custom auth event to notify App component
+        window.dispatchEvent(new CustomEvent('authChange'));
         
         dispatch(addNotification({
           type: 'success',
-          message: `Welcome back, ${data.data.user.username}!`,
+          message: `Welcome back, ${response.data.user.username}!`,
         }));
         
         navigate('/');
       } else {
-        setError(data.error || 'Login failed');
+        setError(response.error || 'Login failed');
       }
     } catch (error: any) {
+      console.error('Login error:', error);
       setError('Network error. Please try again.');
     } finally {
       setLoading(false);
     }
   };
-
-
 
   return (
     <Box sx={{ p: 3, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -125,13 +121,10 @@ const Login: React.FC = () => {
             admin/admin123 (Admin)
           </Typography>
           <Typography variant="caption" color="textSecondary" display="block">
-            editor/editor123 (Editor)
+            analyst/analyst123 (Analyst)
           </Typography>
           <Typography variant="caption" color="textSecondary" display="block">
             viewer/viewer123 (Viewer)
-          </Typography>
-          <Typography variant="caption" color="textSecondary" display="block">
-            analyst/analyst123 (Both)
           </Typography>
         </Box>
       </Paper>

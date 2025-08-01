@@ -282,7 +282,10 @@ class AuthManager:
     def get_provider(self, db: Session = None) -> AuthProvider:
         """Get the appropriate auth provider"""
         if self.provider is None:
-            if self.provider_type == "keycloak":
+            if self.provider_type == "oidc":
+                from .OIDCAuthProvider import OIDCAuthProvider
+                self.provider = OIDCAuthProvider()
+            elif self.provider_type == "keycloak":
                 self.provider = KeycloakAuthProvider()
             else:
                 if db is None:

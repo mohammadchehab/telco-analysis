@@ -7,18 +7,25 @@ from api import capabilities, domains, auth
 print("🚀 Starting Telco Capability Analysis API...")
 
 # Create database tables
-print("📊 Creating database tables...")
 models.Base.metadata.create_all(bind=engine)
-print("✅ Database tables created successfully")
+print("✅ Database tables created")
+
+# Initialize database with default data
+try:
+    from init_db import init_db
+    init_db()
+    print("✅ Database initialized with default data")
+except Exception as e:
+    print(f"⚠️ Database initialization warning: {e}")
 
 # Create FastAPI app
 app = FastAPI(
     title="Telco Capability Analysis API",
-    description="API for managing telco capability research and analysis",
+    description="A comprehensive API for telco capability analysis and research",
     version="1.0.0"
 )
 
-# CORS middleware
+# Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
@@ -33,11 +40,9 @@ app.include_router(domains.router)
 app.include_router(auth.router)
 print("✅ Routers included successfully")
 
-
 @app.get("/")
 def read_root():
     return {"message": "Telco Capability Analysis API"}
-
 
 @app.get("/health")
 async def health_check():

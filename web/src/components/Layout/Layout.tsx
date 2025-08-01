@@ -36,7 +36,8 @@ import {
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import type { RootState } from '../../store';
-import { toggleSidebar, toggleDarkMode } from '../../store/slices/uiSlice';
+import { toggleSidebar, toggleDarkMode, addNotification } from '../../store/slices/uiSlice';
+import { authAPI } from '../../utils/api';
 
 const drawerWidth = 240;
 
@@ -102,10 +103,30 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     dispatch(toggleDarkMode());
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('user');
-    localStorage.removeItem('isAuthenticated');
-    window.location.reload(); // Simple way to refresh the app state
+  const handleLogout = async () => {
+    try {
+      // Call logout API
+      await authAPI.logout();
+    } catch (error) {
+      console.error('Logout API error:', error);
+    } finally {
+      // Clear local storage
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('user');
+      localStorage.removeItem('isAuthenticated');
+      
+      // Dispatch auth change event
+      window.dispatchEvent(new CustomEvent('authChange'));
+      
+      // Show notification
+      dispatch(addNotification({
+        type: 'success',
+        message: 'Logged out successfully',
+      }));
+      
+      // Navigate to login
+      navigate('/login');
+    }
   };
 
   const currentUser = JSON.parse(localStorage.getItem('user') || '{}');

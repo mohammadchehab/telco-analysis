@@ -569,7 +569,7 @@ const Reports: React.FC = () => {
                         <TableHead>
                           <TableRow>
                             <TableCell>Attribute</TableCell>
-                            {reportData.vendorComparison.vendors.map((vendor) => (
+                            {reportData.vendorComparison?.vendors.map((vendor) => (
                               <TableCell key={vendor} align="center">
                                 {vendor.charAt(0).toUpperCase() + vendor.slice(1)}
                               </TableCell>
@@ -577,14 +577,14 @@ const Reports: React.FC = () => {
                           </TableRow>
                         </TableHead>
                         <TableBody>
-                          {reportData.vendorComparison.attributes.map((attribute, index) => (
+                          {reportData.vendorComparison?.attributes.map((attribute, index) => (
                             <TableRow key={attribute}>
                               <TableCell component="th" scope="row">
                                 {attribute}
                               </TableCell>
-                              {reportData.vendorComparison.vendors.map((vendor) => (
+                              {reportData.vendorComparison?.vendors.map((vendor) => (
                                 <TableCell key={vendor} align="center">
-                                  {reportData.vendorComparison.scores[vendor][index]}
+                                  {reportData.vendorComparison?.scores[vendor][index]}
                                 </TableCell>
                               ))}
                             </TableRow>
@@ -622,7 +622,7 @@ const Reports: React.FC = () => {
                         <TableHead>
                           <TableRow>
                             <TableCell>Score Range</TableCell>
-                            {reportData.scoreDistribution.vendors.map((vendor) => (
+                            {reportData.scoreDistribution?.vendors.map((vendor) => (
                               <TableCell key={vendor} align="center">
                                 {vendor.charAt(0).toUpperCase() + vendor.slice(1)}
                               </TableCell>
@@ -630,14 +630,14 @@ const Reports: React.FC = () => {
                           </TableRow>
                         </TableHead>
                         <TableBody>
-                          {reportData.scoreDistribution.score_ranges.map((range, index) => (
+                          {reportData.scoreDistribution?.score_ranges.map((range, index) => (
                             <TableRow key={range}>
                               <TableCell component="th" scope="row">
                                 {range}
                               </TableCell>
-                              {reportData.scoreDistribution.vendors.map((vendor) => (
+                              {reportData.scoreDistribution?.vendors.map((vendor) => (
                                 <TableCell key={vendor} align="center">
-                                  {reportData.scoreDistribution.vendor_counts[vendor][index]}
+                                  {reportData.scoreDistribution?.vendor_counts[vendor][index]}
                                 </TableCell>
                               ))}
                             </TableRow>

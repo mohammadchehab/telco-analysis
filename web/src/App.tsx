@@ -21,9 +21,35 @@ function App() {
 
   useEffect(() => {
     // Check if user is authenticated
-    const authStatus = localStorage.getItem('isAuthenticated');
-    setIsAuthenticated(authStatus === 'true');
+    const checkAuth = () => {
+      const authStatus = localStorage.getItem('isAuthenticated');
+      const authToken = localStorage.getItem('authToken');
+      setIsAuthenticated(authStatus === 'true' && !!authToken);
+    };
+
+    checkAuth();
     setLoading(false);
+
+    // Listen for storage changes (when login/logout happens)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'isAuthenticated' || e.key === 'authToken') {
+        checkAuth();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+
+    // Also listen for custom auth events
+    const handleAuthChange = () => {
+      checkAuth();
+    };
+
+    window.addEventListener('authChange', handleAuthChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('authChange', handleAuthChange);
+    };
   }, []);
 
   if (loading) {

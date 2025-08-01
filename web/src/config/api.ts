@@ -5,33 +5,44 @@ export const API_CONFIG = {
   
   // API Endpoints
   ENDPOINTS: {
+    // Authentication
+    AUTH_LOGIN: '/api/auth/login',
+    AUTH_LOGOUT: '/api/auth/logout',
+    AUTH_ME: '/api/auth/me',
+    AUTH_REFRESH: '/api/auth/refresh',
+    AUTH_USERS: '/api/auth/users',
+    AUTH_CREATE_USER: '/api/auth/users',
+    AUTH_UPDATE_USER: (userId: number) => `/api/auth/users/${userId}`,
+    AUTH_DELETE_USER: (userId: number) => `/api/auth/users/${userId}`,
+    AUTH_UPDATE_USER_STATUS: (userId: number) => `/api/auth/users/${userId}/status`,
+    
     // Capabilities
-    CAPABILITIES: '/capabilities',
-    CAPABILITY_BY_ID: (id: number) => `/capabilities/${id}`,
-    CAPABILITY_WORKFLOW: (id: number) => `/capabilities/${id}/workflow`,
-    CAPABILITY_WORKFLOW_INITIALIZE: (id: number) => `/capabilities/${id}/workflow/initialize`,
-    CAPABILITY_WORKFLOW_GENERATE_PROMPT: (id: number) => `/capabilities/${id}/workflow/generate-prompt`,
-    CAPABILITY_WORKFLOW_PROCESS: (id: number) => `/capabilities/${id}/workflow/process`,
-    CAPABILITY_WORKFLOW_VALIDATE: (id: number) => `/capabilities/${id}/workflow/validate`,
-    CAPABILITY_WORKFLOW_COMPLETE: (id: number) => `/capabilities/${id}/workflow/complete`,
+    CAPABILITIES: '/api/capabilities',
+    CAPABILITY_BY_ID: (id: number) => `/api/capabilities/${id}`,
+    CAPABILITY_WORKFLOW: (id: number) => `/api/capabilities/${id}/workflow`,
+    CAPABILITY_WORKFLOW_INITIALIZE: (id: number) => `/api/capabilities/${id}/workflow/initialize`,
+    CAPABILITY_WORKFLOW_GENERATE_PROMPT: (id: number) => `/api/capabilities/${id}/workflow/generate-prompt`,
+    CAPABILITY_WORKFLOW_PROCESS: (id: number) => `/api/capabilities/${id}/workflow/process`,
+    CAPABILITY_WORKFLOW_VALIDATE: (id: number) => `/api/capabilities/${id}/workflow/validate`,
+    CAPABILITY_WORKFLOW_COMPLETE: (id: number) => `/api/capabilities/${id}/workflow/complete`,
     
     // Attributes
-    ATTRIBUTES: '/attributes',
-    ATTRIBUTES_BY_CAPABILITY: (capabilityId: number) => `/capabilities/${capabilityId}/attributes`,
-    ATTRIBUTE_BY_ID: (id: number) => `/attributes/${id}`,
+    ATTRIBUTES: '/api/attributes',
+    ATTRIBUTES_BY_CAPABILITY: (capabilityId: number) => `/api/capabilities/${capabilityId}/attributes`,
+    ATTRIBUTE_BY_ID: (id: number) => `/api/attributes/${id}`,
     
     // Domains
-    DOMAINS: '/domains',
-    DOMAINS_BY_CAPABILITY: (capabilityId: number) => `/capabilities/${capabilityId}/domains`,
-    DOMAIN_BY_ID: (id: number) => `/domains/${id}`,
+    DOMAINS: '/api/domains',
+    DOMAINS_BY_CAPABILITY: (capabilityId: number) => `/api/capabilities/${capabilityId}/domains`,
+    DOMAIN_BY_ID: (id: number) => `/api/domains/${id}`,
     
     // Reports
-    REPORTS: '/reports',
-    REPORTS_BY_CAPABILITY: (capabilityName: string) => `/reports/${encodeURIComponent(capabilityName)}`,
+    REPORTS: '/api/reports',
+    REPORTS_BY_CAPABILITY: (capabilityName: string) => `/api/reports/${encodeURIComponent(capabilityName)}`,
     
     // Analysis
-    ANALYSIS: '/analysis',
-    ANALYSIS_BY_CAPABILITY: (capabilityName: string) => `/analysis/${encodeURIComponent(capabilityName)}`,
+    ANALYSIS: '/api/analysis',
+    ANALYSIS_BY_CAPABILITY: (capabilityName: string) => `/api/analysis/${encodeURIComponent(capabilityName)}`,
   },
   
   // Request Configuration
@@ -45,7 +56,7 @@ export const API_CONFIG = {
 
 // Environment-based configuration
 export const getApiConfig = () => {
-  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api';
+  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
   
   return {
     ...API_CONFIG,
