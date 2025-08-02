@@ -31,9 +31,9 @@ export const API_CONFIG = {
     CAPABILITY_REPORTS: (id: number) => `/api/capabilities/${id}/reports`,
     
     // Attributes
-    ATTRIBUTES: '/api/attributes',
+    ATTRIBUTES: '/api/capabilities/attributes',
     ATTRIBUTES_BY_CAPABILITY: (capabilityId: number) => `/api/capabilities/${capabilityId}/attributes`,
-    ATTRIBUTE_BY_ID: (id: number) => `/api/attributes/${id}`,
+    ATTRIBUTE_BY_ID: (id: number) => `/api/capabilities/attributes/${id}`,
     
     // Domains
     DOMAINS: '/api/capabilities/domains',

@@ -1,0 +1,80 @@
+{
+  "capability": "has-domains",
+  "research_date": "2025-08-02",
+  "current_framework": {
+    "domains_count": 0,
+    "attributes_count": 0,
+    "domains": []
+  },
+  "market_analysis": {
+    "primary_vendors": ["Comarch", "ServiceNow", "Salesforce"],
+    "missing_capabilities": [
+      {
+        "capability_name": "Cross-Domain Integration",
+        "description": "No vendor offers native support for managing domain interdependencies or dynamic cross-domain governance aligned with TMF cross-domain lifecycle concepts."
+      }
+    ]
+  },
+  "attributes": [
+    {
+      "attribute": "Cross-Domain Visibility",
+      "domain": "Domain Coordination",
+      "weight": 85,
+      "tm_capability": "TMF634 Cross-Domain Service Management",
+      "comarch": {
+        "score": "3 - Good",
+        "observations": [
+          {
+            "observation": "Comarch's OSS modules support modular integration across service layers but require custom integration logic for coordination.",
+            "type": "STRENGTH"
+          },
+          {
+            "observation": "Limited visualization of dependencies across domains in out-of-the-box dashboards.",
+            "type": "WEAKNESS"
+          }
+        ],
+        "evidence": [
+          "https://comarch.com/telecommunications/oss-portfolio/",
+          "https://comarch.com/resources/white-papers/oss-automation-white-paper/"
+        ],
+        "score_decision": "Scored 3 due to existing modularity and API support, but lacks native cross-domain orchestration models."
+      },
+      "servicenow": {
+        "score": "2 - Basic",
+        "observations": [
+          {
+            "observation": "ServiceNow's CSDM provides a logical structure for domain mapping, but lacks native support for cross-domain impact visualization.",
+            "type": "LIMITATION"
+          },
+          {
+            "observation": "Workflows can be built manually to simulate coordination between ITOM and ITSM modules.",
+            "type": "FEATURE"
+          }
+        ],
+        "evidence": [
+          "https://docs.servicenow.com/en-US/bundle/vancouver-servicenow-platform/page/product/configuration-management/concept/c_CSDM.html",
+          "https://www.servicenow.com/products/itsm.html"
+        ],
+        "score_decision": "Scored 2 for limited native capability but flexible manual extension through workflow builder."
+      },
+      "salesforce": {
+        "score": "1 - Poor",
+        "observations": [
+          {
+            "observation": "Salesforce does not support any cross-domain modeling; all service constructs are isolated within CRM and Service Cloud layers.",
+            "type": "GAP"
+          },
+          {
+            "observation": "Any coordination requires custom development using Apex and managed packages.",
+            "type": "DISADVANTAGE"
+          }
+        ],
+        "evidence": [
+          "https://developer.salesforce.com/docs/atlas.en-us.232.0.object_reference.meta/object_reference/sforce_api_objects.htm",
+          "https://trailhead.salesforce.com/en/content/learn/modules/platform_dev_basics"
+        ],
+        "score_decision": "Scored 1 as no domain governance or cross-service awareness exists in core offerings."
+      }
+    }
+  ]
+} 

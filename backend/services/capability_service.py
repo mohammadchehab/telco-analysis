@@ -606,8 +606,28 @@ class CapabilityService:
                 
                 # Create attribute if it doesn't exist
                 if not attribute:
-                    # Map attribute to domain using our mapping function
-                    domain_name = map_attribute_to_domain(attribute_name)
+                    # Use domain from JSON data if available, otherwise map using function
+                    domain_name = attr_data.get("domain")
+                    if not domain_name:
+                        domain_name = map_attribute_to_domain(attribute_name)
+                    
+                    # Ensure domain exists in database
+                    domain = db.query(Domain).filter(
+                        Domain.capability_id == capability.id,
+                        Domain.domain_name == domain_name
+                    ).first()
+                    
+                    if not domain:
+                        # Create domain if it doesn't exist
+                        from services.domain_service import DomainService
+                        from schemas.schemas import DomainCreate
+                        domain_create = DomainCreate(
+                            domain_name=domain_name,
+                            description=f'Domain for {domain_name}',
+                            importance='medium'
+                        )
+                        domain = DomainService.create_domain(db, capability.id, domain_create)
+                        db.flush()  # Get the domain ID
                     
                     # Generate content hash for the attribute
                     attr_hash_data = {
