@@ -108,7 +108,7 @@ const Capabilities: React.FC = () => {
   };
 
   const handleViewReports = (capabilityName: string) => {
-    navigate(`/analysis/${encodeURIComponent(capabilityName)}`);
+    navigate(`/reports`);
   };
 
   // CRUD Functions
@@ -362,53 +362,49 @@ const Capabilities: React.FC = () => {
 
   return (
     <Box>
-      <Typography variant="h4" gutterBottom>
-        Capability Management
-      </Typography>
+      <Paper sx={{ p: 3, mb: 3 }}>
+        <Box display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={2}>
+          <Box>
+            <Typography variant="h4" gutterBottom>
+              Capabilities
+            </Typography>
+            <Typography variant="body2" color="textSecondary">
+              Manage telco capabilities and research workflows
+            </Typography>
+          </Box>
+          <Box sx={{ flexGrow: 1 }} />
 
-      {/* Stats Cards */}
-      <Box sx={{ display: 'flex', gap: 2, mb: 4, flexWrap: 'wrap' }}>
-        <Card sx={{ flex: '1 1 200px', minWidth: 200 }}>
-          <CardContent>
-            <Typography color="textSecondary" gutterBottom>
-              Total Capabilities
-            </Typography>
-            <Typography variant="h4">{workflowStats.total}</Typography>
-          </CardContent>
-        </Card>
-        <Card sx={{ flex: '1 1 200px', minWidth: 200 }}>
-          <CardContent>
-            <Typography color="textSecondary" gutterBottom>
-              Ready for Research
-            </Typography>
-            <Typography variant="h4" color="success.main">{workflowStats.readyForResearch}</Typography>
-          </CardContent>
-        </Card>
-        <Card sx={{ flex: '1 1 200px', minWidth: 200 }}>
-          <CardContent>
-            <Typography color="textSecondary" gutterBottom>
-              Review Required
-            </Typography>
-            <Typography variant="h4" color="warning.main">{workflowStats.reviewRequired}</Typography>
-          </CardContent>
-        </Card>
-        <Card sx={{ flex: '1 1 200px', minWidth: 200 }}>
-          <CardContent>
-            <Typography color="textSecondary" gutterBottom>
-              Domain Analysis
-            </Typography>
-            <Typography variant="h4" color="error.main">{workflowStats.domainAnalysis}</Typography>
-          </CardContent>
-        </Card>
-        <Card sx={{ flex: '1 1 200px', minWidth: 200 }}>
-          <CardContent>
-            <Typography color="textSecondary" gutterBottom>
-              Completed
-            </Typography>
-            <Typography variant="h4" color="info.main">{workflowStats.completed}</Typography>
-          </CardContent>
-        </Card>
-      </Box>
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<AddIcon />}
+            onClick={handleCreateClick}
+            sx={{ mr: 2 }}
+          >
+            Add Capability
+          </Button>
+
+          {selectedCapabilities.length > 0 && (
+            <Box display="flex" gap={1}>
+              <Button
+                variant="contained"
+                color="primary"
+                startIcon={<StartIcon />}
+                onClick={() => handleBulkAction('start_research')}
+              >
+                Start Research
+              </Button>
+              <Button
+                variant="outlined"
+                startIcon={<ExportIcon />}
+                onClick={() => handleBulkAction('export_data')}
+              >
+                Export
+              </Button>
+            </Box>
+          )}
+        </Box>
+      </Paper>
 
       {/* Filters and Actions */}
       <Paper sx={{ p: 2, mb: 3 }}>
@@ -464,6 +460,8 @@ const Capabilities: React.FC = () => {
 
           <Box sx={{ flexGrow: 1 }} />
 
+          {/* The following buttons were moved to the header */}
+          {/*
           <Button
             variant="contained"
             color="primary"
@@ -493,6 +491,7 @@ const Capabilities: React.FC = () => {
               </Button>
             </Box>
           )}
+          */}
         </Box>
       </Paper>
 
@@ -611,7 +610,7 @@ const Capabilities: React.FC = () => {
                 </Tooltip>
                 
                 <Tooltip title={capability.status === 'completed' ? 'Research already completed' : 'Start Research Workflow'}>
-                  <span>
+                  <span style={{ display: 'inline-block' }}>
                     <IconButton
                       size="small"
                       color="primary"

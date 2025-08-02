@@ -12,8 +12,6 @@ import {
   InputLabel,
   Alert,
   CircularProgress,
-  Tabs,
-  Tab,
   Paper,
   Table,
   TableBody,
@@ -25,7 +23,17 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogActions
+  DialogActions,
+  OutlinedInput,
+  Checkbox,
+  ListItemText,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  IconButton,
+  Tooltip,
+  Divider,
+  Link
 } from '@mui/material';
 import {
   Download as DownloadIcon,
@@ -33,9 +41,13 @@ import {
   Assessment as AssessmentIcon,
   TrendingUp as TrendingUpIcon,
   PieChart as PieChartIcon,
-  BarChart as BarChartIcon
+  BarChart as BarChartIcon,
+  FilterList as FilterIcon,
+  ExpandMore as ExpandMoreIcon,
+  Clear as ClearIcon,
+  Visibility as VisibilityIcon
 } from '@mui/icons-material';
-import { Radar, Bar, Pie } from 'react-chartjs-2';
+import { Radar, Bar, Pie, Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
   RadialLinearScale,
@@ -49,6 +61,7 @@ import {
   BarElement,
   ArcElement
 } from 'chart.js';
+import { apiClient } from '../utils/api';
 
 // Register Chart.js components
 ChartJS.register(
@@ -73,67 +86,66 @@ interface Capability {
   last_updated: string;
 }
 
-interface RadarChartData {
+interface FilteredReportsData {
   capability_name: string;
   vendors: string[];
   attributes: string[];
-  scores: number[][];
-}
-
-interface VendorComparisonData {
-  capability_name: string;
-  vendors: string[];
-  attributes: string[];
-  scores: { [key: string]: number[] };
-  weights: number[];
-}
-
-interface ScoreDistributionData {
-  capability_name: string;
-  score_ranges: string[];
-  vendor_counts: { [key: string]: number[] };
-  vendors: string[];
-}
-
-
-
-interface CapabilitySummary {
-  capability_name: string;
-  capability_status: string;
-  total_attributes: number;
-  vendors_analyzed: number;
-  last_updated: string;
-  vendor_summaries: {
-    [key: string]: {
-      average_score: number;
-      max_score: number;
-      min_score: number;
-      total_attributes: number;
-      score_range: string;
-    };
+  domains: string[];
+  radar_data: {
+    labels: string[];
+    datasets: Array<{
+      label: string;
+      data: number[];
+      backgroundColor: string;
+      borderColor: string;
+      borderWidth: number;
+    }>;
   };
+  vendor_comparison: {
+    labels: string[];
+    datasets: Array<{
+      label: string;
+      data: number[];
+      backgroundColor: string;
+      borderColor: string;
+      borderWidth: number;
+    }>;
+  };
+  score_distribution: {
+    labels: string[];
+    datasets: Array<{
+      label: string;
+      data: number[];
+      backgroundColor: string[];
+      borderColor: string[];
+      borderWidth: number;
+    }>;
+  };
+  filtered_attributes: Array<{
+    attribute_name: string;
+    domain_name: string;
+    definition: string;
+    importance: string;
+    vendors: {
+      [key: string]: {
+        score: string;
+        score_numeric: number;
+        observation: string;
+        evidence_url: string;
+        score_decision: string;
+        weight: number;
+      };
+    };
+  }>;
+  total_attributes: number;
+  generated_at: string;
 }
 
-interface TabPanelProps {
-  children?: React.ReactNode;
-  index: number;
-  value: number;
-}
-
-function TabPanel(props: TabPanelProps) {
-  const { children, value, index, ...other } = props;
-
-  return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`report-tabpanel-${index}`}
-      aria-labelledby={`report-tab-${index}`}
-      {...other}
-    >
-      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
-    </div>
-  );
+interface FilterOptions {
+  domains: string[];
+  attributes: string[];
+  vendors: string[];
+  capability_name: string;
 }
 
 const Reports: React.FC = () => {
@@ -141,88 +153,103 @@ const Reports: React.FC = () => {
   const [selectedCapability, setSelectedCapability] = useState<number | ''>('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [tabValue, setTabValue] = useState(0);
-  const [reportData, setReportData] = useState<{
-    radar?: RadarChartData;
-    vendorComparison?: VendorComparisonData;
-    scoreDistribution?: ScoreDistributionData;
-    comprehensive?: any;
-    summary?: CapabilitySummary;
-  }>({});
+  const [reportData, setReportData] = useState<FilteredReportsData | null>(null);
+  const [filterOptions, setFilterOptions] = useState<FilterOptions | null>(null);
+  
+  // Filter states
+  const [selectedDomains, setSelectedDomains] = useState<string[]>([]);
+  const [selectedVendors, setSelectedVendors] = useState<string[]>(['comarch', 'servicenow', 'salesforce']);
+  const [selectedAttributes, setSelectedAttributes] = useState<string[]>([]);
+  const [showFilters, setShowFilters] = useState(false);
+  
+  // UI states
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
   const [exportFormat, setExportFormat] = useState('excel');
-  const [exportType, setExportType] = useState('comprehensive');
+  const [showAttributeDetails, setShowAttributeDetails] = useState(false);
+  const [selectedAttributeDetail, setSelectedAttributeDetail] = useState<any>(null);
 
   // Fetch capabilities on component mount
   useEffect(() => {
     fetchCapabilities();
   }, []);
 
-  // Fetch report data when capability changes
+  // Fetch filter options when capability changes
   useEffect(() => {
     if (selectedCapability) {
-      fetchReportData();
+      fetchFilterOptions();
     }
   }, [selectedCapability]);
+
+  // Fetch report data when filters change
+  useEffect(() => {
+    if (selectedCapability && filterOptions) {
+      fetchReportData();
+    }
+  }, [selectedCapability, selectedDomains, selectedVendors, selectedAttributes, filterOptions]);
 
   const fetchCapabilities = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:8000/api/capabilities');
-      const data = await response.json();
+      const response = await apiClient.get('/api/capabilities');
+      const data = response as any;
       
       if (data.success) {
         setCapabilities(data.data.capabilities);
       } else {
-        setError(data.error || 'Failed to fetch capabilities');
+        setError('Failed to fetch capabilities');
       }
     } catch (err) {
-      setError('Failed to connect to server');
+      setError('Failed to fetch capabilities');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchFilterOptions = async () => {
+    if (!selectedCapability) return;
+
+    try {
+      setLoading(true);
+      const response = await apiClient.get(`/api/reports/${selectedCapability}/available-filters`);
+      const data = response as any;
+      
+      if (data.success) {
+        setFilterOptions(data.data);
+        // Initialize filters with all options
+        setSelectedDomains(data.data.domains);
+        setSelectedVendors(data.data.vendors);
+        setSelectedAttributes(data.data.attributes);
+      } else {
+        setError('Failed to fetch filter options');
+      }
+    } catch (err) {
+      setError('Failed to fetch filter options');
     } finally {
       setLoading(false);
     }
   };
 
   const fetchReportData = async () => {
-    if (!selectedCapability) return;
+    if (!selectedCapability || !filterOptions) return;
 
     try {
       setLoading(true);
       setError(null);
 
-      // Fetch all report types in parallel
-      const [radarRes, vendorRes, distributionRes, summaryRes] = await Promise.all([
-        fetch(`http://localhost:8000/api/capabilities/reports/${selectedCapability}/radar-chart`),
-        fetch(`http://localhost:8000/api/capabilities/reports/${selectedCapability}/vendor-comparison`),
-        fetch(`http://localhost:8000/api/capabilities/reports/${selectedCapability}/score-distribution`),
-        fetch(`http://localhost:8000/api/capabilities/reports/${selectedCapability}/summary`)
-      ]);
+      const domainsParam = selectedDomains.join(',');
+      const vendorsParam = selectedVendors.join(',');
+      const attributesParam = selectedAttributes.join(',');
 
-      const [radarData, vendorData, distributionData, summaryData] = await Promise.all([
-        radarRes.json(),
-        vendorRes.json(),
-        distributionRes.json(),
-        summaryRes.json()
-      ]);
-
-      // Check if any of the reports failed due to incomplete research
-      const hasIncompleteResearch = [radarData, vendorData, distributionData].some(
-        data => !data.success && data.error && data.error.includes("not completed")
+      const response = await apiClient.get(
+        `/api/reports/${selectedCapability}/filtered-reports?domains=${domainsParam}&vendors=${vendorsParam}&attributes=${attributesParam}`
       );
+      const data = response as any;
 
-      if (hasIncompleteResearch) {
-        setError('This capability research is not yet completed. Reports are only available for completed research.');
-        setReportData({});
-        return;
+      if (data.success) {
+        setReportData(data.data);
+      } else {
+        setError(data.error || 'Failed to fetch report data');
       }
-
-      setReportData({
-        radar: radarData.success ? radarData.data : undefined,
-        vendorComparison: vendorData.success ? vendorData.data : undefined,
-        scoreDistribution: distributionData.success ? distributionData.data : undefined,
-        summary: summaryData.success ? summaryData.data : undefined
-      });
-
     } catch (err) {
       setError('Failed to fetch report data');
     } finally {
@@ -235,10 +262,10 @@ const Reports: React.FC = () => {
 
     try {
       setLoading(true);
-      const response = await fetch(
-        `http://localhost:8000/api/capabilities/reports/${selectedCapability}/export/${exportFormat}?report_type=${exportType}`
+      const response = await apiClient.get(
+        `/api/reports/${selectedCapability}/export/${exportFormat}?report_type=comprehensive`
       );
-      const data = await response.json();
+      const data = response as any;
 
       if (data.success) {
         // Convert base64 to blob and download
@@ -260,12 +287,8 @@ const Reports: React.FC = () => {
         a.click();
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
-      } else {
-        if (data.error && data.error.includes("not completed")) {
-          setError('Export failed: This capability research is not yet completed.');
         } else {
           setError(data.error || 'Export failed');
-        }
       }
     } catch (err) {
       setError('Export failed');
@@ -275,124 +298,129 @@ const Reports: React.FC = () => {
     }
   };
 
-  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
-    setTabValue(newValue);
+  const clearFilters = () => {
+    if (filterOptions) {
+      setSelectedDomains(filterOptions.domains);
+      setSelectedVendors(filterOptions.vendors);
+      setSelectedAttributes(filterOptions.attributes);
+    }
   };
 
-  // Chart configurations
-  const getRadarChartConfig = (data: RadarChartData) => ({
-    data: {
-      labels: data.attributes,
-      datasets: data.vendors.map((vendor, index) => ({
-        label: vendor.charAt(0).toUpperCase() + vendor.slice(1),
-        data: data.scores[index],
-        backgroundColor: `rgba(${54 + index * 50}, ${162 + index * 30}, ${235 - index * 20}, 0.2)`,
-        borderColor: `rgba(${54 + index * 50}, ${162 + index * 30}, ${235 - index * 20}, 1)`,
-        borderWidth: 2,
-        pointBackgroundColor: `rgba(${54 + index * 50}, ${162 + index * 30}, ${235 - index * 20}, 1)`,
-        pointBorderColor: '#fff',
-        pointHoverBackgroundColor: '#fff',
-        pointHoverBorderColor: `rgba(${54 + index * 50}, ${162 + index * 30}, ${235 - index * 20}, 1)`
-      }))
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: {
-          position: 'top' as const,
-        },
-        title: {
-          display: true,
-          text: `${data.capability_name} - Vendor Comparison`
-        }
-      },
-      scales: {
-        r: {
-          beginAtZero: true,
-          max: 5,
-          ticks: {
-            stepSize: 1
-          }
-        }
-      }
-    }
-  });
+  const handleAttributeClick = (attribute: any) => {
+    setSelectedAttributeDetail(attribute);
+    setShowAttributeDetails(true);
+  };
 
-  const getBarChartConfig = (data: VendorComparisonData) => ({
-    data: {
-      labels: data.attributes,
-      datasets: data.vendors.map((vendor, index) => ({
-        label: vendor.charAt(0).toUpperCase() + vendor.slice(1),
-        data: data.scores[vendor],
-        backgroundColor: `rgba(${54 + index * 50}, ${162 + index * 30}, ${235 - index * 20}, 0.8)`,
-        borderColor: `rgba(${54 + index * 50}, ${162 + index * 30}, ${235 - index * 20}, 1)`,
-        borderWidth: 1
-      }))
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: {
-          position: 'top' as const,
-        },
-        title: {
-          display: true,
-          text: `${data.capability_name} - Attribute Scores`
-        }
-      },
-      scales: {
-        y: {
-          beginAtZero: true,
-          max: 5
-        }
-      }
-    }
-  });
+  const getScoreColor = (score: number) => {
+    if (score >= 5) return 'success';
+    if (score >= 4) return 'info';
+    if (score >= 3) return 'warning';
+    return 'error';
+  };
 
-  const getPieChartConfig = (data: ScoreDistributionData) => ({
-    data: {
-      labels: data.score_ranges,
-      datasets: data.vendors.map((vendor, _index) => ({
-        label: vendor.charAt(0).toUpperCase() + vendor.slice(1),
-        data: data.vendor_counts[vendor],
-        backgroundColor: [
-          'rgba(255, 99, 132, 0.8)',
-          'rgba(54, 162, 235, 0.8)',
-          'rgba(255, 205, 86, 0.8)',
-          'rgba(75, 192, 192, 0.8)'
-        ],
-        borderColor: [
-          'rgba(255, 99, 132, 1)',
-          'rgba(54, 162, 235, 1)',
-          'rgba(255, 205, 86, 1)',
-          'rgba(75, 192, 192, 1)'
-        ],
-        borderWidth: 1
-      }))
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: {
-          position: 'top' as const,
-        },
-        title: {
-          display: true,
-          text: `${data.capability_name} - Score Distribution`
-        }
-      }
-    }
-  });
+  const renderFilters = () => (
+    <Card sx={{ mb: 3 }}>
+      <CardContent>
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+          <FilterIcon sx={{ mr: 1 }} />
+          <Typography variant="h6">Filters</Typography>
+          <Box sx={{ flexGrow: 1 }} />
+          <Button
+            size="small"
+            startIcon={<ClearIcon />}
+            onClick={clearFilters}
+            disabled={!filterOptions}
+          >
+            Clear All
+          </Button>
+        </Box>
+        
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' }, gap: 3 }}>
+          <FormControl fullWidth>
+            <InputLabel>Domains</InputLabel>
+            <Select
+              multiple
+              value={selectedDomains}
+              onChange={(e) => setSelectedDomains(typeof e.target.value === 'string' ? e.target.value.split(',') : e.target.value)}
+              input={<OutlinedInput label="Domains" />}
+              renderValue={(selected) => (
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                  {selected.map((value) => (
+                    <Chip key={value} label={value} size="small" />
+                  ))}
+                </Box>
+              )}
+            >
+              {filterOptions?.domains.map((domain) => (
+                <MenuItem key={domain} value={domain}>
+                  <Checkbox checked={selectedDomains.indexOf(domain) > -1} />
+                  <ListItemText primary={domain} />
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          
+          <FormControl fullWidth>
+            <InputLabel>Vendors</InputLabel>
+            <Select
+              multiple
+              value={selectedVendors}
+              onChange={(e) => setSelectedVendors(typeof e.target.value === 'string' ? e.target.value.split(',') : e.target.value)}
+              input={<OutlinedInput label="Vendors" />}
+              renderValue={(selected) => (
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                  {selected.map((value) => (
+                    <Chip key={value} label={value} size="small" />
+                  ))}
+                </Box>
+              )}
+            >
+              {filterOptions?.vendors.map((vendor) => (
+                <MenuItem key={vendor} value={vendor}>
+                  <Checkbox checked={selectedVendors.indexOf(vendor) > -1} />
+                  <ListItemText primary={vendor} />
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          
+          <FormControl fullWidth>
+            <InputLabel>Attributes</InputLabel>
+            <Select
+              multiple
+              value={selectedAttributes}
+              onChange={(e) => setSelectedAttributes(typeof e.target.value === 'string' ? e.target.value.split(',') : e.target.value)}
+              input={<OutlinedInput label="Attributes" />}
+              renderValue={(selected) => (
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                  {selected.map((value) => (
+                    <Chip key={value} label={value} size="small" />
+                  ))}
+                </Box>
+              )}
+            >
+              {filterOptions?.attributes.map((attribute) => (
+                <MenuItem key={attribute} value={attribute}>
+                  <Checkbox checked={selectedAttributes.indexOf(attribute) > -1} />
+                  <ListItemText primary={attribute} />
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Box>
+      </CardContent>
+    </Card>
+  );
 
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
       <Box sx={{ mb: 4 }}>
         <Typography variant="h4" component="h1" gutterBottom>
           <AssessmentIcon sx={{ mr: 2, verticalAlign: 'middle' }} />
-          Reports & Analytics
+          Dynamic Reports & Analytics
         </Typography>
         <Typography variant="body1" color="text.secondary">
-          Generate comprehensive reports and analytics for telco capabilities
+          Interactive reports with dynamic filtering by domain, vendor, and attributes
         </Typography>
       </Box>
 
@@ -429,9 +457,17 @@ const Reports: React.FC = () => {
             <Box sx={{ display: 'flex', gap: 2 }}>
               <Button
                 variant="outlined"
+                startIcon={<FilterIcon />}
+                onClick={() => setShowFilters(!showFilters)}
+                disabled={!selectedCapability}
+              >
+                {showFilters ? 'Hide' : 'Show'} Filters
+              </Button>
+              <Button
+                variant="outlined"
                 startIcon={<RefreshIcon />}
                 onClick={fetchReportData}
-                disabled={!selectedCapability || loading || capabilities.find(c => c.id === selectedCapability)?.status !== "completed"}
+                disabled={!selectedCapability || loading}
               >
                 Refresh
               </Button>
@@ -439,9 +475,9 @@ const Reports: React.FC = () => {
                 variant="contained"
                 startIcon={<DownloadIcon />}
                 onClick={() => setExportDialogOpen(true)}
-                disabled={!selectedCapability || loading || capabilities.find(c => c.id === selectedCapability)?.status !== "completed"}
+                disabled={!selectedCapability || loading}
               >
-                Export Report
+                Export
               </Button>
             </Box>
           </Box>
@@ -453,145 +489,255 @@ const Reports: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Report Content */}
-      {selectedCapability && (
-        <Box sx={{ width: '100%' }}>
-          <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-            <Tabs value={tabValue} onChange={handleTabChange} aria-label="report tabs">
-              <Tab label="Summary" icon={<AssessmentIcon />} iconPosition="start" />
-              <Tab label="Radar Chart" icon={<TrendingUpIcon />} iconPosition="start" />
-              <Tab label="Vendor Comparison" icon={<BarChartIcon />} iconPosition="start" />
-              <Tab label="Score Distribution" icon={<PieChartIcon />} iconPosition="start" />
-            </Tabs>
-          </Box>
+      {/* Filters */}
+      {showFilters && renderFilters()}
 
+      {/* Loading State */}
           {loading && (
             <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
               <CircularProgress />
             </Box>
           )}
 
-          {/* Summary Tab */}
-          <TabPanel value={tabValue} index={0}>
-            {reportData.summary && (
-              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' }, gap: 3 }}>
+      {/* Report Content */}
+      {reportData && !loading && (
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+          {/* Summary Stats */}
+                  <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(4, 1fr)' }, gap: 3 }}>
                 <Card>
-                  <CardContent>
-                    <Typography variant="h6" gutterBottom>
-                      Capability Overview
-                    </Typography>
-                    <Box sx={{ mt: 2 }}>
-                      <Typography variant="body2" color="text.secondary">
-                        <strong>Name:</strong> {reportData.summary.capability_name}
+            <CardContent sx={{ textAlign: 'center' }}>
+              <Typography variant="h4" color="primary">
+                {reportData.total_attributes}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        <strong>Status:</strong> 
-                        <Chip 
-                          label={reportData.summary.capability_status} 
-                          size="small" 
-                          color={reportData.summary.capability_status === 'completed' ? 'success' : 'warning'}
-                          sx={{ ml: 1 }}
-                        />
+                Total Attributes
+                      </Typography>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent sx={{ textAlign: 'center' }}>
+              <Typography variant="h4" color="primary">
+                {reportData.domains.length}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        <strong>Total Attributes:</strong> {reportData.summary.total_attributes}
+                Domains
                       </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        <strong>Vendors Analyzed:</strong> {reportData.summary.vendors_analyzed}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        <strong>Last Updated:</strong> {new Date(reportData.summary.last_updated).toLocaleString()}
-                      </Typography>
-                    </Box>
                   </CardContent>
                 </Card>
                 <Card>
-                  <CardContent>
-                    <Typography variant="h6" gutterBottom>
-                      Vendor Summaries
-                    </Typography>
-                    {Object.entries(reportData.summary.vendor_summaries).map(([vendor, summary]) => (
-                      <Box key={vendor} sx={{ mb: 2, p: 2, border: 1, borderColor: 'divider', borderRadius: 1 }}>
-                        <Typography variant="subtitle1" gutterBottom>
-                          {vendor.charAt(0).toUpperCase() + vendor.slice(1)}
-                        </Typography>
-                        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 1 }}>
-                          <Typography variant="body2" color="text.secondary">
-                            Avg Score: <strong>{summary.average_score}</strong>
+            <CardContent sx={{ textAlign: 'center' }}>
+              <Typography variant="h4" color="primary">
+                {reportData.vendors.length}
                           </Typography>
                           <Typography variant="body2" color="text.secondary">
-                            Range: <strong>{summary.score_range}</strong>
+                Vendors
+                          </Typography>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent sx={{ textAlign: 'center' }}>
+              <Typography variant="h4" color="primary">
+                {reportData.attributes.length}
                           </Typography>
                           <Typography variant="body2" color="text.secondary">
-                            Max: <strong>{summary.max_score}</strong>
+                Attributes
                           </Typography>
-                          <Typography variant="body2" color="text.secondary">
-                            Min: <strong>{summary.min_score}</strong>
-                          </Typography>
-                        </Box>
-                      </Box>
-                    ))}
                   </CardContent>
                 </Card>
               </Box>
-            )}
-          </TabPanel>
 
-          {/* Radar Chart Tab */}
-          <TabPanel value={tabValue} index={1}>
-            {reportData.radar && (
+          {/* Charts Grid */}
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: 'repeat(2, 1fr)' }, gap: 3 }}>
+            {/* Radar Chart */}
               <Card>
                 <CardContent>
-                  <Box sx={{ height: 500 }}>
-                    <Radar {...getRadarChartConfig(reportData.radar)} />
+                <Typography variant="h6" gutterBottom>
+                  <TrendingUpIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
+                  Domain Comparison (Radar Chart)
+                </Typography>
+                <Box sx={{ height: 400 }}>
+                  <Radar
+                    data={reportData.radar_data}
+                    options={{
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      plugins: {
+                        legend: { position: 'top' },
+                        title: {
+                          display: true,
+                          text: `${reportData.capability_name} - Domain Performance`
+                        }
+                      },
+                      scales: {
+                        r: {
+                          beginAtZero: true,
+                          max: 5,
+                          ticks: { stepSize: 1 }
+                        }
+                      }
+                    }}
+                  />
                   </Box>
                 </CardContent>
               </Card>
-            )}
-          </TabPanel>
 
-          {/* Vendor Comparison Tab */}
-          <TabPanel value={tabValue} index={2}>
-            {reportData.vendorComparison && (
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            {/* Vendor Comparison Chart */}
                 <Card>
                   <CardContent>
                     <Typography variant="h6" gutterBottom>
-                      Vendor Comparison Chart
+                  <BarChartIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
+                  Attribute Comparison (Bar Chart)
                     </Typography>
                     <Box sx={{ height: 400 }}>
-                      <Bar {...getBarChartConfig(reportData.vendorComparison)} />
+                  <Bar
+                    data={reportData.vendor_comparison}
+                    options={{
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      plugins: {
+                        legend: { position: 'top' },
+                        title: {
+                          display: true,
+                          text: `${reportData.capability_name} - Attribute Scores`
+                        }
+                      },
+                      scales: {
+                        y: {
+                          beginAtZero: true,
+                          max: 5,
+                          ticks: { stepSize: 1 }
+                        }
+                      }
+                    }}
+                  />
                     </Box>
                   </CardContent>
                 </Card>
+
+            {/* Score Distribution Chart */}
                 <Card>
                   <CardContent>
                     <Typography variant="h6" gutterBottom>
-                      Detailed Comparison Table
+                  <PieChartIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
+                  Score Distribution (Pie Chart)
+                    </Typography>
+                <Box sx={{ height: 400 }}>
+                  <Pie
+                    data={reportData.score_distribution}
+                    options={{
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      plugins: {
+                        legend: { position: 'top' },
+                        title: {
+                          display: true,
+                          text: `${reportData.capability_name} - Score Distribution`
+                        }
+                      }
+                    }}
+                  />
+                </Box>
+                  </CardContent>
+                </Card>
+
+            {/* Line Chart for Trends */}
+                <Card>
+                  <CardContent>
+                    <Typography variant="h6" gutterBottom>
+                  <TrendingUpIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
+                  Vendor Performance Trends
+                    </Typography>
+                    <Box sx={{ height: 400 }}>
+                  <Line
+                    data={{
+                      labels: reportData.vendor_comparison.labels,
+                      datasets: reportData.vendor_comparison.datasets.map(dataset => ({
+                        ...dataset,
+                        fill: false,
+                        tension: 0.1
+                      }))
+                    }}
+                    options={{
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      plugins: {
+                        legend: { position: 'top' },
+                        title: {
+                          display: true,
+                          text: `${reportData.capability_name} - Performance Trends`
+                        }
+                      },
+                      scales: {
+                        y: {
+                          beginAtZero: true,
+                          max: 5,
+                          ticks: { stepSize: 1 }
+                        }
+                      }
+                    }}
+                  />
+                    </Box>
+                  </CardContent>
+                </Card>
+          </Box>
+
+          {/* Detailed Attributes Table */}
+                <Card>
+                  <CardContent>
+                    <Typography variant="h6" gutterBottom>
+                Detailed Attribute Analysis
                     </Typography>
                     <TableContainer component={Paper}>
-                      <Table>
+                <Table>
                         <TableHead>
                           <TableRow>
-                            <TableCell>Attribute</TableCell>
-                            {reportData.vendorComparison?.vendors.map((vendor) => (
+                      <TableCell>Attribute</TableCell>
+                      <TableCell>Domain</TableCell>
+                      <TableCell>Importance</TableCell>
+                      {reportData.vendors.map((vendor) => (
                               <TableCell key={vendor} align="center">
                                 {vendor.charAt(0).toUpperCase() + vendor.slice(1)}
                               </TableCell>
                             ))}
+                      <TableCell>Actions</TableCell>
                           </TableRow>
                         </TableHead>
                         <TableBody>
-                          {reportData.vendorComparison?.attributes.map((attribute, index) => (
-                            <TableRow key={attribute}>
+                    {reportData.filtered_attributes.map((attr) => (
+                      <TableRow key={attr.attribute_name}>
                               <TableCell component="th" scope="row">
-                                {attribute}
+                          {attr.attribute_name}
+                        </TableCell>
+                        <TableCell>{attr.domain_name}</TableCell>
+                        <TableCell>
+                          <Chip 
+                            label={attr.importance} 
+                            size="small" 
+                            color={attr.importance === 'high' ? 'error' : attr.importance === 'medium' ? 'warning' : 'default'}
+                          />
                               </TableCell>
-                              {reportData.vendorComparison?.vendors.map((vendor) => (
+                        {reportData.vendors.map((vendor) => {
+                          const vendorData = attr.vendors[vendor];
+                          return (
                                 <TableCell key={vendor} align="center">
-                                  {reportData.vendorComparison?.scores[vendor][index]}
+                              <Chip
+                                label={vendorData.score}
+                                size="small"
+                                color={getScoreColor(vendorData.score_numeric)}
+                              />
+                            </TableCell>
+                          );
+                        })}
+                        <TableCell>
+                          <Tooltip title="View Details">
+                            <IconButton
+                              size="small"
+                              onClick={() => handleAttributeClick(attr)}
+                            >
+                              <VisibilityIcon />
+                            </IconButton>
+                          </Tooltip>
                                 </TableCell>
-                              ))}
                             </TableRow>
                           ))}
                         </TableBody>
@@ -599,62 +745,6 @@ const Reports: React.FC = () => {
                     </TableContainer>
                   </CardContent>
                 </Card>
-              </Box>
-            )}
-          </TabPanel>
-
-          {/* Score Distribution Tab */}
-          <TabPanel value={tabValue} index={3}>
-            {reportData.scoreDistribution && (
-              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' }, gap: 3 }}>
-                <Card>
-                  <CardContent>
-                    <Typography variant="h6" gutterBottom>
-                      Score Distribution Chart
-                    </Typography>
-                    <Box sx={{ height: 400 }}>
-                      <Pie {...getPieChartConfig(reportData.scoreDistribution)} />
-                    </Box>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent>
-                    <Typography variant="h6" gutterBottom>
-                      Distribution Table
-                    </Typography>
-                    <TableContainer component={Paper}>
-                      <Table size="small">
-                        <TableHead>
-                          <TableRow>
-                            <TableCell>Score Range</TableCell>
-                            {reportData.scoreDistribution?.vendors.map((vendor) => (
-                              <TableCell key={vendor} align="center">
-                                {vendor.charAt(0).toUpperCase() + vendor.slice(1)}
-                              </TableCell>
-                            ))}
-                          </TableRow>
-                        </TableHead>
-                        <TableBody>
-                          {reportData.scoreDistribution?.score_ranges.map((range, index) => (
-                            <TableRow key={range}>
-                              <TableCell component="th" scope="row">
-                                {range}
-                              </TableCell>
-                              {reportData.scoreDistribution?.vendors.map((vendor) => (
-                                <TableCell key={vendor} align="center">
-                                  {reportData.scoreDistribution?.vendor_counts[vendor][index]}
-                                </TableCell>
-                              ))}
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </TableContainer>
-                  </CardContent>
-                </Card>
-              </Box>
-            )}
-          </TabPanel>
         </Box>
       )}
 
@@ -663,19 +753,6 @@ const Reports: React.FC = () => {
         <DialogTitle>Export Report</DialogTitle>
         <DialogContent>
           <Box sx={{ pt: 2 }}>
-            <FormControl fullWidth sx={{ mb: 2 }}>
-              <InputLabel>Report Type</InputLabel>
-              <Select
-                value={exportType}
-                label="Report Type"
-                onChange={(e) => setExportType(e.target.value)}
-              >
-                <MenuItem value="comprehensive">Comprehensive</MenuItem>
-                <MenuItem value="vendor_comparison">Vendor Comparison</MenuItem>
-                <MenuItem value="radar_chart">Radar Chart</MenuItem>
-                <MenuItem value="score_distribution">Score Distribution</MenuItem>
-              </Select>
-            </FormControl>
             <FormControl fullWidth>
               <InputLabel>Format</InputLabel>
               <Select
@@ -694,6 +771,137 @@ const Reports: React.FC = () => {
           <Button onClick={handleExport} variant="contained" disabled={loading}>
             {loading ? <CircularProgress size={20} /> : 'Export'}
           </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Attribute Details Dialog */}
+      <Dialog 
+        open={showAttributeDetails} 
+        onClose={() => setShowAttributeDetails(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>
+          Attribute Details: {selectedAttributeDetail?.attribute_name}
+        </DialogTitle>
+        <DialogContent>
+          {selectedAttributeDetail && (
+            <Box>
+              <Typography variant="subtitle1" gutterBottom>
+                <strong>Domain:</strong> {selectedAttributeDetail.domain_name}
+              </Typography>
+              <Typography variant="body2" paragraph>
+                <strong>Definition:</strong> {selectedAttributeDetail.definition}
+              </Typography>
+              <Typography variant="body2" paragraph>
+                <strong>Importance:</strong> {selectedAttributeDetail.importance}
+              </Typography>
+              
+              <Divider sx={{ my: 2 }} />
+              
+              <Typography variant="h6" gutterBottom>
+                Vendor Scores
+              </Typography>
+              
+              {Object.entries(selectedAttributeDetail.vendors).map(([vendor, data]: [string, any]) => (
+                <Accordion key={vendor}>
+                  <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+                      <Typography variant="subtitle1" sx={{ flexGrow: 1 }}>
+                        {vendor.charAt(0).toUpperCase() + vendor.slice(1)}
+                      </Typography>
+                      <Chip
+                        label={data.score}
+                        color={getScoreColor(data.score_numeric)}
+                        sx={{ mr: 2 }}
+                      />
+                    </Box>
+                  </AccordionSummary>
+                  <AccordionDetails>
+                    <Box>
+                      <Typography variant="body2" paragraph>
+                        <strong>Score:</strong> {data.score}
+                      </Typography>
+                      <Typography variant="body2" paragraph>
+                        <strong>Weight:</strong> {data.weight}
+                      </Typography>
+                      <Typography variant="body2" paragraph>
+                        <strong>Score Decision:</strong> {data.score_decision}
+                      </Typography>
+                      <Typography variant="body2" paragraph>
+                        <strong>Observations:</strong>
+                      </Typography>
+                      {(() => {
+                        try {
+                          const observations = JSON.parse(data.observation);
+                          if (Array.isArray(observations)) {
+                            return (
+                              <Box component="ul" sx={{ m: 0, pl: 2, mb: 2 }}>
+                                {observations.map((obs, idx) => (
+                                  <Box key={idx} component="li" sx={{ mb: 0.5 }}>
+                                    <Typography variant="body2">
+                                      {obs}
+                                    </Typography>
+                                  </Box>
+                                ))}
+                              </Box>
+                            );
+                          }
+                        } catch (e) {
+                          // If parsing fails, display as plain text
+                        }
+                        return (
+                          <Typography variant="body2" paragraph>
+                            {data.observation}
+                          </Typography>
+                        );
+                      })()}
+                      <Typography variant="body2" paragraph>
+                        <strong>Evidence:</strong>
+                      </Typography>
+                      {(() => {
+                        try {
+                          const evidence = JSON.parse(data.evidence_url);
+                          if (Array.isArray(evidence)) {
+                            if (evidence.length === 0) {
+                              return (
+                                <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                                  No evidence URLs provided
+                                </Typography>
+                              );
+                            }
+                            return (
+                              <Box component="ul" sx={{ m: 0, pl: 2 }}>
+                                {evidence.map((url, idx) => (
+                                  <Box key={idx} component="li" sx={{ mb: 0.5 }}>
+                                    <Typography variant="body2">
+                                      <Link href={url} target="_blank" rel="noopener noreferrer">
+                                        {url}
+                                      </Link>
+                                    </Typography>
+                                  </Box>
+                                ))}
+                              </Box>
+                            );
+                          }
+                        } catch (e) {
+                          // If parsing fails, display as plain text
+                        }
+                        return (
+                          <Typography variant="body2">
+                            {data.evidence_url}
+                          </Typography>
+                        );
+                      })()}
+                    </Box>
+                  </AccordionDetails>
+                </Accordion>
+              ))}
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowAttributeDetails(false)}>Close</Button>
         </DialogActions>
       </Dialog>
     </Container>

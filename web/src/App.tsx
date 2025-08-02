@@ -14,10 +14,11 @@ import Capabilities from './pages/Capabilities';
 import DomainManagement from './pages/DomainManagement';
 import AttributeManagement from './pages/AttributeManagement';
 import Workflow from './pages/Workflow';
-import Analysis from './pages/Analysis';
+
 import Reports from './pages/Reports';
 import Database from './pages/Database';
 import DataQualityChat from './pages/DataQualityChat';
+import VendorAnalysis from './pages/VendorAnalysis';
 import NotificationSystem from './components/UI/NotificationSystem';
 import LoadingOverlay from './components/UI/LoadingOverlay';
 
@@ -187,11 +188,10 @@ function AppContent() {
               <Route path="/capabilities/:capabilityId/attributes" element={<AttributeManagement />} />
               <Route path="/workflow" element={<Workflow />} />
               <Route path="/workflow/:capabilityId" element={<Workflow />} />
-              <Route path="/analysis" element={<Analysis />} />
-              <Route path="/analysis/:capabilityName" element={<Analysis />} />
               <Route path="/reports" element={<Reports />} />
               <Route path="/database" element={<Database />} />
               <Route path="/data-quality-chat" element={<DataQualityChat />} />
+              <Route path="/vendor-analysis" element={<VendorAnalysis />} />
               <Route path="/login" element={<Navigate to="/" replace />} />
             </Routes>
           </Layout>

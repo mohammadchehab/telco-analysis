@@ -9,11 +9,13 @@ import {
   Alert,
   CircularProgress,
   Container,
+  useTheme,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { addNotification } from '../store/slices/uiSlice';
 import { authAPI } from '../utils/api';
+import type { RootState } from '../store';
 
 interface LoginForm {
   username: string;
@@ -23,6 +25,8 @@ interface LoginForm {
 const Login: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const theme = useTheme();
+  const { darkMode } = useSelector((state: RootState) => state.ui);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
@@ -74,18 +78,26 @@ const Login: React.FC = () => {
           alignItems: 'center', 
           justifyContent: 'center',
           py: 4,
-          background: 'linear-gradient(135deg, #121212 0%, #1e1e1e 100%)'
+          background: darkMode 
+            ? 'linear-gradient(135deg, #121212 0%, #1e1e1e 100%)'
+            : 'linear-gradient(135deg, #f5f5f5 0%, #e3f2fd 100%)'
         }}
       >
         <Card 
           sx={{ 
             width: '100%', 
             maxWidth: 450,
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+            boxShadow: darkMode 
+              ? '0 8px 32px rgba(0, 0, 0, 0.3)'
+              : '0 8px 32px rgba(0, 0, 0, 0.1)',
             borderRadius: 3,
-            background: 'rgba(30, 30, 30, 0.95)',
+            background: darkMode 
+              ? 'rgba(30, 30, 30, 0.95)'
+              : 'rgba(255, 255, 255, 0.95)',
             backdropFilter: 'blur(10px)',
-            border: '1px solid rgba(255, 255, 255, 0.1)'
+            border: darkMode 
+              ? '1px solid rgba(255, 255, 255, 0.1)'
+              : '1px solid rgba(0, 0, 0, 0.1)'
           }}
         >
           <CardContent sx={{ p: 4 }}>
@@ -124,8 +136,12 @@ const Login: React.FC = () => {
                 severity="error" 
                 sx={{ 
                   mb: 3,
-                  backgroundColor: 'rgba(244, 67, 54, 0.1)',
-                  border: '1px solid rgba(244, 67, 54, 0.3)'
+                  backgroundColor: darkMode 
+                    ? 'rgba(244, 67, 54, 0.1)'
+                    : 'rgba(244, 67, 54, 0.05)',
+                  border: darkMode 
+                    ? '1px solid rgba(244, 67, 54, 0.3)'
+                    : '1px solid rgba(244, 67, 54, 0.2)'
                 }}
               >
                 {error}
@@ -142,26 +158,7 @@ const Login: React.FC = () => {
                 required
                 disabled={loading}
                 variant="outlined"
-                sx={{ 
-                  mb: 2,
-                  '& .MuiOutlinedInput-root': {
-                    '& fieldset': {
-                      borderColor: 'rgba(255, 255, 255, 0.2)',
-                    },
-                    '&:hover fieldset': {
-                      borderColor: 'rgba(255, 255, 255, 0.3)',
-                    },
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#90caf9',
-                    },
-                  },
-                  '& .MuiInputLabel-root': {
-                    color: 'rgba(255, 255, 255, 0.7)',
-                  },
-                  '& .MuiInputBase-input': {
-                    color: '#ffffff',
-                  },
-                }}
+                sx={{ mb: 2 }}
               />
               <TextField
                 fullWidth
@@ -173,26 +170,7 @@ const Login: React.FC = () => {
                 required
                 disabled={loading}
                 variant="outlined"
-                sx={{ 
-                  mb: 3,
-                  '& .MuiOutlinedInput-root': {
-                    '& fieldset': {
-                      borderColor: 'rgba(255, 255, 255, 0.2)',
-                    },
-                    '&:hover fieldset': {
-                      borderColor: 'rgba(255, 255, 255, 0.3)',
-                    },
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#90caf9',
-                    },
-                  },
-                  '& .MuiInputLabel-root': {
-                    color: 'rgba(255, 255, 255, 0.7)',
-                  },
-                  '& .MuiInputBase-input': {
-                    color: '#ffffff',
-                  },
-                }}
+                sx={{ mb: 3 }}
               />
               <Button
                 type="submit"
@@ -234,8 +212,12 @@ const Login: React.FC = () => {
                   sx={{ 
                     padding: '4px 8px',
                     borderRadius: 1,
-                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)'
+                    backgroundColor: darkMode 
+                      ? 'rgba(255, 255, 255, 0.05)'
+                      : 'rgba(0, 0, 0, 0.05)',
+                    border: darkMode 
+                      ? '1px solid rgba(255, 255, 255, 0.1)'
+                      : '1px solid rgba(0, 0, 0, 0.1)'
                   }}
                 >
                   <strong>admin</strong> / admin123 (Admin)
@@ -246,8 +228,12 @@ const Login: React.FC = () => {
                   sx={{ 
                     padding: '4px 8px',
                     borderRadius: 1,
-                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)'
+                    backgroundColor: darkMode 
+                      ? 'rgba(255, 255, 255, 0.05)'
+                      : 'rgba(0, 0, 0, 0.05)',
+                    border: darkMode 
+                      ? '1px solid rgba(255, 255, 255, 0.1)'
+                      : '1px solid rgba(0, 0, 0, 0.1)'
                   }}
                 >
                   <strong>analyst</strong> / analyst123 (Analyst)
@@ -258,8 +244,12 @@ const Login: React.FC = () => {
                   sx={{ 
                     padding: '4px 8px',
                     borderRadius: 1,
-                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)'
+                    backgroundColor: darkMode 
+                      ? 'rgba(255, 255, 255, 0.05)'
+                      : 'rgba(0, 0, 0, 0.05)',
+                    border: darkMode 
+                      ? '1px solid rgba(255, 255, 255, 0.1)'
+                      : '1px solid rgba(0, 0, 0, 0.1)'
                   }}
                 >
                   <strong>viewer</strong> / viewer123 (Viewer)

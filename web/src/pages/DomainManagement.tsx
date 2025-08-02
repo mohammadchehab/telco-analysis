@@ -42,9 +42,9 @@ import {
 } from '@mui/icons-material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
-import { domainAPI, attributeAPI, capabilityAPI } from '../utils/api';
+import { domainAPI, attributeAPI, capabilityAPI, apiClient } from '../utils/api';
 import { addNotification } from '../store/slices/uiSlice';
-import type { Domain, Attribute } from '../types';
+import type { Domain, Attribute, APIResponse } from '../types';
 
 const DomainManagement: React.FC = () => {
   const { capabilityId } = useParams<{ capabilityId: string }>();
@@ -72,6 +72,7 @@ const DomainManagement: React.FC = () => {
   const [showImportModal, setShowImportModal] = useState(false);
   const [importFile, setImportFile] = useState<File | null>(null);
   const [importing, setImporting] = useState(false);
+  const [importTabValue, setImportTabValue] = useState(0);
 
   useEffect(() => {
     if (capabilityId) {
@@ -277,16 +278,7 @@ const DomainManagement: React.FC = () => {
       const formData = new FormData();
       formData.append('file', importFile);
 
-      const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:8000/api/imports/capabilities/${capabilityId}/domains`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-        body: formData,
-      });
-
-      const data = await response.json();
+      const data = await apiClient.postFormData<APIResponse<any>>(`/api/imports/capabilities/${capabilityId}/domains`, formData);
 
       if (data.success) {
         let message = `Import completed successfully! ${data.data.new_domains} new domains, ${data.data.new_attributes} new attributes. Version: ${data.data.capability_version}`;
@@ -432,6 +424,7 @@ const DomainManagement: React.FC = () => {
                       />
                     </Box>
                   }
+                  disableTypography
                   secondary={
                     <Box>
                       <Typography variant="body2" color="textSecondary">
@@ -493,6 +486,8 @@ const DomainManagement: React.FC = () => {
           }}
           maxWidth="sm"
           fullWidth
+          disableRestoreFocus
+          disableAutoFocus
         >
           <DialogTitle>
             {editingDomain ? 'Edit Domain' : 'Create New Domain'}
@@ -536,6 +531,8 @@ const DomainManagement: React.FC = () => {
           onClose={() => setDeletingDomain(null)}
           maxWidth="sm"
           fullWidth
+          disableRestoreFocus
+          disableAutoFocus
         >
           <DialogTitle color="error">
             Delete Domain
@@ -569,6 +566,8 @@ const DomainManagement: React.FC = () => {
           onClose={() => setShowAttributeModal(false)}
           maxWidth="md"
           fullWidth
+          disableRestoreFocus
+          disableAutoFocus
         >
           <DialogTitle>
             Manage Attributes for {selectedDomain.domain_name}
@@ -673,6 +672,8 @@ const DomainManagement: React.FC = () => {
           onClose={() => setShowImportModal(false)}
           maxWidth="md"
           fullWidth
+          disableRestoreFocus
+          disableAutoFocus
         >
           <DialogTitle>
             Import Domains and Attributes
@@ -682,7 +683,7 @@ const DomainManagement: React.FC = () => {
               Upload a JSON file with domains and attributes. The system supports two formats:
             </Typography>
             
-            <Tabs value={0} sx={{ mb: 2 }}>
+            <Tabs value={importTabValue} onChange={(e, newValue) => setImportTabValue(newValue)} sx={{ mb: 2 }}>
               <Tab label="Simple Domains Format" />
               <Tab label="Research File Format" />
             </Tabs>
@@ -700,7 +701,7 @@ const DomainManagement: React.FC = () => {
               fontFamily: 'monospace',
               maxHeight: '300px'
             }}>
-{`// Simple Domains Format
+{importTabValue === 0 ? `// Simple Domains Format
 {
   "domains": [
     {
@@ -717,40 +718,44 @@ const DomainManagement: React.FC = () => {
       ]
     }
   ]
-}
-
-// Research File Format (with gap analysis)
+}` : `// Research File Format (with gap analysis)
 {
   "capability": "IT Service Management",
   "analysis_date": "2025-08-01",
   "capability_status": "existing",
+  "current_framework": {
+    "domains_count": 1,
+    "attributes_count": 0,
+    "domains": ["existing domain"]
+  },
   "gap_analysis": {
     "missing_domains": [
       {
         "domain_name": "Service Desk & Support",
-        "description": "Central point of contact...",
+        "description": "Central point of contact for all service requests",
         "importance": "high",
-        "reasoning": "A service desk is the primary..."
+        "reasoning": "A service desk is the primary interface between users and IT services"
       }
     ],
     "missing_attributes": [
       {
         "domain": "Service Desk & Support",
         "attribute_name": "Ticket Logging and Tracking",
-        "description": "Ability to log, assign...",
+        "description": "Ability to log, assign, and track service requests",
         "importance": "high",
-        "reasoning": "Salesforce notes that..."
+        "reasoning": "Essential for managing service requests efficiently"
       }
     ]
   },
   "market_research": {
-    "major_vendors": ["ServiceNow", "Comarch"],
-    "industry_standards": ["ITIL", "TM Forum"]
+    "major_vendors": ["ServiceNow", "Comarch", "Salesforce"],
+    "industry_standards": ["ITIL", "TM Forum", "ISO 20000"]
   },
   "recommendations": {
     "priority_domains": ["Service Desk & Support"],
     "priority_attributes": ["Ticket Logging and Tracking"],
-    "framework_completeness": "needs_major_updates"
+    "framework_completeness": "needs_major_updates",
+    "next_steps": "Implement missing domains and attributes to complete the framework"
   }
 }`}
             </Box>

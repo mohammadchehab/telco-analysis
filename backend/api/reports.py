@@ -14,10 +14,18 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 
 from core.database import get_db
 from services.capability_service import CapabilityService
+from models.models import VendorScore
 from schemas.schemas import (
     APIResponse, ReportRequest, RadarChartData, VendorComparisonData, 
     ScoreDistributionData, ChartData
 )
+from models.models import Capability
+import logging
+from models.models import Attribute, Domain
+from io import BytesIO
+import base64
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/reports", tags=["reports"])
 
@@ -49,7 +57,7 @@ async def generate_report(request: ReportRequest, db: Session = Depends(get_db))
                 "radar_chart": radar_data.model_dump(),
                 "vendor_comparison": vendor_data.model_dump(),
                 "score_distribution": distribution_data.model_dump(),
-                "vendor_scores": [score.model_dump() for score in vendor_scores]
+                "vendor_scores": [score.dict() for score in vendor_scores]
             }
         else:
             return APIResponse(success=False, error="Invalid report type")
@@ -125,7 +133,7 @@ async def get_comprehensive_report(capability_id: int, db: Session = Depends(get
             "radar_chart": radar_data.model_dump(),
             "vendor_comparison": vendor_data.model_dump(),
             "score_distribution": distribution_data.model_dump(),
-            "vendor_scores": [score.model_dump() for score in vendor_scores]
+            "vendor_scores": [score.dict() for score in vendor_scores]
         }
         
         return APIResponse(success=True, data=comprehensive_data)
@@ -140,8 +148,8 @@ async def get_capability_summary(capability_id: int, db: Session = Depends(get_d
         if not capability:
             return APIResponse(success=False, error="Capability not found")
         
-        # Get vendor scores for summary calculations
-        vendor_scores = CapabilityService.get_vendor_scores(db, capability.name)
+        # Get vendor scores directly from database for summary calculations
+        vendor_scores = db.query(VendorScore).filter(VendorScore.capability_id == capability_id).all()
         
         # Calculate summary statistics
         vendors = ["comarch", "servicenow", "salesforce"]
@@ -235,6 +243,145 @@ async def export_capability_report(
             }
         )
         
+    except Exception as e:
+        return APIResponse(success=False, error=str(e))
+
+@router.get("/{capability_id}/vendor-analysis", response_model=APIResponse)
+async def get_vendor_analysis_data(
+    capability_id: int, 
+    vendors: str = "comarch,servicenow,salesforce",
+    db: Session = Depends(get_db)
+):
+    """Get detailed vendor analysis data for comparison"""
+    try:
+        capability = CapabilityService.get_capability(db, capability_id)
+        if not capability:
+            return APIResponse(success=False, error="Capability not found")
+        
+        # Parse vendors from query parameter
+        vendor_list = [v.strip() for v in vendors.split(",")]
+        
+        # Get detailed vendor analysis data
+        analysis_data = CapabilityService.generate_vendor_analysis_data(db, capability_id, vendor_list)
+        return APIResponse(success=True, data=analysis_data)
+    except Exception as e:
+        return APIResponse(success=False, error=str(e))
+
+@router.get("/{capability_id}/vendor-analysis/export", response_model=APIResponse)
+async def export_vendor_analysis(
+    capability_id: int,
+    vendors: str = "comarch,servicenow,salesforce",
+    format: str = "excel",
+    db: Session = Depends(get_db)
+):
+    """Export vendor analysis to Excel with detailed format"""
+    try:
+        capability = CapabilityService.get_capability(db, capability_id)
+        if not capability:
+            return APIResponse(success=False, error="Capability not found")
+        
+        # Parse vendors from query parameter
+        vendor_list = [v.strip() for v in vendors.split(",")]
+        
+        # Get detailed vendor analysis data
+        analysis_data = CapabilityService.generate_vendor_analysis_data(db, capability_id, vendor_list)
+        
+        if format == "excel":
+            excel_data = generate_vendor_analysis_excel(analysis_data, capability.name, vendor_list)
+            return APIResponse(
+                success=True,
+                data={
+                    "excel_data": excel_data, 
+                    "filename": f"{capability.name}_vendor_analysis.xlsx"
+                }
+            )
+        else:
+            return APIResponse(success=False, error="Only Excel format supported for vendor analysis")
+            
+    except Exception as e:
+        return APIResponse(success=False, error=str(e))
+
+@router.get("/vendor-analysis/export-all", response_model=APIResponse)
+async def export_all_vendor_analysis(
+    vendors: str = "comarch,servicenow,salesforce",
+    format: str = "excel",
+    db: Session = Depends(get_db)
+):
+    """Export vendor analysis data for all capabilities"""
+    try:
+        # Parse vendors from query parameter
+        vendor_list = [v.strip() for v in vendors.split(",")]
+        
+        # Get all completed capabilities
+        capabilities = db.query(Capability).filter(Capability.status == "completed").all()
+        
+        if not capabilities:
+            return APIResponse(success=False, error="No completed capabilities found")
+        
+        # Generate Excel data for all capabilities
+        excel_data = generate_all_capabilities_excel(capabilities, vendor_list, db)
+        
+        filename = f"vendor_analysis_all_capabilities_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+        
+        return APIResponse(
+            success=True,
+            data={
+                "excel_data": excel_data,
+                "filename": filename
+            }
+        )
+    except Exception as e:
+        logger.error(f"Error exporting all vendor analysis: {str(e)}")
+        return APIResponse(success=False, error=f"Failed to export vendor analysis: {str(e)}")
+
+@router.get("/{capability_id}/filtered-reports", response_model=APIResponse)
+async def get_filtered_reports(
+    capability_id: int,
+    domains: str = "",
+    vendors: str = "comarch,servicenow,salesforce",
+    attributes: str = "",
+    db: Session = Depends(get_db)
+):
+    """Get filtered reports data for a capability"""
+    try:
+        capability = CapabilityService.get_capability(db, capability_id)
+        if not capability:
+            return APIResponse(success=False, error="Capability not found")
+        
+        # Only proceed if capability is completed
+        if capability.status != "completed":
+            return APIResponse(success=False, error="Capability research is not completed")
+        
+        # Parse filter parameters
+        domain_list = [d.strip() for d in domains.split(",") if d.strip()] if domains else []
+        vendor_list = [v.strip() for v in vendors.split(",") if v.strip()] if vendors else []
+        attribute_list = [a.strip() for a in attributes.split(",") if a.strip()] if attributes else []
+        
+        # Get filtered data
+        filtered_data = CapabilityService.generate_filtered_reports_data(
+            db, capability_id, domain_list, vendor_list, attribute_list
+        )
+        
+        return APIResponse(success=True, data=filtered_data)
+    except Exception as e:
+        return APIResponse(success=False, error=str(e))
+
+@router.get("/{capability_id}/available-filters", response_model=APIResponse)
+async def get_available_filters(capability_id: int, db: Session = Depends(get_db)):
+    """Get available filter options for a capability"""
+    try:
+        capability = CapabilityService.get_capability(db, capability_id)
+        if not capability:
+            return APIResponse(success=False, error="Capability not found")
+        
+        # Only proceed if capability is completed
+        if capability.status != "completed":
+            return APIResponse(success=False, error="Capability research is not completed")
+        
+        # Get available filter options
+        filter_options = CapabilityService.get_available_filter_options(db, capability_id)
+        
+        return APIResponse(success=True, data=filter_options)
     except Exception as e:
         return APIResponse(success=False, error=str(e))
 
@@ -524,3 +671,247 @@ def add_comprehensive_to_pdf(story, data):
         
         story.append(table)
         story.append(Spacer(1, 20)) 
+
+def generate_vendor_analysis_excel(analysis_data: dict, capability_name: str, vendors: list) -> str:
+    """Generate Excel report for vendor analysis with detailed format"""
+    try:
+        wb = Workbook()
+        ws = wb.active
+        ws.title = f"{capability_name} Vendor Analysis"
+        
+        # Header
+        ws['A1'] = f"{capability_name} - Vendor Analysis Report"
+        ws['A1'].font = Font(size=16, bold=True)
+        ws['A2'] = f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+        ws['A3'] = f"Vendors: {', '.join(vendors)}"
+        
+        # Define headers based on the requested format
+        headers = [
+            "Capability", "Domain", "Attribute", 
+            "Observations (Vendor 1)", "Observations (Vendor 2)", "Observations (Vendor 3)",
+            "Score Vendor 1", "Score Vendor 2", "Score Vendor 3",
+            "Justification Score Vendor 1", "Justification Score Vendor 2", "Justification Score Vendor 3",
+            "Evidence Vendor 1", "Evidence Vendor 2", "Evidence Vendor 3"
+        ]
+        
+        # Adjust headers based on number of vendors
+        if len(vendors) == 1:
+            headers = ["Capability", "Domain", "Attribute", 
+                      f"Observations ({vendors[0].title()})", 
+                      f"Score {vendors[0].title()}", 
+                      f"Justification Score {vendors[0].title()}", 
+                      f"Evidence {vendors[0].title()}"]
+        elif len(vendors) == 2:
+            headers = ["Capability", "Domain", "Attribute", 
+                      f"Observations ({vendors[0].title()})", f"Observations ({vendors[1].title()})",
+                      f"Score {vendors[0].title()}", f"Score {vendors[1].title()}",
+                      f"Justification Score {vendors[0].title()}", f"Justification Score {vendors[1].title()}",
+                      f"Evidence {vendors[0].title()}", f"Evidence {vendors[1].title()}"]
+        
+        # Write headers
+        for col, header in enumerate(headers, 1):
+            cell = ws.cell(row=5, column=col, value=header)
+            cell.font = Font(bold=True)
+            cell.fill = PatternFill(start_color="CCCCCC", end_color="CCCCCC", fill_type="solid")
+            cell.alignment = Alignment(horizontal="center", vertical="center")
+        
+        # Write data
+        row = 6
+        for item in analysis_data.get('analysis_items', []):
+            col = 1
+            ws.cell(row=row, column=col, value=item['capability_name']); col += 1
+            ws.cell(row=row, column=col, value=item['domain_name']); col += 1
+            ws.cell(row=row, column=col, value=item['attribute_name']); col += 1
+            
+            # Add vendor data
+            for vendor in vendors:
+                vendor_data = item.get('vendors', {}).get(vendor, {})
+                observations = vendor_data.get('observations', [])
+                if observations:
+                    # Format observations as a list with types
+                    obs_text = []
+                    for obs in observations:
+                        obs_type = obs.get('type', 'note')
+                        obs_text.append(f"[{obs_type.upper()}] {obs.get('observation', '')}")
+                    ws.cell(row=row, column=col, value='\n'.join(obs_text))
+                else:
+                    ws.cell(row=row, column=col, value='No observations available')
+                col += 1
+            
+            for vendor in vendors:
+                vendor_data = item.get('vendors', {}).get(vendor, {})
+                ws.cell(row=row, column=col, value=vendor_data.get('score', '')); col += 1
+            
+            for vendor in vendors:
+                vendor_data = item.get('vendors', {}).get(vendor, {})
+                ws.cell(row=row, column=col, value=vendor_data.get('score_decision', '')); col += 1
+            
+            for vendor in vendors:
+                vendor_data = item.get('vendors', {}).get(vendor, {})
+                ws.cell(row=row, column=col, value=vendor_data.get('evidence_url', '')); col += 1
+            
+            row += 1
+        
+        # Auto-adjust column widths
+        for column in ws.columns:
+            max_length = 0
+            column_letter = column[0].column_letter
+            for cell in column:
+                try:
+                    if len(str(cell.value)) > max_length:
+                        max_length = len(str(cell.value))
+                except:
+                    pass
+            adjusted_width = min(max_length + 2, 50)
+            ws.column_dimensions[column_letter].width = adjusted_width
+        
+        # Save to bytes
+        output = io.BytesIO()
+        wb.save(output)
+        output.seek(0)
+        
+        # Convert to base64 for API response
+        import base64
+        return base64.b64encode(output.getvalue()).decode('utf-8')
+        
+    except Exception as e:
+        raise Exception(f"Error generating vendor analysis Excel report: {str(e)}") 
+
+def generate_all_capabilities_excel(capabilities: list, vendors: list, db: Session) -> str:
+    """Generate Excel report for all capabilities with vendor analysis"""
+    try:
+        wb = Workbook()
+        
+        # Remove default sheet
+        wb.remove(wb.active)
+        
+        # Create summary sheet
+        summary_ws = wb.create_sheet("Summary")
+        
+        # Summary headers
+        summary_headers = [
+            "Capability", "Total Attributes", "Total Domains", 
+            "Average Score (Comarch)", "Average Score (ServiceNow)", "Average Score (Salesforce)",
+            "Average Score (Oracle)", "Average Score (IBM)", "Average Score (Microsoft)"
+        ]
+        
+        for col, header in enumerate(summary_headers, 1):
+            summary_ws.cell(row=1, column=col, value=header)
+            summary_ws.cell(row=1, column=col).font = Font(bold=True)
+        
+        # Add capability summary data
+        for row, capability in enumerate(capabilities, 2):
+            summary_ws.cell(row=row, column=1, value=capability.name)
+            
+            # Get capability stats
+            attributes = db.query(Attribute).filter(Attribute.capability_id == capability.id).all()
+            domains = db.query(Domain).filter(Domain.capability_id == capability.id).all()
+            
+            summary_ws.cell(row=row, column=2, value=len(attributes))
+            summary_ws.cell(row=row, column=3, value=len(domains))
+            
+            # Calculate average scores for each vendor
+            for col, vendor in enumerate(vendors, 4):
+                vendor_scores = db.query(VendorScore).filter(
+                    VendorScore.capability_id == capability.id,
+                    VendorScore.vendor == vendor
+                ).all()
+                
+                if vendor_scores:
+                    avg_score = sum(score.score_numeric for score in vendor_scores) / len(vendor_scores)
+                    summary_ws.cell(row=row, column=col, value=round(avg_score, 2))
+                else:
+                    summary_ws.cell(row=row, column=col, value="N/A")
+        
+        # Create detailed analysis sheets for each capability
+        for capability in capabilities:
+            try:
+                # Generate detailed data for this capability
+                analysis_data = CapabilityService.generate_vendor_analysis_data(db, capability.id, vendors)
+                
+                # Create sheet for this capability
+                sheet_name = capability.name[:31] if len(capability.name) <= 31 else capability.name[:28] + "..."
+                ws = wb.create_sheet(sheet_name)
+                
+                # Headers for detailed analysis
+                headers = ["Capability", "Domain", "Attribute"]
+                for i, vendor in enumerate(vendors, 1):
+                    headers.extend([
+                        f"Observations (Vendor {i})",
+                        f"Score (Vendor {i})",
+                        f"Justification (Vendor {i})",
+                        f"Evidence (Vendor {i})"
+                    ])
+                
+                for col, header in enumerate(headers, 1):
+                    ws.cell(row=1, column=col, value=header)
+                    ws.cell(row=1, column=col).font = Font(bold=True)
+                
+                # Add detailed data
+                for row, item in enumerate(analysis_data['analysis_items'], 2):
+                    ws.cell(row=row, column=1, value=item['capability_name'])
+                    ws.cell(row=row, column=2, value=item['domain_name'])
+                    ws.cell(row=row, column=3, value=item['attribute_name'])
+                    
+                    col = 4
+                    for vendor in vendors:
+                        vendor_data = item['vendors'].get(vendor, {})
+                        observations = vendor_data.get('observations', [])
+                        if observations:
+                            # Format observations as a list with types
+                            obs_text = []
+                            for obs in observations:
+                                obs_type = obs.get('type', 'NOTE')
+                                obs_text.append(f"[{obs_type}] {obs.get('observation', '')}")
+                            ws.cell(row=row, column=col, value='\n'.join(obs_text))
+                        else:
+                            ws.cell(row=row, column=col, value='No observations available')
+                        ws.cell(row=row, column=col + 1, value=vendor_data.get('score', 'N/A'))
+                        ws.cell(row=row, column=col + 2, value=vendor_data.get('score_decision', 'N/A'))
+                        ws.cell(row=row, column=col + 3, value=vendor_data.get('evidence_url', 'N/A'))
+                        col += 4
+                
+                # Auto-adjust column widths
+                for column in ws.columns:
+                    max_length = 0
+                    column_letter = column[0].column_letter
+                    for cell in column:
+                        try:
+                            if len(str(cell.value)) > max_length:
+                                max_length = len(str(cell.value))
+                        except:
+                            pass
+                    adjusted_width = min(max_length + 2, 50)
+                    ws.column_dimensions[column_letter].width = adjusted_width
+                    
+            except Exception as e:
+                logger.error(f"Error generating sheet for capability {capability.name}: {str(e)}")
+                continue
+        
+        # Auto-adjust summary sheet column widths
+        for column in summary_ws.columns:
+            max_length = 0
+            column_letter = column[0].column_letter
+            for cell in column:
+                try:
+                    if len(str(cell.value)) > max_length:
+                        max_length = len(str(cell.value))
+                except:
+                    pass
+            adjusted_width = min(max_length + 2, 30)
+            summary_ws.column_dimensions[column_letter].width = adjusted_width
+        
+        # Save to bytes
+        output = BytesIO()
+        wb.save(output)
+        output.seek(0)
+        
+        # Convert to base64
+        excel_bytes = output.getvalue()
+        excel_base64 = base64.b64encode(excel_bytes).decode('utf-8')
+        
+        return excel_base64
+        
+    except Exception as e:
+        logger.error(f"Error generating all capabilities Excel: {str(e)}")
+        raise e 

@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import {
   Box,
   Typography,
-  Paper,
   IconButton,
-  Drawer,
+  Dialog,
+  DialogTitle,
+  DialogContent,
   Divider,
   Snackbar,
   Alert,
@@ -13,6 +14,8 @@ import {
   Close as CloseIcon,
   Download as DownloadIcon,
   ContentCopy as CopyIcon,
+  Fullscreen as FullscreenIcon,
+  FullscreenExit as FullscreenExitIcon,
 } from '@mui/icons-material';
 
 interface MarkdownViewerProps {
@@ -31,6 +34,7 @@ const MarkdownViewer: React.FC<MarkdownViewerProps> = ({
   onDownload,
 }) => {
   const [showCopyNotification, setShowCopyNotification] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   // Simple markdown to HTML conversion for basic formatting
   const convertMarkdownToHtml = (markdown: string): string => {
@@ -67,22 +71,28 @@ const MarkdownViewer: React.FC<MarkdownViewerProps> = ({
     }
   };
 
+  const handleFullscreenToggle = () => {
+    setIsFullscreen(!isFullscreen);
+  };
+
+
+
   return (
-    <Drawer
-      anchor="right"
+    <Dialog
       open={open}
       onClose={onClose}
+      maxWidth={isFullscreen ? false : 'md'}
+      fullWidth={isFullscreen}
+      fullScreen={isFullscreen}
       sx={{
-        '& .MuiDrawer-paper': {
-          width: '40%',
-          minWidth: 400,
-          maxWidth: 600,
+        zIndex: 99999,
+        '& .MuiDialog-paper': {
+          zIndex: 99999,
         },
       }}
     >
-      <Box sx={{ p: 2, height: '100%', display: 'flex', flexDirection: 'column' }}>
-        {/* Header */}
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+      <DialogTitle>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Typography variant="h6" component="h2">
             {title}
           </Typography>
@@ -95,11 +105,17 @@ const MarkdownViewer: React.FC<MarkdownViewerProps> = ({
                 <DownloadIcon />
               </IconButton>
             )}
+            <IconButton onClick={handleFullscreenToggle} size="small" sx={{ mr: 1 }} title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}>
+              {isFullscreen ? <FullscreenExitIcon /> : <FullscreenIcon />}
+            </IconButton>
             <IconButton onClick={onClose} size="small">
               <CloseIcon />
             </IconButton>
           </Box>
         </Box>
+      </DialogTitle>
+      <DialogContent>
+        <Box sx={{ p: 2, height: '100%', display: 'flex', flexDirection: 'column' }}>
         
         <Divider sx={{ mb: 2 }} />
         
@@ -158,6 +174,7 @@ const MarkdownViewer: React.FC<MarkdownViewerProps> = ({
           dangerouslySetInnerHTML={{ __html: htmlContent }}
         />
       </Box>
+      </DialogContent>
 
       {/* Copy Notification */}
       <Snackbar
@@ -174,7 +191,7 @@ const MarkdownViewer: React.FC<MarkdownViewerProps> = ({
           Content copied to clipboard!
         </Alert>
       </Snackbar>
-    </Drawer>
+    </Dialog>
   );
 };
 

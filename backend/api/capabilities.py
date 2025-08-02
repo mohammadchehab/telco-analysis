@@ -264,7 +264,7 @@ async def get_vendor_scores_by_id(capability_id: int, db: Session = Depends(get_
             return APIResponse(success=False, error="Capability not found")
         
         scores = CapabilityService.get_vendor_scores(db, capability.name)
-        return APIResponse(success=True, data=[score.model_dump() for score in scores])
+        return APIResponse(success=True, data={"scores": [score.model_dump() for score in scores]})
     except Exception as e:
         return APIResponse(success=False, error=str(e))
 
@@ -273,7 +273,7 @@ async def get_vendor_scores(capability_name: str, db: Session = Depends(get_db))
     """Get vendor scores by capability name"""
     try:
         scores = CapabilityService.get_vendor_scores(db, capability_name)
-        return APIResponse(success=True, data=[score.model_dump() for score in scores])
+        return APIResponse(success=True, data={"scores": [score.model_dump() for score in scores]})
     except Exception as e:
         return APIResponse(success=False, error=str(e))
 
@@ -406,7 +406,8 @@ async def upload_research_file_by_id(
     capability_id: int,
     file: UploadFile = File(...),
     expected_type: str = Form(...),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: Dict[str, Any] = Depends(get_current_user)
 ):
     """Upload research file by capability ID"""
     try:
@@ -423,15 +424,56 @@ async def upload_research_file_by_id(
         except json.JSONDecodeError:
             return APIResponse(success=False, error="Invalid JSON format")
         
+        # Store the JSON data in ResearchResult table
+        from models.models import ResearchResult
+        
+        # Map expected_type to research_type
+        research_type_mapping = {
+            "comprehensive_research": "comprehensive_research",
+            "domain_research": "domain_research",
+            "comprehensive": "comprehensive_research",
+            "domain": "domain_research"
+        }
+        research_type = research_type_mapping.get(expected_type, expected_type)
+        
+        # Delete any existing research results for this capability and type
+        db.query(ResearchResult).filter(
+            ResearchResult.capability_id == capability_id,
+            ResearchResult.research_type == research_type
+        ).delete()
+        
+        # Create new research result
+        research_result = ResearchResult(
+            capability_id=capability_id,
+            research_type=research_type,
+            result_data=json.dumps(json_data)
+        )
+        db.add(research_result)
+        db.commit()
+        
+        # Log activity
+        from core.auth import log_activity
+        log_activity(
+            user_id=current_user.get("id"),
+            username=current_user.get("username", "unknown"),
+            action="uploaded_research_file",
+            entity_type="capability",
+            entity_id=capability_id,
+            entity_name=capability.name,
+            details=f"Uploaded {file.filename} ({len(content)} bytes) for {expected_type} research",
+            db=db
+        )
+        
         return APIResponse(
             success=True,
             data={
-                "message": f"File uploaded successfully for {capability.name}",
+                "message": f"File uploaded and stored successfully for {capability.name}",
                 "filename": file.filename,
                 "size": len(content),
                 "expected_type": expected_type,
                 "capability_name": capability.name,
-                "capability_id": capability_id
+                "capability_id": capability_id,
+                "stored": True
             }
         )
     except Exception as e:
@@ -582,13 +624,24 @@ async def process_domain_results_by_id(
         if not capability:
             return APIResponse(success=False, error="Capability not found")
         
-        # Check if it's the old format (wrapped in data) or new format (direct)
-        if "data" in request:
-            # Old format - extract data
-            data = request["data"]
+        # Try to get stored research data first
+        from models.models import ResearchResult
+        stored_data = db.query(ResearchResult).filter(
+            ResearchResult.capability_id == capability_id,
+            ResearchResult.research_type == "domain_research"
+        ).first()
+        
+        if stored_data:
+            # Use stored data
+            data = json.loads(stored_data.result_data)
         else:
-            # New format - use request directly
-            data = request
+            # Fall back to request data
+            if "data" in request:
+                # Old format - extract data
+                data = request["data"]
+            else:
+                # New format - use request directly
+                data = request
         
         result = CapabilityService.process_domain_results(db, capability.name, data, current_user.get("id"))
         
@@ -646,15 +699,37 @@ async def process_comprehensive_results_by_id(
         if not capability:
             return APIResponse(success=False, error="Capability not found")
         
-        # Check if it's the old format (wrapped in data) or new format (direct)
-        if "data" in request:
-            # Old format - extract data
-            data = request["data"]
+        # Try to get stored research data first
+        from models.models import ResearchResult
+        stored_data = db.query(ResearchResult).filter(
+            ResearchResult.capability_id == capability_id,
+            ResearchResult.research_type == "comprehensive_research"
+        ).first()
+        
+        if stored_data:
+            # Use stored data
+            data = json.loads(stored_data.result_data)
         else:
-            # New format - use request directly
-            data = request
+            # Fall back to request data
+            if "data" in request:
+                data = request["data"]
+            else:
+                data = request
         
         result = CapabilityService.process_comprehensive_results(db, capability.name, data, current_user.get("id"))
+        
+        # Log activity
+        from core.auth import log_activity
+        log_activity(
+            user_id=current_user.get("id"),
+            username=current_user.get("username", "unknown"),
+            action="processed_comprehensive_results",
+            entity_type="capability",
+            entity_id=capability_id,
+            entity_name=capability.name,
+            details=f"Processed comprehensive results: {result.get('processed_vendors', 0)} vendors, {result.get('created_attributes', 0)} attributes",
+            db=db
+        )
         
         return APIResponse(
             success=True,

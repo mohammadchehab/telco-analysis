@@ -1,0 +1,1338 @@
+{
+    "capability": "Partner Management",
+    "research_date": "2025-08-02",
+    "current_framework": {
+      "domains_count": 10,
+      "attributes_count": 30,
+      "domains": [
+        "Partner Lifecycle Management",
+        "Partner Performance & Engagement",
+        "Contract & Agreement Management",
+        "Quoting & Ordering Management",
+        "Settlement & Revenue Management",
+        "Partner Marketing & Enablement",
+        "Analytics & Reporting",
+        "Partner Support & Service",
+        "Data Integration & API Management",
+        "Compliance & Risk Management"
+      ]
+    },
+    "market_analysis": {
+      "primary_vendors": [
+        "Comarch",
+        "ServiceNow",
+        "Salesforce"
+      ],
+      "missing_capabilities": [
+        {
+          "capability_name": "Partner Incentive Management",
+          "description": "Tools for managing partner incentives, rebates and reward programs are not explicitly covered in the existing framework; such capability would help motivate partners through incentive and rebate management."
+        },
+        {
+          "capability_name": "Partner Ecosystem Marketplace",
+          "description": "A marketplace where partners can publish, discover and transact offerings (e.g., apps or services) is missing from the current domains; such a marketplace fosters co\u2011innovation and revenue generation by enabling partners to sell and purchase complementary services."
+        }
+      ]
+    },
+    "attributes": [
+      {
+        "attribute": "Partner Offboarding",
+        "domain": "Partner Lifecycle Management",
+        "weight": 65,
+        "tm_capability": "Partner Offboarding",
+        "comarch": {
+          "score": "3 - Good",
+          "observation": [
+            "Comarch\u2019s partner management platform orchestrates onboarding, agreements and order fulfilment, suggesting that lifecycle processes are managed end\u2011to\u2011end.",
+            "Multi\u2011level orchestration implies partners can be removed or offboarded through workflows, although the site doesn\u2019t explicitly describe offboarding steps.",
+            "Multi\u2011tenancy ensures each partner\u2019s data is isolated, which helps when deactivating a partner.",
+            "Limited evidence of automated offboarding or compliance checks means the capability is adequate but not strong."
+          ],
+          "evidence": [
+            "\u3010552391157238505\u2020L83-L115\u3011"
+          ],
+          "score_decision": "The platform handles complete partner lifecycle processes, but documentation focuses on onboarding and quoting; offboarding is assumed rather than described, so the score is good but not high."
+        },
+        "servicenow": {
+          "score": "3 - Good",
+          "observation": [
+            "ServiceNow\u2019s partner portal provides streamlined workflows and automation that simplify complex business processes.",
+            "Real\u2011time collaboration and deal registration processes can incorporate offboarding tasks using workflow templates.",
+            "The platform\u2019s strong security and compliance features facilitate controlled deactivation of partner accounts.",
+            "Offboarding is not explicitly documented in the available sources, so capability is inferred rather than evidenced."
+          ],
+          "evidence": [
+            "\u301094332939452191\u2020L36-L90\u3011"
+          ],
+          "score_decision": "ServiceNow\u2019s workflow engine could manage offboarding and access revocation, but sources focus on onboarding and collaboration rather than offboarding; therefore the score is good."
+        },
+        "salesforce": {
+          "score": "3 - Good",
+          "observation": [
+            "Salesforce PRM provides centralised channel management with granular permission controls for partners and internal teams.",
+            "Deal registration and lead routing automation facilitate partner onboarding and can be adapted for offboarding by revoking access and closing opportunities.",
+            "Partners work across CRMs via Partner Connect, indicating integration with identity management systems.",
+            "No direct mention of offboarding processes exists, so the capability is rated good but not strong."
+          ],
+          "evidence": [
+            "\u3010917901306481134\u2020L37-L43\u3011",
+            "\u3010917901306481134\u2020L90-L95\u3011"
+          ],
+          "score_decision": "Salesforce\u2019s role and permission management enable controlled partner deactivation, but offboarding procedures are not explicitly described; therefore the rating is good."
+        }
+      },
+      {
+        "attribute": "Partner Onboarding & Verification",
+        "domain": "Partner Lifecycle Management",
+        "weight": 85,
+        "tm_capability": "Partner Onboarding & Verification",
+        "comarch": {
+          "score": "4 - Very Good",
+          "observation": [
+            "Comarch supports multi\u2011level orchestration of onboarding, agreements and quotes, allowing seamless partner onboarding processes.",
+            "Flexible modelling of business partnerships and catalog\u2011driven offers enable partners to join and configure services quickly.",
+            "Multi\u2011tenancy and multi\u2011currency features allow global partners to onboard on a single platform.",
+            "Verification steps are implied through agreement workflows but not detailed, preventing a top score."
+          ],
+          "evidence": [
+            "\u3010552391157238505\u2020L83-L115\u3011",
+            "\u3010552391157238505\u2020L137-L146\u3011"
+          ],
+          "score_decision": "The platform offers comprehensive onboarding orchestration and supports global partners, but explicit verification or due\u2011diligence processes are not documented; hence a very good score."
+        },
+        "servicenow": {
+          "score": "4 - Very Good",
+          "observation": [
+            "The ServiceNow partner portal streamlines complex business processes, including deal registration, enabling rapid onboarding.",
+            "Automated workflows and real\u2011time collaboration simplify data collection and approval steps during onboarding.",
+            "Training and certification resources help verify partner competency and compliance.",
+            "Although the portal supports verification through workflow, the absence of explicit KYC features prevents an excellent score."
+          ],
+          "evidence": [
+            "\u3010505289936123474\u2020L56-L65\u3011",
+            "\u301094332939452191\u2020L36-L90\u3011"
+          ],
+          "score_decision": "ServiceNow\u2019s workflow automation and collaboration tools provide strong onboarding capabilities, but specific verification or KYC functionality is not clearly documented, resulting in a very good rating."
+        },
+        "salesforce": {
+          "score": "4 - Very Good",
+          "observation": [
+            "Salesforce PRM automates deal registration and lead routing, helping partners onboard efficiently.",
+            "Partner Connect allows partners to work securely across CRMs, simplifying data sharing during onboarding.",
+            "Centralised channel management provides visibility into partner activities and can be used to verify onboarding completion.",
+            "The PRM page doesn\u2019t describe formal verification or due\u2011diligence checks, so the score is very good rather than excellent."
+          ],
+          "evidence": [
+            "\u3010917901306481134\u2020L27-L33\u3011",
+            "\u3010917901306481134\u2020L37-L43\u3011",
+            "\u3010917901306481134\u2020L90-L95\u3011"
+          ],
+          "score_decision": "Strong onboarding automation and cross\u2011CRM integration justify a very good score, but explicit verification procedures are not detailed."
+        }
+      },
+      {
+        "attribute": "Role & Access Management",
+        "domain": "Partner Lifecycle Management",
+        "weight": 70,
+        "tm_capability": "Role & Access Management",
+        "comarch": {
+          "score": "4 - Very Good",
+          "observation": [
+            "Comarch\u2019s platform is multi\u2011tenant, ensuring each partner accesses only their own products, processes and clients.",
+            "Business relationships are modelled flexibly, indicating the ability to define roles and permissions for different partner types.",
+            "Multi\u2011currency and multi\u2011language support implies granular control over regional settings and user rights.",
+            "Specific role\u2011based access controls are not deeply documented, so the capability is strong but not top tier."
+          ],
+          "evidence": [
+            "\u3010552391157238505\u2020L83-L115\u3011"
+          ],
+          "score_decision": "Multi\u2011tenancy and flexible partner modelling demonstrate solid role and access management, but lack of explicit details limits the rating to very good."
+        },
+        "servicenow": {
+          "score": "4 - Very Good",
+          "observation": [
+            "ServiceNow ensures data security with encryption at rest and multi\u2011factor authentication, implying strong user access controls.",
+            "Partners collaborate through the portal with controlled access to deal registration and sales tools.",
+            "Continuous monitoring and compliance reporting enable administrators to audit partner actions.",
+            "The article does not describe role hierarchies in detail, keeping the score at very good."
+          ],
+          "evidence": [
+            "\u301094332939452191\u2020L94-L127\u3011"
+          ],
+          "score_decision": "Robust security and monitoring imply that role and access management is mature, but explicit descriptions of role configurations are missing, so the rating is very good."
+        },
+        "salesforce": {
+          "score": "5 - Excellent",
+          "observation": [
+            "Salesforce PRM offers centralised channel management where administrators set permissions for partners and internal teams.",
+            "Partner Connect enables partners to work across CRMs while keeping data fields controlled to protect sensitive information.",
+            "Sales tracking and deal registration ensure that partners only access relevant opportunities and leads.",
+            "The explicit mention of permission controls and secure cross\u2011CRM integration supports an excellent rating."
+          ],
+          "evidence": [
+            "\u3010917901306481134\u2020L37-L43\u3011",
+            "\u3010917901306481134\u2020L90-L95\u3011"
+          ],
+          "score_decision": "Granular permission controls and secure data sharing across CRMs illustrate an excellent role and access management capability."
+        }
+      },
+      {
+        "attribute": "Communication & Collaboration Tools",
+        "domain": "Partner Performance & Engagement",
+        "weight": 60,
+        "tm_capability": "Communication & Collaboration Tools",
+        "comarch": {
+          "score": "2 - Basic",
+          "observation": [
+            "Comarch\u2019s documentation focuses on quoting, ordering and settlement rather than partner communication tools.",
+            "There is no mention of built\u2011in chat, forums or collaboration workspaces for partners.",
+            "Partners may communicate through external systems or email, limiting engagement within the platform.",
+            "As a result, communication and collaboration capabilities are considered basic."
+          ],
+          "evidence": [],
+          "score_decision": "Due to the lack of evidence about collaboration features, Comarch scores low for communication tools."
+        },
+        "servicenow": {
+          "score": "4 - Very Good",
+          "observation": [
+            "The ServiceNow partner portal enables real\u2011time collaboration between the company and partners, allowing partners to register deals and receive sales support.",
+            "Streamlined workflows simplify complex processes and reduce manual tasks, enhancing collaboration and productivity.",
+            "Analytics tools allow partners and administrators to discuss performance metrics and progress.",
+            "Although dedicated chat is not mentioned, the portal\u2019s collaborative features support strong engagement."
+          ],
+          "evidence": [
+            "\u3010505289936123474\u2020L56-L65\u3011",
+            "\u301094332939452191\u2020L36-L90\u3011"
+          ],
+          "score_decision": "Real\u2011time collaboration and streamlined workflows provide a strong foundation for partner engagement, resulting in a very good rating."
+        },
+        "salesforce": {
+          "score": "4 - Very Good",
+          "observation": [
+            "Salesforce PRM enables partners to work across CRMs through Partner Connect, ensuring they share information securely and collaborate on deals.",
+            "Out\u2011of\u2011the\u2011box dashboards and AI insights encourage conversations around performance and next steps.",
+            "Centralised channel management gives both partners and internal teams visibility into leads, opportunities and enablement engagement.",
+            "While dedicated communication tools are not specified, the integrated environment supports strong collaboration."
+          ],
+          "evidence": [
+            "\u3010917901306481134\u2020L37-L43\u3011",
+            "\u3010917901306481134\u2020L48-L53\u3011",
+            "\u3010917901306481134\u2020L90-L95\u3011"
+          ],
+          "score_decision": "Secure cross\u2011CRM collaboration and shared dashboards foster strong communication, warranting a very good score."
+        }
+      },
+      {
+        "attribute": "Performance Metrics & Scoring",
+        "domain": "Partner Performance & Engagement",
+        "weight": 75,
+        "tm_capability": "Performance Metrics & Scoring",
+        "comarch": {
+          "score": "2 - Basic",
+          "observation": [
+            "Comarch\u2019s platform description does not mention dashboards or scoring mechanisms for partner performance.",
+            "While settlement calculations imply some tracking of partner activity, explicit metrics and scoring tools are absent.",
+            "This limitation makes it difficult to evaluate partner effectiveness using the system.",
+            "Therefore, the performance metrics capability is rated as basic."
+          ],
+          "evidence": [],
+          "score_decision": "The absence of explicit performance dashboards or metrics results in a low score for Comarch."
+        },
+        "servicenow": {
+          "score": "4 - Very Good",
+          "observation": [
+            "ServiceNow\u2019s portal offers robust analytics tools that monitor performance and track partner progress.",
+            "Real\u2011time collaboration enables partners and managers to review metrics and take data\u2011driven decisions.",
+            "Automation reduces manual errors, improving the accuracy of performance scores.",
+            "Although details on scoring models are limited, the analytics capabilities justify a very good score."
+          ],
+          "evidence": [
+            "\u301094332939452191\u2020L80-L90\u3011"
+          ],
+          "score_decision": "Comprehensive analytics and performance monitoring support a very good rating despite limited details on scoring formulas."
+        },
+        "salesforce": {
+          "score": "5 - Excellent",
+          "observation": [
+            "Salesforce PRM provides AI\u2011generated insights into which opportunities are most likely to close, enabling performance ranking and prioritisation.",
+            "Out\u2011of\u2011the\u2011box dashboards and reports feed directly from CRM data, giving partners immediate visibility into revenue potential.",
+            "Pipeline Inspection offers real\u2011time tracking of deal progression, supporting accurate performance scoring.",
+            "These advanced analytics and forecasting tools justify an excellent rating."
+          ],
+          "evidence": [
+            "\u3010917901306481134\u2020L27-L33\u3011",
+            "\u3010917901306481134\u2020L48-L53\u3011"
+          ],
+          "score_decision": "AI\u2011driven insights and comprehensive dashboards provide advanced performance scoring, resulting in an excellent score."
+        }
+      },
+      {
+        "attribute": "Training & Certification Tracking",
+        "domain": "Partner Performance & Engagement",
+        "weight": 70,
+        "tm_capability": "Training & Certification Tracking",
+        "comarch": {
+          "score": "3 - Good",
+          "observation": [
+            "The Comarch partner program aims to share knowledge and provide access to training resources for partners.",
+            "Partners can collaborate with Comarch for co\u2011innovation, suggesting ongoing learning opportunities.",
+            "However, there is no mention of a formal system to track certifications or training progress.",
+            "Therefore, the capability is rated good rather than very good."
+          ],
+          "evidence": [
+            "\u301072778365246883\u2020L774-L781\u3011"
+          ],
+          "score_decision": "While Comarch offers knowledge resources and collaboration opportunities, the lack of explicit certification tracking limits the score to good."
+        },
+        "servicenow": {
+          "score": "4 - Very Good",
+          "observation": [
+            "The ServiceNow portal provides professional development resources and supports partner training and certification.",
+            "Partners can access certification programs to demonstrate competency on the platform.",
+            "Training materials are integrated into the portal, enabling partners to self\u2011learn and update skills.",
+            "Explicit tracking of certification status is not detailed, preventing an excellent score."
+          ],
+          "evidence": [
+            "\u3010505289936123474\u2020L67-L70\u3011"
+          ],
+          "score_decision": "Availability of training and certification resources and their integration into the portal justify a very good rating."
+        },
+        "salesforce": {
+          "score": "3 - Good",
+          "observation": [
+            "Salesforce provides extensive training through Trailhead, and partners can access knowledge articles via the PRM\u2019s AI\u2011powered self\u2011service.",
+            "While training resources exist, the PRM page does not explicitly mention certification tracking for partners.",
+            "Self\u2011service support suggests partners can upskill at their own pace but without formal progress tracking.",
+            "Therefore, the capability is considered good rather than very good."
+          ],
+          "evidence": [
+            "\u3010917901306481134\u2020L80-L85\u3011"
+          ],
+          "score_decision": "Training resources are available but certification tracking is not highlighted, so the score is good."
+        }
+      },
+      {
+        "attribute": "Contract Templates & Terms",
+        "domain": "Contract & Agreement Management",
+        "weight": 60,
+        "tm_capability": "Contract Templates & Terms",
+        "comarch": {
+          "score": "3 - Good",
+          "observation": [
+            "Comarch\u2019s catalog\u2011driven offers and flexible partnership modelling suggest the ability to generate contract templates tied to products and services.",
+            "Multi\u2011level orchestration includes agreements alongside onboarding and quote management.",
+            "However, there is no explicit description of reusable contract templates or term libraries.",
+            "Thus the capability is rated good."
+          ],
+          "evidence": [
+            "\u3010552391157238505\u2020L83-L115\u3011"
+          ],
+          "score_decision": "Contract management appears integrated into quoting and agreements, but the absence of explicit template features results in a good rating."
+        },
+        "servicenow": {
+          "score": "3 - Good",
+          "observation": [
+            "ServiceNow\u2019s workflow platform can manage document generation and approval processes, implying support for contract templates.",
+            "Deal registration processes likely involve standardised documents for agreements.",
+            "No specific information on contract templates or term libraries is provided in the referenced sources.",
+            "Therefore the capability is assessed as good."
+          ],
+          "evidence": [],
+          "score_decision": "Basic contract management is inferred from the workflow engine, but lack of explicit details limits the rating to good."
+        },
+        "salesforce": {
+          "score": "4 - Very Good",
+          "observation": [
+            "Salesforce\u2019s CRM ecosystem includes CPQ and document generation tools often used for contract templates and terms.",
+            "Deal registration integrates with quoting and contract processes, suggesting a robust templating capability.",
+            "Although the PRM page does not highlight templates, Salesforce\u2019s broader platform supports automated contract documents.",
+            "Hence the capability is rated very good."
+          ],
+          "evidence": [],
+          "score_decision": "Salesforce\u2019s broader ecosystem offers strong contract template features even if the PRM page does not explicitly describe them, leading to a very good score."
+        }
+      },
+      {
+        "attribute": "Negotiation & Approval Workflow",
+        "domain": "Contract & Agreement Management",
+        "weight": 65,
+        "tm_capability": "Negotiation & Approval Workflow",
+        "comarch": {
+          "score": "4 - Very Good",
+          "observation": [
+            "Comarch\u2019s platform orchestrates agreements, quotes and order fulfilment, implying structured approval workflows.",
+            "Multi\u2011level orchestration allows multiple stakeholders to negotiate and approve contracts across different lifecycle stages.",
+            "Flexible partnership modelling supports complex business negotiations.",
+            "The lack of explicit negotiation features (e.g., redlining) prevents an excellent rating."
+          ],
+          "evidence": [
+            "\u3010552391157238505\u2020L83-L115\u3011",
+            "\u3010552391157238505\u2020L137-L146\u3011"
+          ],
+          "score_decision": "Integrated lifecycle workflows indicate strong negotiation and approval capabilities, though specific negotiation tools aren\u2019t detailed, warranting a very good score."
+        },
+        "servicenow": {
+          "score": "4 - Very Good",
+          "observation": [
+            "ServiceNow automates complex processes and provides approval workflows that can be tailored for negotiations.",
+            "Real\u2011time collaboration tools support interactive discussions and approvals between partners and managers.",
+            "Automation reduces manual tasks and ensures that approvals follow defined processes.",
+            "Absent explicit negotiation features or contract redlining keeps the score at very good."
+          ],
+          "evidence": [
+            "\u301094332939452191\u2020L36-L90\u3011",
+            "\u301094332939452191\u2020L69-L78\u3011"
+          ],
+          "score_decision": "Workflow automation and collaboration provide robust approval capabilities, but lack of specific negotiation tools limits the rating to very good."
+        },
+        "salesforce": {
+          "score": "3 - Good",
+          "observation": [
+            "Salesforce PRM automates deal registration and lead routing, which includes some approval steps.",
+            "Centralised channel management allows internal teams to review partner activities and approve deals.",
+            "However, there is no explicit mention of negotiation workflows or structured approvals for contracts.",
+            "Therefore, the capability is rated good."
+          ],
+          "evidence": [
+            "\u3010917901306481134\u2020L37-L43\u3011",
+            "\u3010917901306481134\u2020L90-L95\u3011"
+          ],
+          "score_decision": "Deal registration and centralised management support basic approvals, but absence of detailed negotiation processes results in a good score."
+        }
+      },
+      {
+        "attribute": "Renewal & Compliance Monitoring",
+        "domain": "Contract & Agreement Management",
+        "weight": 60,
+        "tm_capability": "Renewal & Compliance Monitoring",
+        "comarch": {
+          "score": "3 - Good",
+          "observation": [
+            "Comarch\u2019s orchestration of agreements and settlements suggests that renewal processes can be managed, but specifics are not described.",
+            "The platform\u2019s multi\u2011currency and multi\u2011tenant setup might support contract renewal across regions.",
+            "No explicit compliance monitoring or alerts for expiring contracts are documented.",
+            "Consequently, the capability is rated good."
+          ],
+          "evidence": [],
+          "score_decision": "Renewal processes are assumed to be part of the lifecycle orchestration, but compliance monitoring is not highlighted, limiting the rating to good."
+        },
+        "servicenow": {
+          "score": "4 - Very Good",
+          "observation": [
+            "ServiceNow\u2019s platform offers continuous monitoring and compliance reporting, which can track contract obligations.",
+            "Automation and workflow tools can trigger reminders and renewals based on contract schedules.",
+            "Security features such as data retention policies ensure compliance with regulatory requirements.",
+            "While not specific to contract renewals, these features collectively support a very good score."
+          ],
+          "evidence": [
+            "\u301094332939452191\u2020L94-L127\u3011"
+          ],
+          "score_decision": "Strong compliance reporting and monitoring imply capable renewal management, justifying a very good rating."
+        },
+        "salesforce": {
+          "score": "3 - Good",
+          "observation": [
+            "Salesforce\u2019s platform includes workflows and reminders that could manage contract renewal, though the PRM page does not highlight this feature.",
+            "Centralised channel management helps monitor partner activities and may assist in renewal planning.",
+            "Compliance monitoring is not emphasised within the PRM context.",
+            "Hence, the capability is rated good."
+          ],
+          "evidence": [],
+          "score_decision": "Contract renewals and compliance monitoring are possible within the broader Salesforce ecosystem but are not detailed in the PRM materials, resulting in a good score."
+        }
+      },
+      {
+        "attribute": "Order Capture & Management",
+        "domain": "Quoting & Ordering Management",
+        "weight": 75,
+        "tm_capability": "Order Capture & Management",
+        "comarch": {
+          "score": "5 - Excellent",
+          "observation": [
+            "Comarch\u2019s partner management solution uses catalog\u2011driven quoting and automated bid generation that seamlessly converts quotes into orders.",
+            "Orders are managed and fulfilled through multi\u2011level orchestration involving partners and service providers.",
+            "The platform supports multi\u2011currency and multi\u2011tenant contexts, enabling global order management.",
+            "These comprehensive features justify an excellent rating for order capture and management."
+          ],
+          "evidence": [
+            "\u3010552391157238505\u2020L83-L115\u3011"
+          ],
+          "score_decision": "Rich quoting and order conversion capabilities with global support lead to an excellent score for Comarch."
+        },
+        "servicenow": {
+          "score": "2 - Basic",
+          "observation": [
+            "The available information about ServiceNow\u2019s partner portal focuses on collaboration and analytics rather than order management.",
+            "While workflows could be configured to capture orders, there is no evidence of dedicated order capture or management features.",
+            "Deal registration may initiate orders, but the end\u2011to\u2011end order process is not described.",
+            "Therefore, the capability is rated as basic."
+          ],
+          "evidence": [],
+          "score_decision": "Lack of explicit order management functionality results in a low score for ServiceNow in this area."
+        },
+        "salesforce": {
+          "score": "4 - Very Good",
+          "observation": [
+            "Salesforce PRM integrates with Sales Cloud and CPQ solutions that handle quoting and order management.",
+            "Deal registration and lead routing indicate the initiation of orders within the CRM ecosystem.",
+            "Partner Connect ensures that updates are automatically synchronised across CRMs when partners work on deals.",
+            "Though not detailed on the PRM page, the broader Salesforce platform supports strong order management, justifying a very good score."
+          ],
+          "evidence": [
+            "\u3010917901306481134\u2020L27-L33\u3011",
+            "\u3010917901306481134\u2020L37-L43\u3011"
+          ],
+          "score_decision": "Integration with Salesforce\u2019s sales and CPQ tools provides robust order management capabilities, leading to a very good rating."
+        }
+      },
+      {
+        "attribute": "Pricing & Discount Management",
+        "domain": "Quoting & Ordering Management",
+        "weight": 70,
+        "tm_capability": "Pricing & Discount Management",
+        "comarch": {
+          "score": "4 - Very Good",
+          "observation": [
+            "Comarch\u2019s catalog\u2011driven offers allow flexible pricing and discount configurations as part of quote generation.",
+            "Automated bid generation implies pricing models can be adjusted to include discounts.",
+            "Multi\u2011currency support ensures pricing adapts to different currencies and markets.",
+            "The lack of explicit discount rules prevents an excellent rating."
+          ],
+          "evidence": [
+            "\u3010552391157238505\u2020L83-L115\u3011"
+          ],
+          "score_decision": "Flexible catalog\u2011driven quoting supports robust pricing and discount management, resulting in a very good score."
+        },
+        "servicenow": {
+          "score": "2 - Basic",
+          "observation": [
+            "There is no mention of pricing or discount management in the ServiceNow partner portal descriptions.",
+            "Deal registration focuses on lead tracking rather than price configuration.",
+            "Partners may rely on external systems or manual processes for pricing.",
+            "Thus, the capability is rated basic."
+          ],
+          "evidence": [],
+          "score_decision": "Absence of pricing management features results in a low score for ServiceNow."
+        },
+        "salesforce": {
+          "score": "4 - Very Good",
+          "observation": [
+            "Salesforce\u2019s CPQ tools enable complex pricing and discount structures and are often used in conjunction with PRM.",
+            "The PRM environment leverages CRM data to ensure consistent pricing across channels.",
+            "Deal registration and AI insights help partners understand pricing thresholds and likely win rates.",
+            "Although the PRM page does not explicitly mention discounts, Salesforce\u2019s ecosystem supports strong pricing management."
+          ],
+          "evidence": [
+            "\u3010917901306481134\u2020L27-L33\u3011"
+          ],
+          "score_decision": "Salesforce\u2019s integration with CPQ solutions provides robust pricing and discount capabilities, justifying a very good score."
+        }
+      },
+      {
+        "attribute": "Quote Generation & Pricing",
+        "domain": "Quoting & Ordering Management",
+        "weight": 70,
+        "tm_capability": "Quote Generation & Pricing",
+        "comarch": {
+          "score": "5 - Excellent",
+          "observation": [
+            "Comarch offers catalog\u2011driven quoting with automated bid generation, enabling rapid quote creation.",
+            "Quotes are seamlessly converted into orders through orchestrated workflows.",
+            "Multi\u2011currency and multi\u2011tenant capabilities ensure quotes are accurate across markets.",
+            "The completeness of the quoting process supports an excellent rating."
+          ],
+          "evidence": [
+            "\u3010552391157238505\u2020L83-L115\u3011"
+          ],
+          "score_decision": "Comarch\u2019s comprehensive quoting engine and automated bid generation earn an excellent score."
+        },
+        "servicenow": {
+          "score": "2 - Basic",
+          "observation": [
+            "The ServiceNow portal does not discuss quote generation or pricing capabilities.",
+            "Workflow automation could be configured to generate simple quotes, but no dedicated functionality is described.",
+            "Partners likely use external systems for pricing and quoting.",
+            "Therefore the capability is rated basic."
+          ],
+          "evidence": [],
+          "score_decision": "Absence of quoting functions leads to a low score for ServiceNow."
+        },
+        "salesforce": {
+          "score": "4 - Very Good",
+          "observation": [
+            "Salesforce\u2019s PRM integrates with CPQ and Sales Cloud to generate quotes within the CRM.",
+            "AI insights and deal registration help partners select the right products and pricing for quotes.",
+            "The broader Salesforce ecosystem supports flexible pricing and automated quote generation.",
+            "However, the PRM page does not explicitly showcase quoting features, so the rating is very good."
+          ],
+          "evidence": [
+            "\u3010917901306481134\u2020L27-L33\u3011"
+          ],
+          "score_decision": "Integration with CPQ tools provides strong quoting capabilities, though the PRM documentation lacks explicit detail, resulting in a very good score."
+        }
+      },
+      {
+        "attribute": "Commission & Revenue Share Calculation",
+        "domain": "Settlement & Revenue Management",
+        "weight": 85,
+        "tm_capability": "Commission & Revenue Share Calculation",
+        "comarch": {
+          "score": "5 - Excellent",
+          "observation": [
+            "Comarch supports multi\u2011side settlements, enabling complex commission and revenue share calculations across partners.",
+            "The system calculates commissions for digital services sold through partners and vendors.",
+            "Multi\u2011currency support allows accurate revenue sharing across global markets.",
+            "Automated settlement processes reduce manual errors and enable transparency."
+          ],
+          "evidence": [
+            "\u3010552391157238505\u2020L83-L115\u3011",
+            "\u3010552391157238505\u2020L137-L146\u3011"
+          ],
+          "score_decision": "Comarch\u2019s built\u2011in multi\u2011party settlement and commission engine warrants an excellent rating."
+        },
+        "servicenow": {
+          "score": "2 - Basic",
+          "observation": [
+            "There is no mention of commission calculation or revenue sharing in the ServiceNow partner portal description.",
+            "The platform focuses on collaboration, training and analytics, not financial settlement.",
+            "Partners may need external systems for commission management.",
+            "Hence the capability is rated basic."
+          ],
+          "evidence": [],
+          "score_decision": "Lack of commission or revenue share functionality results in a low score for ServiceNow."
+        },
+        "salesforce": {
+          "score": "3 - Good",
+          "observation": [
+            "Salesforce\u2019s ecosystem includes incentive management tools, but the PRM page does not explicitly mention commission calculations.",
+            "Deal registration and pipeline visibility help track partner contributions to revenue.",
+            "AI insights can guide partners on high\u2011value opportunities, indirectly aiding revenue sharing.",
+            "However, explicit revenue share calculation is not detailed, so the capability is assessed as good."
+          ],
+          "evidence": [],
+          "score_decision": "Salesforce\u2019s CRM can integrate with incentive management solutions, but absence of clear revenue share features in PRM yields a good rating."
+        }
+      },
+      {
+        "attribute": "Invoicing & Payment Processing",
+        "domain": "Settlement & Revenue Management",
+        "weight": 80,
+        "tm_capability": "Invoicing & Payment Processing",
+        "comarch": {
+          "score": "4 - Very Good",
+          "observation": [
+            "Comarch\u2019s settlement engine supports invoicing and payment processes as part of multi\u2011party settlements.",
+            "Multi\u2011currency and tax support enable accurate invoices across different countries and currencies.",
+            "The orchestrated workflows convert orders into billing events for partners.",
+            "Detailed invoicing functions are not fully described, so the rating is very good rather than excellent."
+          ],
+          "evidence": [
+            "\u3010552391157238505\u2020L83-L115\u3011"
+          ],
+          "score_decision": "Integrated settlements and global currency support indicate strong invoicing capabilities, warranting a very good score."
+        },
+        "servicenow": {
+          "score": "2 - Basic",
+          "observation": [
+            "No evidence in the ServiceNow portal description regarding invoicing or payment processing for partners.",
+            "The focus is on collaboration and analytics rather than financial transactions.",
+            "Any invoicing would rely on external ERP systems.",
+            "Therefore, the capability is rated as basic."
+          ],
+          "evidence": [],
+          "score_decision": "Lack of financial transaction features yields a low score for ServiceNow."
+        },
+        "salesforce": {
+          "score": "3 - Good",
+          "observation": [
+            "Salesforce\u2019s ecosystem supports invoicing and payment processing through add\u2011ons like Billing or third\u2011party integrations.",
+            "Deal registration and pipeline tracking help prepare billing data, but the PRM page does not discuss invoicing directly.",
+            "Integration with Revenue Cloud can handle recurring billing and payments.",
+            "Due to the absence of explicit invoicing features in PRM, the capability is rated good."
+          ],
+          "evidence": [],
+          "score_decision": "Although Salesforce can integrate billing solutions, the PRM page lacks specific invoicing details; hence a good score."
+        }
+      },
+      {
+        "attribute": "Multi\u2011Currency & Tax Support",
+        "domain": "Settlement & Revenue Management",
+        "weight": 75,
+        "tm_capability": "Multi\u2011Currency & Tax Support",
+        "comarch": {
+          "score": "5 - Excellent",
+          "observation": [
+            "Comarch\u2019s partner management platform explicitly supports multi\u2011currency operations, enabling partners worldwide to transact in their local currencies.",
+            "The system is multi\u2011tenant and can synchronise language, time and currency, ensuring accurate tax and revenue calculations.",
+            "Multi\u2011side settlements require correct currency conversions and tax rules, demonstrating robustness.",
+            "These features justify an excellent rating."
+          ],
+          "evidence": [
+            "\u3010552391157238505\u2020L83-L115\u3011"
+          ],
+          "score_decision": "Explicit multi\u2011currency support and global synchronisation earn Comarch the highest score."
+        },
+        "servicenow": {
+          "score": "3 - Good",
+          "observation": [
+            "The ServiceNow portal does not emphasise multi\u2011currency or tax support.",
+            "As a workflow platform, ServiceNow can handle different currencies via custom fields, but this is not highlighted.",
+            "No evidence of built\u2011in tax calculations or currency conversion is provided.",
+            "Hence, the capability is assessed as good."
+          ],
+          "evidence": [],
+          "score_decision": "Due to the lack of explicit multi\u2011currency features in the available sources, ServiceNow receives a good rating."
+        },
+        "salesforce": {
+          "score": "4 - Very Good",
+          "observation": [
+            "Salesforce offers multi\u2011currency support within its CRM, and PRM benefits from this capability.",
+            "Partners can work across CRMs, implying that currency and tax data remain consistent across systems.",
+            "Deal registration and pipeline inspection incorporate currency information to evaluate opportunities.",
+            "Tax support is not explicitly mentioned, preventing an excellent rating."
+          ],
+          "evidence": [
+            "\u3010917901306481134\u2020L37-L43\u3011"
+          ],
+          "score_decision": "Multi\u2011currency support inherent to Salesforce\u2019s platform justifies a very good score, though tax features are not explicitly stated."
+        }
+      },
+      {
+        "attribute": "Co\u2011branded Asset Management",
+        "domain": "Partner Marketing & Enablement",
+        "weight": 50,
+        "tm_capability": "Co\u2011branded Asset Management",
+        "comarch": {
+          "score": "3 - Good",
+          "observation": [
+            "The Comarch partner program emphasises joint success and co\u2011innovation, suggesting partners can collaborate on marketing materials.",
+            "However, there is no explicit mention of a repository or system for managing co\u2011branded assets.",
+            "Partners may need manual processes to manage marketing collateral.",
+            "Therefore the capability is rated good."
+          ],
+          "evidence": [
+            "\u301072778365246883\u2020L774-L781\u3011"
+          ],
+          "score_decision": "Collaborative aspirations exist, but the lack of a dedicated asset management system limits the score to good."
+        },
+        "servicenow": {
+          "score": "4 - Very Good",
+          "observation": [
+            "ServiceNow\u2019s partner portal provides marketing collateral and sales tools to support partners\u2019 marketing efforts.",
+            "Partners can access sales documentation and co\u2011branded materials via the portal.",
+            "Automation features likely assist with distributing approved assets.",
+            "Specifics on asset repositories are limited, resulting in a very good rather than excellent score."
+          ],
+          "evidence": [
+            "\u3010505289936123474\u2020L73-L76\u3011"
+          ],
+          "score_decision": "Availability of marketing collateral and sales tools supports a very good rating."
+        },
+        "salesforce": {
+          "score": "5 - Excellent",
+          "observation": [
+            "Salesforce PRM offers prebuilt marketing journeys and co\u2011branded assets that partners can customise for their campaigns.",
+            "Automated marketing fund and campaign requests streamline the distribution and approval of co\u2011branded materials.",
+            "Partners can access assets within the CRM, ensuring brand consistency and ease of use.",
+            "These comprehensive capabilities justify an excellent rating."
+          ],
+          "evidence": [
+            "\u3010917901306481134\u2020L69-L75\u3011"
+          ],
+          "score_decision": "Rich co\u2011branded asset tools and marketing automation features earn Salesforce the highest score."
+        }
+      },
+      {
+        "attribute": "Marketing Fund & Campaign Management",
+        "domain": "Partner Marketing & Enablement",
+        "weight": 55,
+        "tm_capability": "Marketing Fund & Campaign Management",
+        "comarch": {
+          "score": "2 - Basic",
+          "observation": [
+            "There is no evidence that Comarch offers marketing fund or campaign management capabilities for partners.",
+            "The focus is on service delivery and quoting rather than marketing activities.",
+            "Partners may have to manage campaigns outside the platform.",
+            "As a result, the capability is rated basic."
+          ],
+          "evidence": [],
+          "score_decision": "Absence of marketing fund features results in a low score."
+        },
+        "servicenow": {
+          "score": "3 - Good",
+          "observation": [
+            "ServiceNow provides marketing collateral and sales tools but does not mention marketing fund management.",
+            "Campaign management could be implemented through custom workflows, but no explicit support is described.",
+            "Therefore, the capability is assessed as good.",
+            "Further evidence would be required to justify a higher rating."
+          ],
+          "evidence": [
+            "\u3010505289936123474\u2020L73-L76\u3011"
+          ],
+          "score_decision": "Basic marketing support exists, but absence of funds or campaign management limits the score."
+        },
+        "salesforce": {
+          "score": "5 - Excellent",
+          "observation": [
+            "Salesforce PRM includes automated marketing fund and campaign requests as part of its marketing automation features.",
+            "Partners can initiate and track marketing fund requests directly within the platform.",
+            "Prebuilt marketing journeys help partners execute campaigns effectively.",
+            "These robust features justify an excellent rating."
+          ],
+          "evidence": [
+            "\u3010917901306481134\u2020L69-L75\u3011"
+          ],
+          "score_decision": "Built\u2011in marketing fund and campaign management tools earn Salesforce the highest score."
+        }
+      },
+      {
+        "attribute": "Self\u2011Service Training & Resources",
+        "domain": "Partner Marketing & Enablement",
+        "weight": 60,
+        "tm_capability": "Self\u2011Service Training & Resources",
+        "comarch": {
+          "score": "3 - Good",
+          "observation": [
+            "The Comarch partner program offers access to knowledge and resources for partners, suggesting some level of self\u2011service training.",
+            "Collaborative partnerships encourage learning and co\u2011innovation.",
+            "There is no mention of a structured portal for self\u2011service learning or knowledge articles.",
+            "Thus, the capability is rated good."
+          ],
+          "evidence": [
+            "\u301072778365246883\u2020L774-L781\u3011"
+          ],
+          "score_decision": "Basic access to knowledge resources exists, but the absence of a formal self\u2011service portal limits the rating to good."
+        },
+        "servicenow": {
+          "score": "4 - Very Good",
+          "observation": [
+            "ServiceNow\u2019s partner portal includes training and certification resources that partners can access on demand.",
+            "Professional development resources indicate a self\u2011service approach for learning.",
+            "Automated workflows and real\u2011time collaboration support partners in finding relevant training materials.",
+            "Explicit self\u2011service knowledge base features are not described, so the rating is very good rather than excellent."
+          ],
+          "evidence": [
+            "\u3010505289936123474\u2020L67-L70\u3011"
+          ],
+          "score_decision": "Availability of training and certification resources justifies a very good score."
+        },
+        "salesforce": {
+          "score": "5 - Excellent",
+          "observation": [
+            "Salesforce PRM provides AI\u2011powered partner self\u2011service with knowledge articles and bots accessible anytime.",
+            "Self\u2011service support routes cases to the appropriate agent when necessary, enhancing the learning experience.",
+            "The PRM integrates with Trailhead and other Salesforce learning resources for comprehensive self\u2011learning.",
+            "These extensive self\u2011service features justify an excellent rating."
+          ],
+          "evidence": [
+            "\u3010917901306481134\u2020L80-L85\u3011"
+          ],
+          "score_decision": "AI\u2011powered self\u2011service and integrated knowledge resources earn Salesforce the highest score."
+        }
+      },
+      {
+        "attribute": "Commission & Compliance Reporting",
+        "domain": "Analytics & Reporting",
+        "weight": 70,
+        "tm_capability": "Commission & Compliance Reporting",
+        "comarch": {
+          "score": "3 - Good",
+          "observation": [
+            "Comarch\u2019s settlement engine can produce commission calculations, implying some reporting capabilities.",
+            "However, the documentation does not describe dashboards or compliance reports.",
+            "Partners likely need custom reports or external tools for detailed analysis.",
+            "Thus, the capability is rated good."
+          ],
+          "evidence": [],
+          "score_decision": "Basic settlement reporting exists but absence of dedicated compliance reporting limits the score."
+        },
+        "servicenow": {
+          "score": "4 - Very Good",
+          "observation": [
+            "ServiceNow\u2019s analytics tools monitor performance and can be configured for commission reporting.",
+            "Continuous monitoring and compliance reporting features support regulatory obligations.",
+            "Data encryption and retention policies assist in producing compliant reports.",
+            "Lack of explicit commission functionality prevents an excellent rating."
+          ],
+          "evidence": [
+            "\u301094332939452191\u2020L80-L90\u3011",
+            "\u301094332939452191\u2020L94-L127\u3011"
+          ],
+          "score_decision": "Strong analytics and compliance capabilities yield a very good score, although commission calculations are not emphasised."
+        },
+        "salesforce": {
+          "score": "4 - Very Good",
+          "observation": [
+            "Salesforce provides out\u2011of\u2011the\u2011box dashboards and reports feeding directly from CRM data.",
+            "AI insights help partners understand revenue potential and next steps.",
+            "While compliance reporting is not specifically mentioned, Salesforce offers robust reporting tools that can be configured for compliance.",
+            "As commission reporting is not highlighted, the capability is assessed as very good."
+          ],
+          "evidence": [
+            "\u3010917901306481134\u2020L48-L53\u3011"
+          ],
+          "score_decision": "Comprehensive dashboards and AI insights support strong reporting, but lack of explicit commission or compliance details prevents an excellent score."
+        }
+      },
+      {
+        "attribute": "Forecasting & Predictive Insights",
+        "domain": "Analytics & Reporting",
+        "weight": 65,
+        "tm_capability": "Forecasting & Predictive Insights",
+        "comarch": {
+          "score": "2 - Basic",
+          "observation": [
+            "The available information does not mention forecasting or predictive analytics in Comarch\u2019s partner management solution.",
+            "While settlement calculations provide historical data, predictive insights are not described.",
+            "Partners may need external analytics tools for forecasting.",
+            "Therefore, the capability is rated basic."
+          ],
+          "evidence": [],
+          "score_decision": "Lack of predictive analytics features results in a low score."
+        },
+        "servicenow": {
+          "score": "3 - Good",
+          "observation": [
+            "ServiceNow\u2019s analytics tools enable monitoring and tracking but do not explicitly mention predictive modeling.",
+            "Real\u2011time data can support trend analysis, hinting at basic forecasting capabilities.",
+            "Automation and AI features may provide some predictive insights, though not detailed in the source.",
+            "Hence, the capability is rated good."
+          ],
+          "evidence": [],
+          "score_decision": "Analytics tools provide some forecasting potential, but lack of explicit predictive features limits the score to good."
+        },
+        "salesforce": {
+          "score": "5 - Excellent",
+          "observation": [
+            "Salesforce PRM offers AI\u2011generated insights on which opportunities are most likely to close, delivering predictive intelligence to partners.",
+            "Out\u2011of\u2011the\u2011box dashboards feed real\u2011time data into predictive models for revenue potential.",
+            "Pipeline Inspection provides forecasting based on current opportunities and partner activities.",
+            "These advanced predictive features justify an excellent rating."
+          ],
+          "evidence": [
+            "\u3010917901306481134\u2020L27-L33\u3011",
+            "\u3010917901306481134\u2020L48-L53\u3011"
+          ],
+          "score_decision": "AI\u2011driven forecasting and predictive insights lead to the highest score for Salesforce."
+        }
+      },
+      {
+        "attribute": "Real\u2011Time Dashboards & KPIs",
+        "domain": "Analytics & Reporting",
+        "weight": 65,
+        "tm_capability": "Real\u2011Time Dashboards & KPIs",
+        "comarch": {
+          "score": "2 - Basic",
+          "observation": [
+            "Comarch\u2019s description does not mention real\u2011time dashboards or KPI tracking for partners.",
+            "Partners may need external BI tools to visualise performance metrics.",
+            "Settlement and quoting features provide data but no dashboards are described.",
+            "Thus, the capability is rated basic."
+          ],
+          "evidence": [],
+          "score_decision": "Absence of real\u2011time dashboards results in a low score."
+        },
+        "servicenow": {
+          "score": "4 - Very Good",
+          "observation": [
+            "ServiceNow\u2019s analytics tools provide robust dashboards that allow partners to monitor performance in real time.",
+            "Continuous monitoring and compliance reporting imply up\u2011to\u2011date KPI tracking.",
+            "Automation ensures data is updated quickly, supporting real\u2011time insights.",
+            "While custom KPIs are possible, specifics are not described, preventing an excellent rating."
+          ],
+          "evidence": [
+            "\u301094332939452191\u2020L80-L90\u3011"
+          ],
+          "score_decision": "Comprehensive dashboards and real\u2011time monitoring capabilities warrant a very good score."
+        },
+        "salesforce": {
+          "score": "5 - Excellent",
+          "observation": [
+            "Salesforce PRM provides out\u2011of\u2011the\u2011box dashboards and reports that feed directly from CRM data, offering real\u2011time visibility.",
+            "AI insights and Pipeline Inspection deliver KPIs and real\u2011time tracking for partner opportunities.",
+            "Centralised channel management ensures all partner activities are visible in real time.",
+            "These advanced dashboard capabilities justify an excellent rating."
+          ],
+          "evidence": [
+            "\u3010917901306481134\u2020L48-L53\u3011"
+          ],
+          "score_decision": "Rich dashboards and real\u2011time KPI tracking deliver the highest score."
+        }
+      },
+      {
+        "attribute": "Knowledge Base & AI Assistant",
+        "domain": "Partner Support & Service",
+        "weight": 60,
+        "tm_capability": "Knowledge Base & AI Assistant",
+        "comarch": {
+          "score": "2 - Basic",
+          "observation": [
+            "Comarch\u2019s available materials do not mention a knowledge base or AI assistant for partners.",
+            "Partners may rely on general documentation or external support channels.",
+            "Support resources appear limited compared with other vendors.",
+            "Therefore, the capability is rated basic."
+          ],
+          "evidence": [],
+          "score_decision": "Lack of documented knowledge base or AI support results in a low score."
+        },
+        "servicenow": {
+          "score": "4 - Very Good",
+          "observation": [
+            "ServiceNow\u2019s platform is widely used for knowledge management and can provide knowledge articles to partners.",
+            "Automation and AI capabilities suggest the potential for AI assistants, though not explicitly described in the partner portal.",
+            "Real\u2011time collaboration and training resources contribute to the support experience.",
+            "Due to limited explicit evidence, the capability is rated very good rather than excellent."
+          ],
+          "evidence": [],
+          "score_decision": "Strong knowledge management capabilities are inferred, but absence of explicit AI assistant details prevents a higher score."
+        },
+        "salesforce": {
+          "score": "5 - Excellent",
+          "observation": [
+            "Salesforce PRM offers AI\u2011powered self\u2011service, allowing partners to access knowledge articles and intelligent bots for support.",
+            "Cases can be routed to the appropriate agent when necessary, blending AI assistance with human support.",
+            "Knowledge articles are searchable within the partner portal, reducing the need for manual intervention.",
+            "These features justify an excellent rating."
+          ],
+          "evidence": [
+            "\u3010917901306481134\u2020L80-L85\u3011"
+          ],
+          "score_decision": "AI\u2011powered self\u2011service and integrated knowledge base warrant the highest score for Salesforce."
+        }
+      },
+      {
+        "attribute": "SLA & Escalation Management",
+        "domain": "Partner Support & Service",
+        "weight": 55,
+        "tm_capability": "SLA & Escalation Management",
+        "comarch": {
+          "score": "2 - Basic",
+          "observation": [
+            "There is no evidence that Comarch\u2019s partner management solution includes SLA tracking or escalation management features.",
+            "Support processes are not described, suggesting manual SLA handling.",
+            "Partners may rely on external systems for escalation workflows.",
+            "Hence, the capability is rated basic."
+          ],
+          "evidence": [],
+          "score_decision": "Absence of SLA or escalation features results in a low score."
+        },
+        "servicenow": {
+          "score": "4 - Very Good",
+          "observation": [
+            "ServiceNow\u2019s ITSM heritage implies strong SLA management and escalation workflows which can be leveraged by partners.",
+            "Continuous monitoring and compliance reporting support adherence to SLAs.",
+            "Automated workflows ensure issues are escalated to the right teams.",
+            "Due to lack of explicit partner SLA examples in the sources, the rating is very good, not excellent."
+          ],
+          "evidence": [
+            "\u301094332939452191\u2020L94-L127\u3011"
+          ],
+          "score_decision": "Strong SLA capabilities inherent to ServiceNow\u2019s platform justify a very good score, even though not detailed for partners."
+        },
+        "salesforce": {
+          "score": "3 - Good",
+          "observation": [
+            "Salesforce PRM routes cases to appropriate agents and provides knowledge articles, implying some level of escalation handling.",
+            "SLA management is not explicitly mentioned in the PRM documentation.",
+            "Partners can track case status via the portal, but formal SLA tracking is unclear.",
+            "Therefore, the capability is rated good."
+          ],
+          "evidence": [
+            "\u3010917901306481134\u2020L80-L85\u3011"
+          ],
+          "score_decision": "Basic case routing exists, but absence of explicit SLA and escalation workflows limits the rating to good."
+        }
+      },
+      {
+        "attribute": "Support Portal & Ticketing",
+        "domain": "Partner Support & Service",
+        "weight": 65,
+        "tm_capability": "Support Portal & Ticketing",
+        "comarch": {
+          "score": "2 - Basic",
+          "observation": [
+            "Comarch\u2019s partner management information does not reference a support portal or ticketing system for partners.",
+            "Partners likely rely on general customer support channels outside the platform.",
+            "Lack of dedicated ticketing reduces the ability to track and resolve partner issues systematically.",
+            "Hence, the capability is rated basic."
+          ],
+          "evidence": [],
+          "score_decision": "Absence of support portal or ticketing features results in a low score."
+        },
+        "servicenow": {
+          "score": "4 - Very Good",
+          "observation": [
+            "ServiceNow is well\u2011known for its service management and ticketing capabilities, which can be extended to partners.",
+            "Partners can raise tickets and track issue resolution through the portal, leveraging ServiceNow\u2019s ITSM platform.",
+            "Automation and workflows ensure tickets are routed and resolved efficiently.",
+            "No explicit partner ticketing examples are provided in the sources, so the score is very good rather than excellent."
+          ],
+          "evidence": [],
+          "score_decision": "Inherent ITSM strengths support a very good rating for ticketing, despite limited explicit details in the partner portal article."
+        },
+        "salesforce": {
+          "score": "4 - Very Good",
+          "observation": [
+            "Salesforce PRM includes AI\u2011powered self\u2011service with case routing, effectively functioning as a support portal.",
+            "Partners can open cases and receive support through intelligent bots and agents.",
+            "Integration with Service Cloud or experience cloud enhances ticket tracking and resolution.",
+            "Because dedicated ticketing features are not extensively described, the score is very good rather than excellent."
+          ],
+          "evidence": [
+            "\u3010917901306481134\u2020L80-L85\u3011"
+          ],
+          "score_decision": "AI\u2011driven case routing and integration with Service Cloud justify a very good score."
+        }
+      },
+      {
+        "attribute": "Cross\u2011CRM & System Integration",
+        "domain": "Data Integration & API Management",
+        "weight": 75,
+        "tm_capability": "Cross\u2011CRM & System Integration",
+        "comarch": {
+          "score": "4 - Very Good",
+          "observation": [
+            "Comarch\u2019s platform is multi\u2011tenant and multi\u2011currency, implying integration with various systems and regions.",
+            "Multi\u2011side settlements and orchestration across onboarding, agreements and orders indicate integration with other BSS/OSS components.",
+            "However, explicit cross\u2011CRM integration is not described.",
+            "Therefore, the capability is rated very good."
+          ],
+          "evidence": [
+            "\u3010552391157238505\u2020L83-L115\u3011"
+          ],
+          "score_decision": "Strong orchestration and multi\u2011tenant design show good integration capabilities, but lack of explicit cross\u2011CRM support limits the rating to very good."
+        },
+        "servicenow": {
+          "score": "4 - Very Good",
+          "observation": [
+            "ServiceNow integrates with many systems through APIs and connectors, enabling partners to work with external CRMs and ERPs.",
+            "The partner portal supports real\u2011time collaboration, implying data exchange between ServiceNow and partner systems.",
+            "While cross\u2011CRM integration is not specifically highlighted, the platform\u2019s extensibility suggests strong integration potential.",
+            "Hence, the capability is assessed as very good."
+          ],
+          "evidence": [],
+          "score_decision": "ServiceNow\u2019s extensible integration capabilities justify a very good rating despite the lack of explicit cross\u2011CRM examples."
+        },
+        "salesforce": {
+          "score": "5 - Excellent",
+          "observation": [
+            "Salesforce PRM allows partners to work securely across CRMs using Partner Connect, ensuring data consistency and real\u2011time updates.",
+            "Updates made in partner CRMs are automatically synchronised back to Salesforce, enabling seamless integration.",
+            "Data fields are controlled to maintain integrity across systems.",
+            "These features demonstrate strong cross\u2011CRM and system integration, justifying an excellent rating."
+          ],
+          "evidence": [
+            "\u3010917901306481134\u2020L37-L43\u3011"
+          ],
+          "score_decision": "Secure cross\u2011CRM integration and automatic synchronisation merit the highest score."
+        }
+      },
+      {
+        "attribute": "Data Security & Privacy",
+        "domain": "Data Integration & API Management",
+        "weight": 90,
+        "tm_capability": "Data Security & Privacy",
+        "comarch": {
+          "score": "4 - Very Good",
+          "observation": [
+            "Comarch\u2019s multi\u2011tenant architecture ensures that each partner accesses only their own products and clients, promoting data isolation.",
+            "The system synchronises language, time and currency to maintain data integrity across regions.",
+            "No explicit mention of encryption or multi\u2011factor authentication exists, limiting the rating.",
+            "Therefore, the capability is rated very good."
+          ],
+          "evidence": [
+            "\u3010552391157238505\u2020L83-L115\u3011"
+          ],
+          "score_decision": "Data isolation through multi\u2011tenancy indicates strong privacy controls, but lack of explicit security measures prevents a top score."
+        },
+        "servicenow": {
+          "score": "5 - Excellent",
+          "observation": [
+            "ServiceNow\u2019s partner portal employs data encryption at rest and multi\u2011factor authentication to safeguard sensitive information.",
+            "Continuous monitoring and audit logging support privacy compliance.",
+            "Data retention policies and compliance reporting ensure adherence to regulatory requirements.",
+            "These comprehensive security features justify an excellent rating."
+          ],
+          "evidence": [
+            "\u301094332939452191\u2020L94-L127\u3011"
+          ],
+          "score_decision": "Strong encryption, authentication and compliance features deliver the highest score for ServiceNow."
+        },
+        "salesforce": {
+          "score": "4 - Very Good",
+          "observation": [
+            "Salesforce PRM ensures secure data sharing across CRMs through Partner Connect and controlled data fields.",
+            "Permissions can be set for partners and internal teams to restrict data access.",
+            "The PRM page does not explicitly mention encryption or privacy certifications, so the rating is very good rather than excellent.",
+            "Salesforce\u2019s general security features (e.g., trust site) are strong but not referenced in the PRM materials."
+          ],
+          "evidence": [
+            "\u3010917901306481134\u2020L37-L43\u3011"
+          ],
+          "score_decision": "Secure data sharing and permission controls justify a very good rating, though explicit security measures are not detailed."
+        }
+      },
+      {
+        "attribute": "Open API Integration",
+        "domain": "Data Integration & API Management",
+        "weight": 70,
+        "tm_capability": "Open API Integration",
+        "comarch": {
+          "score": "3 - Good",
+          "observation": [
+            "Comarch\u2019s documentation does not explicitly mention open APIs for extending partner management.",
+            "The platform likely provides integration APIs to connect with BSS/OSS systems, but details are not provided.",
+            "As a result, open API support is considered good but not strong.",
+            "Additional documentation would be needed for a higher score."
+          ],
+          "evidence": [],
+          "score_decision": "Limited information on APIs results in a moderate score."
+        },
+        "servicenow": {
+          "score": "4 - Very Good",
+          "observation": [
+            "ServiceNow offers extensive REST and SOAP APIs across its platform, enabling integration with external systems.",
+            "Partners can build custom applications and integrations using the Now Platform\u2019s open API framework.",
+            "The partner portal can leverage these APIs to extend functionality and integrate with other tools.",
+            "The lack of explicit partner API examples keeps the score at very good."
+          ],
+          "evidence": [],
+          "score_decision": "The platform\u2019s comprehensive API framework warrants a very good rating despite absence of partner\u2011specific examples."
+        },
+        "salesforce": {
+          "score": "4 - Very Good",
+          "observation": [
+            "Salesforce provides REST and SOAP APIs as well as the Salesforce Platform for custom integrations.",
+            "Partner Connect allows integration across CRMs, implying open APIs facilitate data exchange.",
+            "The PRM can be extended using AppExchange apps and custom development.",
+            "Absence of explicit partner API examples prevents an excellent score."
+          ],
+          "evidence": [
+            "\u3010917901306481134\u2020L37-L43\u3011"
+          ],
+          "score_decision": "Robust API ecosystem yields a very good rating, though explicit partner API functionality isn\u2019t highlighted."
+        }
+      },
+      {
+        "attribute": "Audit & Risk Reporting",
+        "domain": "Compliance & Risk Management",
+        "weight": 80,
+        "tm_capability": "Audit & Risk Reporting",
+        "comarch": {
+          "score": "3 - Good",
+          "observation": [
+            "Comarch\u2019s documentation does not mention audit logs or risk reporting for partner activities.",
+            "Multi\u2011party settlements and lifecycle orchestration imply some tracking, but audit reporting is not described.",
+            "Partners may need external systems for compliance auditing.",
+            "Thus, the capability is rated good."
+          ],
+          "evidence": [],
+          "score_decision": "Lack of explicit audit or risk reporting features results in a moderate score."
+        },
+        "servicenow": {
+          "score": "4 - Very Good",
+          "observation": [
+            "ServiceNow provides continuous monitoring and compliance reporting, supporting audit and risk management.",
+            "Data encryption and retention policies contribute to risk mitigation.",
+            "Partners can track compliance status through analytics dashboards.",
+            "Absence of partner\u2011specific audit examples keeps the rating at very good."
+          ],
+          "evidence": [
+            "\u301094332939452191\u2020L94-L127\u3011"
+          ],
+          "score_decision": "Comprehensive compliance reporting and monitoring earn a very good score."
+        },
+        "salesforce": {
+          "score": "3 - Good",
+          "observation": [
+            "Salesforce does not highlight audit or risk reporting within the PRM documentation.",
+            "Audit trails exist within the broader Salesforce platform but are not referenced.",
+            "Partners may access limited audit logs through CRM reporting.",
+            "Consequently, the capability is rated good."
+          ],
+          "evidence": [],
+          "score_decision": "Limited mention of audit and risk reporting results in a moderate score."
+        }
+      },
+      {
+        "attribute": "KYC & Due Diligence",
+        "domain": "Compliance & Risk Management",
+        "weight": 85,
+        "tm_capability": "KYC & Due Diligence",
+        "comarch": {
+          "score": "3 - Good",
+          "observation": [
+            "Comarch\u2019s documentation does not mention Know\u2011Your\u2011Customer (KYC) or partner due diligence processes.",
+            "Onboarding workflows may include some verification, but specifics are lacking.",
+            "Partners might need external tools to perform due diligence checks.",
+            "Therefore, the capability is rated good."
+          ],
+          "evidence": [],
+          "score_decision": "The lack of explicit KYC or due\u2011diligence functionality leads to a moderate score."
+        },
+        "servicenow": {
+          "score": "3 - Good",
+          "observation": [
+            "The ServiceNow portal does not reference KYC or due diligence features.",
+            "Workflow tools could be customised to perform basic checks, but no dedicated functionality is described.",
+            "Data security and compliance features indirectly support due diligence.",
+            "As a result, the capability is rated good."
+          ],
+          "evidence": [],
+          "score_decision": "Absence of specific KYC features results in a moderate rating."
+        },
+        "salesforce": {
+          "score": "3 - Good",
+          "observation": [
+            "Salesforce PRM does not mention KYC or due diligence processes.",
+            "Partners can be verified manually using CRM data, but automated checks are not detailed.",
+            "Compliance and risk tools may be configured for KYC, but no evidence is provided.",
+            "Consequently, the capability is rated good."
+          ],
+          "evidence": [],
+          "score_decision": "Lack of explicit KYC functionality results in a moderate score."
+        }
+      },
+      {
+        "attribute": "Regulatory Compliance Tracking",
+        "domain": "Compliance & Risk Management",
+        "weight": 80,
+        "tm_capability": "Regulatory Compliance Tracking",
+        "comarch": {
+          "score": "3 - Good",
+          "observation": [
+            "There is no specific mention of regulatory compliance tracking in Comarch\u2019s partner management description.",
+            "Multi\u2011currency and settlement features imply some compliance with financial regulations, but tracking is not detailed.",
+            "Partners may rely on external systems for regulatory compliance.",
+            "Hence, the capability is rated good."
+          ],
+          "evidence": [],
+          "score_decision": "Limited evidence of compliance tracking results in a moderate score."
+        },
+        "servicenow": {
+          "score": "4 - Very Good",
+          "observation": [
+            "ServiceNow provides compliance reporting, data retention policies and continuous monitoring, which support regulatory compliance.",
+            "Encryption and multi\u2011factor authentication align with data protection regulations.",
+            "Audit logs facilitate compliance tracking across partner activities.",
+            "These features justify a very good rating."
+          ],
+          "evidence": [
+            "\u301094332939452191\u2020L94-L127\u3011"
+          ],
+          "score_decision": "Comprehensive compliance features warrant a very good score."
+        },
+        "salesforce": {
+          "score": "3 - Good",
+          "observation": [
+            "The Salesforce PRM documentation does not discuss regulatory compliance tracking.",
+            "Standard Salesforce features provide some compliance support, but partner\u2011specific tracking is not described.",
+            "Partners may rely on Salesforce\u2019s trust and security features for baseline compliance.",
+            "Therefore, the capability is rated good."
+          ],
+          "evidence": [],
+          "score_decision": "Absence of explicit compliance tracking features results in a moderate rating."
+        }
+      }
+    ]
+  }

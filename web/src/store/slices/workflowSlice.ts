@@ -142,6 +142,9 @@ const workflowSlice = createSlice({
       state.loading = false;
       state.error = null;
     },
+    clearPromptResponse: (state) => {
+      state.promptResponse = null;
+    },
     setUploadedFile: (state, action: PayloadAction<FileUploadResult>) => {
       state.uploadedFile = action.payload;
     },
@@ -284,6 +287,7 @@ export const {
   setCurrentStep,
   updateWorkflowStep,
   clearWorkflow,
+  clearPromptResponse,
   setUploadedFile,
   setValidationResult,
   clearError,

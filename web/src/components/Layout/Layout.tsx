@@ -25,14 +25,14 @@ import {
   Dashboard as DashboardIcon,
   List as ListIcon,
   Timeline as TimelineIcon,
-  Analytics as AnalyticsIcon,
   Assessment as AssessmentIcon,
   Storage as StorageIcon,
   Brightness4 as DarkModeIcon,
   Brightness7 as LightModeIcon,
   Logout as LogoutIcon,
   Person as PersonIcon,
-  SmartToy as BotIcon
+  SmartToy as BotIcon,
+  Compare as CompareIcon
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
@@ -86,6 +86,42 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           },
         },
       },
+      MuiTooltip: {
+        styleOverrides: {
+          tooltip: {
+            backgroundColor: darkMode ? '#2d2d2d' : '#424242',
+            color: darkMode ? '#ffffff' : '#ffffff',
+            fontSize: '0.875rem',
+            fontWeight: 500,
+            padding: '8px 12px',
+            borderRadius: '6px',
+            boxShadow: darkMode 
+              ? '0 4px 20px rgba(0, 0, 0, 0.8)' 
+              : '0 4px 20px rgba(0, 0, 0, 0.3)',
+            border: `1px solid ${darkMode ? '#555' : '#666'}`,
+            maxWidth: '300px',
+            wordWrap: 'break-word',
+            zIndex: '99999 !important',
+          },
+          arrow: {
+            color: darkMode ? '#2d2d2d' : '#424242',
+          },
+          popper: {
+            zIndex: '99999 !important',
+          },
+        },
+        defaultProps: {
+          placement: 'bottom',
+          arrow: true,
+          enterDelay: 500,
+          leaveDelay: 0,
+          PopperProps: {
+            style: {
+              zIndex: 99999,
+            },
+          },
+        },
+      },
     },
   });
 
@@ -93,8 +129,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     { text: 'Dashboard', icon: <DashboardIcon />, path: '/' },
     { text: 'Capabilities', icon: <ListIcon />, path: '/capabilities' },
     { text: 'Workflow', icon: <TimelineIcon />, path: '/workflow' },
-    { text: 'Analysis', icon: <AnalyticsIcon />, path: '/analysis' },
     { text: 'Reports', icon: <AssessmentIcon />, path: '/reports' },
+    { text: 'Vendor Analysis', icon: <CompareIcon />, path: '/vendor-analysis' },
     { text: 'Data Quality Chat', icon: <BotIcon />, path: '/data-quality-chat' },
   ];
 
@@ -112,13 +148,15 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       
       dispatch(addNotification({
         type: 'success',
-        message: `Switched to ${newDarkMode ? 'dark' : 'light'} mode`,
+        message: `Theme preference saved successfully`,
+        duration: 3000,
       }));
     } catch (error: any) {
       console.error('Failed to update dark mode preference:', error);
       dispatch(addNotification({
         type: 'error',
         message: 'Failed to save theme preference',
+        duration: 5000,
       }));
     }
   };
@@ -231,7 +269,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           sx={{
             width: { sm: `calc(100% - ${drawerWidth}px)` },
             ml: { sm: `${drawerWidth}px` },
-            zIndex: theme.zIndex.drawer + 1,
+            zIndex: 10000,
           }}
         >
           <Toolbar>
@@ -278,7 +316,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               color="inherit"
               onClick={handleLogout}
               sx={{ ml: 1 }}
-              title="Logout"
             >
               <LogoutIcon />
             </IconButton>

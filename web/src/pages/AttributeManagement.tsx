@@ -100,7 +100,7 @@ const AttributeManagement: React.FC = () => {
       // Load attributes
       const attributesResponse = await attributeAPI.getByCapabilityId(parseInt(capabilityId));
       if (attributesResponse.success && attributesResponse.data) {
-        setAttributes(attributesResponse.data || []);
+        setAttributes(attributesResponse.data.attributes || []);
       } else {
         setError(attributesResponse.error || 'Failed to load attributes');
       }
@@ -349,6 +349,7 @@ const AttributeManagement: React.FC = () => {
                       )}
                     </Box>
                   }
+                  disableTypography
                   secondary={
                     <Box>
                       {attribute.definition && (
@@ -413,6 +414,8 @@ const AttributeManagement: React.FC = () => {
           }}
           maxWidth="md"
           fullWidth
+          disableRestoreFocus
+          disableAutoFocus
         >
           <DialogTitle>
             {editingAttribute ? 'Edit Attribute' : 'Create New Attribute'}
@@ -508,6 +511,8 @@ const AttributeManagement: React.FC = () => {
           onClose={() => setDeletingAttribute(null)}
           maxWidth="sm"
           fullWidth
+          disableRestoreFocus
+          disableAutoFocus
         >
           <DialogTitle color="error">
             Delete Attribute

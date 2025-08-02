@@ -183,6 +183,13 @@ class ProcessRequest(Base):
     data: Dict[str, Any]
 
 # Vendor Score schemas
+class VendorScoreObservationResponse(Base):
+    id: int
+    vendor_score_id: int
+    observation: str
+    observation_type: str
+    created_at: datetime
+
 class VendorScoreResponse(Base):
     id: int
     capability_id: int
@@ -191,12 +198,12 @@ class VendorScoreResponse(Base):
     weight: int
     score: str
     score_numeric: int
-    observation: str
     evidence_url: str
     score_decision: str
     research_type: str
-    research_date: str
-    created_at: str
+    research_date: datetime
+    created_at: datetime
+    observations: List[VendorScoreObservationResponse] = []
 
 # Capability Tracker schemas
 class CapabilityTrackerResponse(Base):

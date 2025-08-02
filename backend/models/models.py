@@ -1,7 +1,18 @@
-from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, ForeignKey, Float
+from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, ForeignKey, Float, Enum
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from core.database import Base
+import enum
+
+class ObservationType(enum.Enum):
+    STRENGTH = "strength"
+    WEAKNESS = "weakness"
+    GAP = "gap"
+    FEATURE = "feature"
+    LIMITATION = "limitation"
+    ADVANTAGE = "advantage"
+    DISADVANTAGE = "disadvantage"
+    NOTE = "note"
 
 class Capability(Base):
     __tablename__ = "capabilities"
@@ -81,7 +92,6 @@ class VendorScore(Base):
     weight = Column(Integer, default=50)
     score = Column(String, nullable=False)
     score_numeric = Column(Float, nullable=False)
-    observation = Column(Text)
     evidence_url = Column(String)
     score_decision = Column(String)
     research_type = Column(String, default="capability_research")
@@ -91,6 +101,19 @@ class VendorScore(Base):
     # Relationships
     capability = relationship("Capability", back_populates="vendor_scores")
     attribute = relationship("Attribute", back_populates="vendor_scores")
+    observations = relationship("VendorScoreObservation", back_populates="vendor_score", cascade="all, delete-orphan")
+
+class VendorScoreObservation(Base):
+    __tablename__ = "vendor_score_observations"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    vendor_score_id = Column(Integer, ForeignKey("vendor_scores.id"), nullable=False)
+    observation = Column(Text, nullable=False)
+    observation_type = Column(Enum(ObservationType), nullable=False, default=ObservationType.NOTE)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    
+    # Relationships
+    vendor_score = relationship("VendorScore", back_populates="observations")
 
 class CapabilityTracker(Base):
     __tablename__ = "capability_tracker"

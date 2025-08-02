@@ -4,9 +4,9 @@ These templates contain the full, detailed markdown prompts used for research.
 """
 
 # New Capability Domain Analysis Template
-NEW_CAPABILITY_DOMAIN_TEMPLATE = """# New Capability Domain and Attribute Analysis Prompt
+NEW_CAPABILITY_DOMAIN_TEMPLATE = """# **NEW** Capability Domain and Attribute Analysis Prompt
 
-You are analyzing a NEW telecom capability that is not currently in our framework. You need to research and create a comprehensive domain and attribute structure for this capability.
+You are analyzing a **NEW** telecom capability that is not currently in our framework. You need to research and create a comprehensive domain and attribute structure for this capability.
 
 ## Analysis Target
 
@@ -57,7 +57,8 @@ Return ONLY valid JSON in this exact format:
             }}
         ]
     }}
-}}```
+}}
+```
 """
 
 # Existing Capability Domain Analysis Template
@@ -218,7 +219,8 @@ Conduct comprehensive vendor research for the telecom capability **{capability_n
 
 4. **Evidence Collection**
    - Provide specific evidence URLs for each score
-   - Include detailed observations for each vendor per attribute
+   - Include detailed observations as arrays for each vendor per attribute
+   - Each observation should have a type (strength, weakness, gap, feature, limitation, advantage, disadvantage, note)
 
 ### Expected Output Format
 
@@ -226,12 +228,12 @@ Please provide your research in the following JSON format:
 
 ```json
 {{
-  "capability": "{capability_name}",
+  "capability": "has-domains",
   "research_date": "YYYY-MM-DD",
   "current_framework": {{
-    "domains_count": {domain_count},
-    "attributes_count": {attribute_count},
-    "domains": {domains}
+    "domains_count": 0,
+    "attributes_count": 0,
+    "domains": []
   }},
   "market_analysis": {{
     "primary_vendors": [],
@@ -250,7 +252,16 @@ Please provide your research in the following JSON format:
       "tm_capability": "string",
       "comarch": {{
         "score": "X - Level",
-        "observation": ["point1", "point2", "point3", "point4"],
+        "observations": [
+          {{
+            "observation": "Detailed observation point 1",
+            "type": "STRENGTH|WEAKNESS|GAP|FEATURE|LIMITATION|ADVANTAGE|DISADVANTAGE|NOTE"
+          }},
+          {{
+            "observation": "Detailed observation point 2", 
+            "type": "STRENGTH|WEAKNESS|GAP|FEATURE|LIMITATION|ADVANTAGE|DISADVANTAGE|NOTE"
+          }}
+        ],
         "evidence": ["url1", "url2", "url3", "url4"],
         "score_decision": "string"
       }},
@@ -284,6 +295,24 @@ Please provide your research in the following JSON format:
 - **Be current**: Use recent information and up-to-date sources
 - **Be comprehensive**: Cover all existing attributes across all domains
 
+### Observation Guidelines
+
+- **Observation Types**: Use appropriate types for each observation:
+  - `STRENGTH`: Vendor's strong capabilities or advantages
+  - `WEAKNESS`: Vendor's limitations or areas of concern
+  - `GAP`: Missing functionality or capabilities
+  - `FEATURE`: Specific features or capabilities
+  - `LIMITATION`: Technical or functional limitations
+  - `ADVANTAGE`: Competitive advantages
+  - `DISADVANTAGE`: Competitive disadvantages
+  - `NOTE`: General observations or notes
+
+- **Observation Quality**: Each observation should be:
+  - Specific and detailed
+  - Evidence-based
+  - Actionable for decision-making
+  - Relevant to the attribute being evaluated
+
 ### Submission Instructions
 
 1. Review the existing domain and attribute structure
@@ -307,6 +336,52 @@ def format_domains_summary(capability_data: dict) -> str:
         domains_summary.append("")
     
     return "\n".join(domains_summary)
+
+def get_json_template(capability_name: str, capability_data: dict = None) -> str:
+    """Generate the JSON template for comprehensive research"""
+    return '''{{
+  "capability": "has-domains",
+  "research_date": "YYYY-MM-DD",
+  "current_framework": {{
+    "domains_count": 0,
+    "attributes_count": 0,
+    "domains": []
+  }},
+  "market_analysis": {{
+    "primary_vendors": [],
+    "missing_capabilities": [
+      {{
+        "capability_name": "string",
+        "description": "string"
+      }}
+    ]
+  }},
+  "attributes": [
+    {{
+      "attribute": "string",
+      "domain": "string",
+      "weight": 50,
+      "tm_capability": "string",
+      "comarch": {{
+        "score": "X - Level",
+        "observations": [
+          {{
+            "observation": "Detailed observation point 1",
+            "type": "STRENGTH|WEAKNESS|GAP|FEATURE|LIMITATION|ADVANTAGE|DISADVANTAGE|NOTE"
+          }},
+          {{
+            "observation": "Detailed observation point 2", 
+            "type": "STRENGTH|WEAKNESS|GAP|FEATURE|LIMITATION|ADVANTAGE|DISADVANTAGE|NOTE"
+          }}
+        ],
+        "evidence": ["url1", "url2", "url3", "url4"],
+        "score_decision": "string"
+      }},
+      "servicenow": {{ ... }},
+      "salesforce": {{ ... }}
+    }}
+  ]
+}}'''
 
 def get_prompt_template(prompt_type: str, capability_name: str, capability_data: dict = None) -> str:
     """Get the appropriate prompt template based on type and capability data"""

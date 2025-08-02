@@ -3,6 +3,29 @@ import apiConfig from '../config/api';
 
 const API_BASE_URL = apiConfig.BASE_URL;
 
+// Report data types (matching Reports.tsx)
+interface RadarChartData {
+  capability_name: string;
+  vendors: string[];
+  attributes: string[]; // Now represents domains
+  scores: number[][];
+}
+
+interface VendorComparisonData {
+  capability_name: string;
+  vendors: string[];
+  attributes: string[];
+  scores: { [key: string]: number[] };
+  weights: number[];
+}
+
+interface ScoreDistributionData {
+  capability_name: string;
+  score_ranges: string[];
+  vendor_counts: { [key: string]: number[] };
+  vendors: string[];
+}
+
 // Helper function to get auth headers
 const getAuthHeaders = () => {
   const token = localStorage.getItem('authToken');
@@ -303,6 +326,23 @@ export const capabilityAPI = {
   async processComprehensiveResults(id: number, data: any): Promise<APIResponse<{ message: string }>> {
     return apiClient.post(`/api/capabilities/${id}/workflow/process-comprehensive`, data);
   },
+
+  // Report methods
+  async getRadarChartData(id: number): Promise<APIResponse<RadarChartData>> {
+    return apiClient.get(`/api/capabilities/reports/${id}/radar-chart`);
+  },
+
+  async getVendorComparisonData(id: number): Promise<APIResponse<VendorComparisonData>> {
+    return apiClient.get(`/api/capabilities/reports/${id}/vendor-comparison`);
+  },
+
+  async getScoreDistributionData(id: number): Promise<APIResponse<ScoreDistributionData>> {
+    return apiClient.get(`/api/capabilities/reports/${id}/score-distribution`);
+  },
+
+  async exportReport(id: number, format: string, reportType: string): Promise<APIResponse<{ export_data: string; filename: string }>> {
+    return apiClient.get(`/api/capabilities/reports/${id}/export/${format}?report_type=${reportType}`);
+  },
 };
 
 export const domainAPI = {
@@ -339,7 +379,7 @@ export const domainAPI = {
 
 export const attributeAPI = {
   // Get all attributes for a capability by ID
-  async getByCapabilityId(capabilityId: number): Promise<APIResponse<Attribute[]>> {
+  async getByCapabilityId(capabilityId: number): Promise<APIResponse<{attributes: Attribute[]}>> {
     return apiClient.get(apiConfig.ENDPOINTS.ATTRIBUTES_BY_CAPABILITY(capabilityId));
   },
 
@@ -478,5 +518,19 @@ import type {
   WorkflowStats, 
   Domain, 
   Attribute, 
-  VendorScore 
-} from '../types'; 
+  VendorScore,
+  VendorAnalysisData
+} from '../types';
+
+// Vendor Analysis API methods
+export const vendorAnalysisAPI = {
+  async getVendorAnalysisData(capabilityId: number, vendors: string[]): Promise<APIResponse<VendorAnalysisData>> {
+    const vendorsParam = vendors.join(',');
+    return apiClient.get<APIResponse<VendorAnalysisData>>(`/api/reports/${capabilityId}/vendor-analysis?vendors=${vendorsParam}`);
+  },
+
+  async exportVendorAnalysis(vendors: string[]): Promise<APIResponse<{excel_data: string, filename: string}>> {
+    const vendorsParam = vendors.join(',');
+    return apiClient.get<APIResponse<{excel_data: string, filename: string}>>(`/api/reports/vendor-analysis/export-all?vendors=${vendorsParam}&format=excel`);
+  },
+}; 

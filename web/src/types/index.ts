@@ -272,4 +272,28 @@ export interface ReportResponse {
   generated_at: string;
   file_size: number;
   format: string;
+}
+
+export interface VendorAnalysisItem {
+  capability_name: string;
+  domain_name: string;
+  attribute_name: string;
+  vendors: {
+    [key: string]: {
+      score: string;
+      score_numeric: number;
+      observation: string;
+      evidence_url: string;
+      score_decision: string;
+      weight: number;
+    };
+  };
+}
+
+export interface VendorAnalysisData {
+  capability_name: string;
+  vendors: string[];
+  analysis_items: VendorAnalysisItem[];
+  total_attributes: number;
+  generated_at: string;
 } 

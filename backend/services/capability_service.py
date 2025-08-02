@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import text
 import hashlib
 import json
-from models.models import Capability, Domain, Attribute, VendorScore, ResearchResult, User, ActivityLog, CapabilityTracker
+from models.models import Capability, Domain, Attribute, VendorScore, VendorScoreObservation, ResearchResult, User, ActivityLog, CapabilityTracker
 from schemas.schemas import CapabilityCreate, CapabilityUpdate, CapabilitySummary, WorkflowStats, CapabilityTrackerResponse, VendorScoreResponse, RadarChartData, VendorComparisonData, ScoreDistributionData, WorkflowStep
 from templates.prompts import get_prompt_template
 from utils.version_manager import VersionManager
@@ -44,8 +44,11 @@ class CapabilityService:
                     "importance": attr.importance
                 })
             
+            # Check if capability has any domains or attributes
+            has_framework = len(domain_names) > 0 or len(attributes_data) > 0
+            
             return {
-                "exists": True,
+                "exists": has_framework,  # Only exists if it has a framework
                 "capability_id": capability.id,
                 "name": capability.name,
                 "status": capability.status,
@@ -248,8 +251,27 @@ class CapabilityService:
         
         scores = db.query(VendorScore).filter(VendorScore.capability_id == capability.id).all()
         
-        return [
-            VendorScoreResponse(
+        from schemas.schemas import VendorScoreObservationResponse
+        
+        result = []
+        for score in scores:
+            # Get observations for this score
+            observations = db.query(VendorScoreObservation).filter(
+                VendorScoreObservation.vendor_score_id == score.id
+            ).all()
+            
+            observation_responses = [
+                VendorScoreObservationResponse(
+                    id=obs.id,
+                    vendor_score_id=obs.vendor_score_id,
+                    observation=obs.observation,
+                    observation_type=obs.observation_type.value,
+                    created_at=obs.created_at
+                )
+                for obs in observations
+            ]
+            
+            result.append(VendorScoreResponse(
                 id=score.id,
                 capability_id=score.capability_id,
                 attribute_name=score.attribute.attribute_name if score.attribute else "Unknown",
@@ -257,15 +279,15 @@ class CapabilityService:
                 weight=score.weight,
                 score=score.score,
                 score_numeric=score.score_numeric,
-                observation=score.observation,
                 evidence_url=score.evidence_url,
                 score_decision=score.score_decision,
                 research_type=score.research_type,
                 research_date=score.research_date,
-                created_at=score.created_at
-            )
-            for score in scores
-        ]
+                created_at=score.created_at,
+                observations=observation_responses
+            ))
+        
+        return result
     
     @staticmethod
     def initialize_workflow() -> List[WorkflowStep]:
@@ -302,8 +324,6 @@ class CapabilityService:
         """Generate research prompt based on type using templates"""
         # Load capability data to determine if it's new or existing
         capability_data = CapabilityService.load_capability_data(capability_name, db)
-        print(f"DEBUG: Generating {prompt_type} prompt for {capability_name}")
-        print(f"DEBUG: Capability data: {capability_data}")
         return get_prompt_template(prompt_type, capability_name, capability_data)
     
     @staticmethod
@@ -468,6 +488,110 @@ class CapabilityService:
         
         processed_vendors = 0
         created_attributes = 0
+        skipped_attributes = 0
+        
+        # Create domain mapping from domains file
+        domain_mapping = {
+            # Service Desk & Support
+            "ticket logging": "Service Desk & Support",
+            "multichannel": "Service Desk & Support",
+            "sla tracking": "Service Desk & Support",
+            "notification": "Service Desk & Support",
+            
+            # Incident Management
+            "incident detection": "Incident Management",
+            "incident classification": "Incident Management",
+            "routing": "Incident Management",
+            "assignment": "Incident Management",
+            
+            # Problem & Knowledge Management
+            "root cause": "Problem & Knowledge Management",
+            "knowledge": "Problem & Knowledge Management",
+            "known error": "Problem & Knowledge Management",
+            "problem": "Problem & Knowledge Management",
+            
+            # Change & Release Management
+            "change planning": "Change & Release Management",
+            "change impact": "Change & Release Management",
+            "approval workflow": "Change & Release Management",
+            "release coordination": "Change & Release Management",
+            "release scheduling": "Change & Release Management",
+            
+            # Request & Catalog Management
+            "service catalog": "Request & Catalog Management",
+            "catalog management": "Request & Catalog Management",
+            "request fulfillment": "Request & Catalog Management",
+            "catalog structuring": "Request & Catalog Management",
+            "lifecycle state": "Request & Catalog Management",
+            "configuration flexibility": "Request & Catalog Management",
+            "integration with product": "Request & Catalog Management",
+            
+            # Configuration & Asset Management
+            "cmdb": "Configuration & Asset Management",
+            "configuration management": "Configuration & Asset Management",
+            "asset lifecycle": "Configuration & Asset Management",
+            "asset inventory": "Configuration & Asset Management",
+            "relationship mapping": "Configuration & Asset Management",
+            
+            # Service Level & Performance Analytics
+            "sla definition": "Service Level & Performance Analytics",
+            "performance analytics": "Service Level & Performance Analytics",
+            "analytics": "Service Level & Performance Analytics",
+            "reporting": "Service Level & Performance Analytics",
+            "dashboard": "Service Level & Performance Analytics",
+            
+            # Automation, AI & Self-Service
+            "virtual agent": "Automation, AI & Self-Service",
+            "chatbot": "Automation, AI & Self-Service",
+            "predictive intelligence": "Automation, AI & Self-Service",
+            "machine learning": "Automation, AI & Self-Service",
+            "self-service": "Automation, AI & Self-Service",
+            "automation": "Automation, AI & Self-Service",
+            
+            # Field Service & Workforce Management
+            "work order": "Field Service & Workforce Management",
+            "dispatch": "Field Service & Workforce Management",
+            "field service": "Field Service & Workforce Management",
+            "workforce": "Field Service & Workforce Management",
+            "mobile field": "Field Service & Workforce Management",
+            
+            # Integration & Compliance
+            "api integration": "Integration & Compliance",
+            "integration": "Integration & Compliance",
+            "compliance": "Integration & Compliance",
+            "security": "Integration & Compliance",
+            "governance": "Integration & Compliance",
+            "connector": "Integration & Compliance",
+            
+            # Domain Governance (NEW)
+            "domain governance": "Domain Governance",
+            "domain lifecycle": "Domain Governance",
+            "domain modeling": "Domain Governance",
+            "domain management": "Domain Governance",
+            "domain control": "Domain Governance",
+            "domain hierarchy": "Domain Governance",
+            "domain framework": "Domain Governance",
+            "domain standards": "Domain Governance",
+            "domain compliance": "Domain Governance",
+            "domain policy": "Domain Governance"
+        }
+        
+        def map_attribute_to_domain(attribute_name: str) -> str:
+            """Map attribute name to domain based on keywords"""
+            attribute_lower = attribute_name.lower()
+            
+            # Check for exact matches first
+            for keyword, domain in domain_mapping.items():
+                if keyword in attribute_lower:
+                    return domain
+            
+            # If no match found, try partial matches
+            for keyword, domain in domain_mapping.items():
+                if any(word in attribute_lower for word in keyword.split()):
+                    return domain
+            
+            # Default to Service Desk & Support if no match
+            return "Service Desk & Support"
         
         if "attributes" in data:
             for attr_data in data["attributes"]:
@@ -482,8 +606,8 @@ class CapabilityService:
                 
                 # Create attribute if it doesn't exist
                 if not attribute:
-                    # Determine domain name from the attribute
-                    domain_name = attr_data.get("domain", "General") or "General"
+                    # Map attribute to domain using our mapping function
+                    domain_name = map_attribute_to_domain(attribute_name)
                     
                     # Generate content hash for the attribute
                     attr_hash_data = {
@@ -517,6 +641,13 @@ class CapabilityService:
                     if vendor in attr_data:
                         vendor_data = attr_data[vendor]
                         
+                        # Handle evidence field - convert array to string if needed
+                        evidence = vendor_data.get("evidence", "")
+                        if isinstance(evidence, list):
+                            evidence = ", ".join(evidence)
+                        elif not isinstance(evidence, str):
+                            evidence = str(evidence) if evidence else ""
+                        
                         # Create vendor score
                         score = VendorScore(
                             capability_id=capability.id,
@@ -525,14 +656,36 @@ class CapabilityService:
                             weight=weight,
                             score=vendor_data.get("score", ""),
                             score_numeric=int(vendor_data.get("score", "0").split()[0]) if vendor_data.get("score") else 0,
-                            observation=json.dumps(vendor_data.get("observation", [])),
-                            evidence_url=json.dumps(vendor_data.get("evidence", [])),
+                            evidence_url=evidence,  # Now properly handled as string
                             score_decision=vendor_data.get("score_decision", ""),
                             research_type="capability_research",
                             research_date=datetime.fromisoformat(data.get("research_date", datetime.now().isoformat())),
                             created_at=datetime.now()
                         )
                         db.add(score)
+                        db.flush()  # Get the score ID
+                        
+                        # Process observations
+                        observations = vendor_data.get("observations", [])
+                        if isinstance(observations, list):
+                            for obs_data in observations:
+                                if isinstance(obs_data, dict):
+                                    observation = VendorScoreObservation(
+                                        vendor_score_id=score.id,
+                                        observation=obs_data.get("observation", ""),
+                                        observation_type=obs_data.get("type", "NOTE")
+                                    )
+                                    db.add(observation)
+                        else:
+                            # Handle legacy format where observation is a string
+                            if vendor_data.get("observation"):
+                                observation = VendorScoreObservation(
+                                    vendor_score_id=score.id,
+                                    observation=vendor_data.get("observation", ""),
+                                    observation_type="NOTE"
+                                )
+                                db.add(observation)
+                        
                         processed_vendors += 1
         
         # Update capability tracker
@@ -553,35 +706,34 @@ class CapabilityService:
         if processed_vendors > 0:
             capability.version_patch = (capability.version_patch or 0) + 1
             capability.version_build = 0
-        
-        # Update capability status
-        capability.status = "completed"
-        
-        # Log activity if user_id provided
-        if user_id:
-            activity = ActivityLog(
-                user_id=user_id,
-                username="system",  # Will be updated by the API layer
-                action="processed_comprehensive_results",
-                entity_type="capability",
-                entity_id=capability.id,
-                entity_name=capability_name,
-                details=f"Processed {processed_vendors} vendor scores, created {created_attributes} attributes"
-            )
-            db.add(activity)
+            capability.status = "completed"  # Mark as completed
+            
+            # Log capability completion
+            if user_id:
+                activity = ActivityLog(
+                    user_id=user_id,
+                    username="system",  # Will be updated by the API layer
+                    action="capability_completed",
+                    entity_type="capability",
+                    entity_id=capability.id,
+                    entity_name=capability.name,
+                    details=f"Capability marked as completed with {processed_vendors} vendor scores and {created_attributes} attributes"
+                )
+                db.add(activity)
         
         db.commit()
         
         return {
             "processed_vendors": processed_vendors,
             "created_attributes": created_attributes,
+            "skipped_attributes": skipped_attributes,
             "capability_name": capability_name,
-            "analysis_ready": True
+            "capability_id": capability.id
         }
     
     @staticmethod
     def generate_radar_chart_data(db: Session, capability_id: int) -> RadarChartData:
-        """Generate radar chart data for a capability"""
+        """Generate radar chart data for a capability grouped by domains"""
         capability = db.query(Capability).filter(Capability.id == capability_id).first()
         if not capability:
             raise ValueError("Capability not found")
@@ -590,30 +742,37 @@ class CapabilityService:
         if capability.status != "completed":
             raise ValueError("Capability research is not completed")
         
-        # Get all attributes for this capability
-        attributes = db.query(Attribute).filter(Attribute.capability_id == capability_id).all()
-        attribute_names = [attr.attribute_name for attr in attributes]
+        # Get all domains for this capability
+        domains = db.query(Domain).filter(Domain.capability_id == capability_id).all()
+        domain_names = [domain.domain_name for domain in domains]
         
-        # Get vendor scores
+        # Get vendor scores grouped by domain
         vendors = ["comarch", "servicenow", "salesforce"]
         scores = []
         
         for vendor in vendors:
             vendor_scores = []
-            for attr in attributes:
-                score = db.query(VendorScore).filter(
+            for domain in domains:
+                # Get all vendor scores for attributes in this domain
+                domain_scores = db.query(VendorScore).join(Attribute).filter(
                     VendorScore.capability_id == capability_id,
-                    VendorScore.attribute_id == attr.id,
-                    VendorScore.vendor == vendor
-                ).order_by(VendorScore.created_at.desc()).first()
+                    VendorScore.vendor == vendor,
+                    Attribute.domain_name == domain.domain_name
+                ).all()
                 
-                vendor_scores.append(float(score.score_numeric) if score else 0.0)
+                if domain_scores:
+                    # Calculate average score for this domain
+                    avg_score = sum(float(score.score_numeric) for score in domain_scores) / len(domain_scores)
+                    vendor_scores.append(avg_score)
+                else:
+                    vendor_scores.append(0.0)
+            
             scores.append(vendor_scores)
         
         return RadarChartData(
             capability_name=capability.name,
             vendors=vendors,
-            attributes=attribute_names,
+            attributes=domain_names,  # Now represents domains
             scores=scores
         )
     
@@ -631,7 +790,15 @@ class CapabilityService:
         # Get all attributes with weights
         attributes = db.query(Attribute).filter(Attribute.capability_id == capability_id).all()
         attribute_names = [attr.attribute_name for attr in attributes]
-        weights = [int(attr.importance) if attr.importance else 50 for attr in attributes]
+        weights = []
+        for attr in attributes:
+            try:
+                if attr.importance and attr.importance.isdigit():
+                    weights.append(int(attr.importance))
+                else:
+                    weights.append(50)  # Default weight
+            except (ValueError, AttributeError):
+                weights.append(50)  # Default weight
         
         # Get vendor scores
         vendors = ["comarch", "servicenow", "salesforce"]
@@ -694,3 +861,309 @@ class CapabilityService:
             score_ranges=score_ranges,
             vendor_counts=vendor_counts
         ) 
+
+    @staticmethod
+    def generate_vendor_analysis_data(db: Session, capability_id: int, vendors: list) -> dict:
+        """Generate detailed vendor analysis data for comparison"""
+        capability = db.query(Capability).filter(Capability.id == capability_id).first()
+        if not capability:
+            raise ValueError("Capability not found")
+        
+        # Only proceed if capability is completed
+        if capability.status != "completed":
+            raise ValueError("Capability research is not completed")
+        
+        # Get all attributes with their domains
+        attributes = db.query(Attribute).filter(Attribute.capability_id == capability_id).all()
+        
+        analysis_items = []
+        
+        for attr in attributes:
+            item = {
+                'capability_name': capability.name,
+                'domain_name': attr.domain_name,
+                'attribute_name': attr.attribute_name,
+                'vendors': {}
+            }
+            
+            # Get vendor scores for this attribute
+            for vendor in vendors:
+                vendor_score = db.query(VendorScore).filter(
+                    VendorScore.capability_id == capability_id,
+                    VendorScore.attribute_id == attr.id,
+                    VendorScore.vendor == vendor
+                ).order_by(VendorScore.created_at.desc()).first()
+                
+                if vendor_score:
+                    # Get observations for this vendor score
+                    observations = db.query(VendorScoreObservation).filter(
+                        VendorScoreObservation.vendor_score_id == vendor_score.id
+                    ).all()
+                    
+                    observation_list = [
+                        {
+                            'observation': obs.observation,
+                            'type': obs.observation_type.value
+                        }
+                        for obs in observations
+                    ]
+                    
+                    item['vendors'][vendor] = {
+                        'score': vendor_score.score,
+                        'score_numeric': vendor_score.score_numeric,
+                        'observations': observation_list,
+                        'evidence_url': vendor_score.evidence_url,
+                        'score_decision': vendor_score.score_decision,
+                        'weight': vendor_score.weight
+                    }
+                else:
+                    item['vendors'][vendor] = {
+                        'score': 'N/A',
+                        'score_numeric': 0,
+                        'observations': [],
+                        'evidence_url': 'N/A',
+                        'score_decision': 'No data available',
+                        'weight': 50
+                    }
+            
+            analysis_items.append(item)
+        
+        return {
+            'capability_name': capability.name,
+            'vendors': vendors,
+            'analysis_items': analysis_items,
+            'total_attributes': len(attributes),
+            'generated_at': datetime.now().isoformat()
+        }
+
+    @staticmethod
+    def generate_filtered_reports_data(db: Session, capability_id: int, domains: list, vendors: list, attributes: list) -> dict:
+        """Generate filtered reports data based on domain, vendor, and attribute filters"""
+        capability = db.query(Capability).filter(Capability.id == capability_id).first()
+        if not capability:
+            raise ValueError("Capability not found")
+        
+        # Only proceed if capability is completed
+        if capability.status != "completed":
+            raise ValueError("Capability research is not completed")
+        
+        # Build query filters
+        query_filters = [Attribute.capability_id == capability_id]
+        
+        if domains:
+            query_filters.append(Attribute.domain_name.in_(domains))
+        
+        if attributes:
+            query_filters.append(Attribute.attribute_name.in_(attributes))
+        
+        # Get filtered attributes
+        attributes_data = db.query(Attribute).filter(*query_filters).all()
+        
+        if not attributes_data:
+            return {
+                'capability_name': capability.name,
+                'vendors': vendors,
+                'attributes': [],
+                'domains': [],
+                'radar_data': {'labels': [], 'datasets': []},
+                'vendor_comparison': {'labels': [], 'datasets': []},
+                'score_distribution': {'labels': [], 'datasets': []},
+                'filtered_attributes': []
+            }
+        
+        # Get unique domains from filtered attributes
+        filtered_domains = list(set([attr.domain_name for attr in attributes_data]))
+        
+        # Generate radar chart data (by domains)
+        radar_labels = filtered_domains
+        radar_datasets = []
+        
+        for vendor in vendors:
+            vendor_data = []
+            for domain in filtered_domains:
+                # Get average score for this domain and vendor
+                domain_attributes = [attr for attr in attributes_data if attr.domain_name == domain]
+                domain_scores = []
+                
+                for attr in domain_attributes:
+                    score = db.query(VendorScore).filter(
+                        VendorScore.capability_id == capability_id,
+                        VendorScore.attribute_id == attr.id,
+                        VendorScore.vendor == vendor
+                    ).first()
+                    if score:
+                        domain_scores.append(score.score_numeric)
+                
+                avg_score = sum(domain_scores) / len(domain_scores) if domain_scores else 0
+                vendor_data.append(avg_score)
+            
+            radar_datasets.append({
+                'label': vendor.title(),
+                'data': vendor_data,
+                'backgroundColor': f'rgba({54 + len(radar_datasets) * 50}, {162 + len(radar_datasets) * 30}, {235 - len(radar_datasets) * 20}, 0.2)',
+                'borderColor': f'rgba({54 + len(radar_datasets) * 50}, {162 + len(radar_datasets) * 30}, {235 - len(radar_datasets) * 20}, 1)',
+                'borderWidth': 2
+            })
+        
+        # Generate vendor comparison data (by attributes)
+        comparison_labels = [attr.attribute_name for attr in attributes_data]
+        comparison_datasets = []
+        
+        for vendor in vendors:
+            vendor_data = []
+            for attr in attributes_data:
+                score = db.query(VendorScore).filter(
+                    VendorScore.capability_id == capability_id,
+                    VendorScore.attribute_id == attr.id,
+                    VendorScore.vendor == vendor
+                ).first()
+                vendor_data.append(score.score_numeric if score else 0)
+            
+            comparison_datasets.append({
+                'label': vendor.title(),
+                'data': vendor_data,
+                'backgroundColor': f'rgba({54 + len(comparison_datasets) * 50}, {162 + len(comparison_datasets) * 30}, {235 - len(comparison_datasets) * 20}, 0.8)',
+                'borderColor': f'rgba({54 + len(comparison_datasets) * 50}, {162 + len(comparison_datasets) * 30}, {235 - len(comparison_datasets) * 20}, 1)',
+                'borderWidth': 1
+            })
+        
+        # Generate score distribution data
+        score_ranges = ["1-2", "2-3", "3-4", "4-5"]
+        distribution_labels = score_ranges
+        distribution_datasets = []
+        
+        for vendor in vendors:
+            vendor_counts = [0, 0, 0, 0]
+            
+            for attr in attributes_data:
+                score = db.query(VendorScore).filter(
+                    VendorScore.capability_id == capability_id,
+                    VendorScore.attribute_id == attr.id,
+                    VendorScore.vendor == vendor
+                ).first()
+                
+                if score:
+                    score_val = score.score_numeric
+                    if 1 <= score_val <= 2:
+                        vendor_counts[0] += 1
+                    elif 2 < score_val <= 3:
+                        vendor_counts[1] += 1
+                    elif 3 < score_val <= 4:
+                        vendor_counts[2] += 1
+                    elif 4 < score_val <= 5:
+                        vendor_counts[3] += 1
+            
+            distribution_datasets.append({
+                'label': vendor.title(),
+                'data': vendor_counts,
+                'backgroundColor': [
+                    'rgba(255, 99, 132, 0.8)',
+                    'rgba(54, 162, 235, 0.8)',
+                    'rgba(255, 205, 86, 0.8)',
+                    'rgba(75, 192, 192, 0.8)'
+                ],
+                'borderColor': [
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 205, 86, 1)',
+                    'rgba(75, 192, 192, 1)'
+                ],
+                'borderWidth': 1
+            })
+        
+        # Prepare filtered attributes data
+        filtered_attributes = []
+        for attr in attributes_data:
+            attr_data = {
+                'attribute_name': attr.attribute_name,
+                'domain_name': attr.domain_name,
+                'definition': attr.definition,
+                'importance': attr.importance,
+                'vendors': {}
+            }
+            
+            for vendor in vendors:
+                score = db.query(VendorScore).filter(
+                    VendorScore.capability_id == capability_id,
+                    VendorScore.attribute_id == attr.id,
+                    VendorScore.vendor == vendor
+                ).first()
+                
+                if score:
+                    attr_data['vendors'][vendor] = {
+                        'score': score.score,
+                        'score_numeric': score.score_numeric,
+                        'observation': score.observation,
+                        'evidence_url': score.evidence_url,
+                        'score_decision': score.score_decision,
+                        'weight': score.weight
+                    }
+                else:
+                    attr_data['vendors'][vendor] = {
+                        'score': 'N/A',
+                        'score_numeric': 0,
+                        'observation': 'No data available',
+                        'evidence_url': 'N/A',
+                        'score_decision': 'No data available',
+                        'weight': 50
+                    }
+            
+            filtered_attributes.append(attr_data)
+        
+        return {
+            'capability_name': capability.name,
+            'vendors': vendors,
+            'attributes': [attr.attribute_name for attr in attributes_data],
+            'domains': filtered_domains,
+            'radar_data': {
+                'labels': radar_labels,
+                'datasets': radar_datasets
+            },
+            'vendor_comparison': {
+                'labels': comparison_labels,
+                'datasets': comparison_datasets
+            },
+            'score_distribution': {
+                'labels': distribution_labels,
+                'datasets': distribution_datasets
+            },
+            'filtered_attributes': filtered_attributes,
+            'total_attributes': len(attributes_data),
+            'generated_at': datetime.now().isoformat()
+        }
+
+    @staticmethod
+    def get_available_filter_options(db: Session, capability_id: int) -> dict:
+        """Get available filter options for a capability"""
+        capability = db.query(Capability).filter(Capability.id == capability_id).first()
+        if not capability:
+            raise ValueError("Capability not found")
+        
+        # Only proceed if capability is completed
+        if capability.status != "completed":
+            raise ValueError("Capability research is not completed")
+        
+        # Get all domains
+        domains = db.query(Attribute.domain_name).filter(
+            Attribute.capability_id == capability_id
+        ).distinct().all()
+        domain_list = [domain[0] for domain in domains]
+        
+        # Get all attributes
+        attributes = db.query(Attribute.attribute_name).filter(
+            Attribute.capability_id == capability_id
+        ).distinct().all()
+        attribute_list = [attr[0] for attr in attributes]
+        
+        # Get all vendors
+        vendors = db.query(VendorScore.vendor).filter(
+            VendorScore.capability_id == capability_id
+        ).distinct().all()
+        vendor_list = [vendor[0] for vendor in vendors]
+        
+        return {
+            'domains': domain_list,
+            'attributes': attribute_list,
+            'vendors': vendor_list,
+            'capability_name': capability.name
+        } 

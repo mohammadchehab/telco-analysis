@@ -202,15 +202,29 @@ const DataQualityChat: React.FC = () => {
     } catch (error) {
       console.error('Error processing query:', error);
       
-      const errorMessage: ChatMessage = {
+      let errorMessage = 'Sorry, I encountered an error processing your request. Please try again.';
+      
+      if (error instanceof Error) {
+        if (error.message.includes('authentication') || error.message.includes('auth')) {
+          errorMessage = 'Authentication failed. Please log in again.';
+          // Redirect to login after a short delay
+          setTimeout(() => {
+            window.location.href = '/login';
+          }, 2000);
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
+      const errorMessageObj: ChatMessage = {
         id: thinkingMessage.id,
         type: 'assistant',
-        content: 'Sorry, I encountered an error processing your request. Please try again.',
+        content: errorMessage,
         timestamp: new Date(),
       };
 
       setMessages(prev => prev.map(msg => 
-        msg.id === thinkingMessage.id ? errorMessage : msg
+        msg.id === thinkingMessage.id ? errorMessageObj : msg
       ));
     } finally {
       setIsProcessing(false);
@@ -219,16 +233,26 @@ const DataQualityChat: React.FC = () => {
 
   const processDataQualityQuery = async (query: string): Promise<QueryResult> => {
     try {
+      const token = localStorage.getItem('authToken');
+      console.log('Using token:', token ? token.substring(0, 20) + '...' : 'No token found');
+      
+      if (!token) {
+        throw new Error('No authentication token found. Please log in again.');
+      }
+
       const response = await fetch('/api/data-quality/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({ query }),
       });
 
       if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Authentication failed. Please log in again.');
+        }
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
