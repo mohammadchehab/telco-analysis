@@ -41,6 +41,7 @@ cleanup() {
     echo "🧹 Final cleanup..."
     pkill -f "npm.*dev" 2>/dev/null || true
     pkill -f "python.*app.py" 2>/dev/null || true
+    pkill -f "npm.*start:prod" 2>/dev/null || true
     echo "✅ All services stopped"
     exit 0
 }
@@ -82,12 +83,20 @@ if [ -f "backend/config.env" ]; then
     export $(cat backend/config.env | grep -v '^#' | xargs)
 fi
 
-# Start backend
-echo "🔧 Starting modular backend API server..."
-cd backend
-python app.py &
-BACKEND_PID=$!
-cd ..
+# Start backend based on mode
+if [ "$MODE" = "prod" ]; then
+    echo "🔧 Starting modular backend API server in production mode (nohup)..."
+    cd backend
+    nohup python app.py > backend.log 2>&1 &
+    BACKEND_PID=$!
+    cd ..
+else
+    echo "🔧 Starting modular backend API server..."
+    cd backend
+    python app.py &
+    BACKEND_PID=$!
+    cd ..
+fi
 
 # Wait a moment for backend to start
 sleep 3
@@ -100,12 +109,12 @@ fi
 
 # Start frontend based on mode
 if [ "$MODE" = "prod" ]; then
-    echo "🌐 Building and starting frontend in production mode..."
+    echo "🌐 Building and starting frontend in production mode (nohup)..."
     cd web
     # Set production API URL
     export VITE_API_BASE_URL=https://telco-platform.openbiocure.ai
     npm run build
-    npm run start:prod &
+    nohup npm run start:prod > frontend.log 2>&1 &
     FRONTEND_PID=$!
     cd ..
 else
@@ -127,9 +136,15 @@ fi
 
 echo "✅ All services started successfully!"
 if [ "$MODE" = "prod" ]; then
-    echo "🌐 Frontend: http://localhost:3000 (Production)"
-    echo "🔧 Backend: http://localhost:8000"
+    echo "🌐 Frontend: http://localhost:3000 (Production - Running with nohup)"
+    echo "🔧 Backend: http://localhost:8000 (Production - Running with nohup)"
     echo "📚 API Docs: http://localhost:8000/docs"
+    echo ""
+    echo "📋 Log files:"
+    echo "  📄 Backend logs: backend/backend.log"
+    echo "  📄 Frontend logs: web/frontend.log"
+    echo ""
+    echo "💡 Services will continue running after you disconnect from SSH"
 else
     echo "🌐 Frontend: http://localhost:5173 (Development)"
     echo "🔧 Backend: http://localhost:8000"
@@ -141,5 +156,15 @@ echo "  👤 Admin: admin/admin123"
 echo "  👤 Analyst: analyst/analyst123"
 echo "  👤 Viewer: viewer/viewer123"
 
-# Keep script running
-wait 
+# Keep script running based on mode
+if [ "$MODE" = "prod" ]; then
+    echo ""
+    echo "🚀 Production mode: Services are running in background with nohup"
+    echo "📊 You can safely disconnect from SSH - services will continue running"
+    echo "🔍 To check logs: tail -f backend/backend.log or tail -f web/frontend.log"
+    echo "🛑 To stop services: pkill -f 'python.*app.py' && pkill -f 'npm.*start:prod'"
+    exit 0
+else
+    # Keep script running for development mode
+    wait
+fi 
