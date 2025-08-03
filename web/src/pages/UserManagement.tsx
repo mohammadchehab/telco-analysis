@@ -23,20 +23,16 @@ import {
   Chip,
   Switch,
   FormControlLabel,
-  Grid,
   Card,
   CardContent,
   Alert,
   Snackbar,
   TablePagination,
   Tooltip,
-  Divider,
   List,
   ListItem,
   ListItemText,
   ListItemIcon,
-  Collapse,
-  Badge,
   Tabs,
   Tab
 } from '@mui/material';
@@ -50,17 +46,11 @@ import {
   Email as EmailIcon,
   CalendarToday as CalendarIcon,
   AccessTime as TimeIcon,
-  ExpandMore as ExpandMoreIcon,
-  ExpandLess as ExpandLessIcon,
-  Refresh as RefreshIcon,
   Security as SecurityIcon,
   Timeline as ActivityIcon,
-  Group as GroupIcon,
-  CheckCircle as CheckCircleIcon,
-  Cancel as CancelIcon,
-  Warning as WarningIcon
+  Group as GroupIcon
 } from '@mui/icons-material';
-import { authAPI } from '../utils/api';
+
 
 interface User {
   id: number;
@@ -210,7 +200,7 @@ const UserManagement: React.FC = () => {
     }
   };
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+  const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
   };
 
@@ -604,7 +594,7 @@ const UserManagement: React.FC = () => {
             count={users.length}
             rowsPerPage={rowsPerPage}
             page={page}
-            onPageChange={(event, newPage) => setPage(newPage)}
+            onPageChange={(_, newPage) => setPage(newPage)}
             onRowsPerPageChange={(event) => {
               setRowsPerPage(parseInt(event.target.value, 10));
               setPage(0);
