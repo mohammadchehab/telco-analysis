@@ -3,9 +3,7 @@ import {
   Box,
   Card,
   CardContent,
-  Typography,
-  Grid,
-  Paper
+  Typography
 } from '@mui/material';
 import {
   Radar,
@@ -220,7 +218,7 @@ export const PieChartComponent: React.FC<ChartProps> = ({ data, title, height = 
               fill="#8884d8"
               dataKey="value"
             >
-              {pieData.map((entry: any, index: number) => (
+              {pieData.map((_: any, index: number) => (
                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
               ))}
             </Pie>

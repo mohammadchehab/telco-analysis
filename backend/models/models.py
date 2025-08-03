@@ -102,6 +102,7 @@ class VendorScore(Base):
     capability = relationship("Capability", back_populates="vendor_scores")
     attribute = relationship("Attribute", back_populates="vendor_scores")
     observations = relationship("VendorScoreObservation", back_populates="vendor_score", cascade="all, delete-orphan")
+    url_validations = relationship("URLValidation", back_populates="vendor_score", cascade="all, delete-orphan")
 
 class VendorScoreObservation(Base):
     __tablename__ = "vendor_score_observations"
@@ -183,6 +184,96 @@ class ActivityLog(Base):
     ip_address = Column(String)
     user_agent = Column(String)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    
+    # Relationships
+    user = relationship("User") 
+
+class URLValidation(Base):
+    __tablename__ = "url_validations"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    vendor_score_id = Column(Integer, ForeignKey("vendor_scores.id"), nullable=False)
+    url = Column(String, nullable=False)
+    original_url = Column(String, nullable=False)  # Store original URL before any modifications
+    status = Column(String, default="pending")  # pending, valid, invalid, flagged, fixed
+    http_status = Column(Integer)
+    response_time = Column(Float)  # Response time in seconds
+    content_length = Column(Integer)
+    content_hash = Column(String)  # Hash of page content for change detection
+    ai_analysis = Column(Text)  # JSON string with AI analysis results
+    ai_confidence = Column(Float)  # AI confidence score (0-1)
+    flagged_reason = Column(Text)  # Reason for flagging (404, irrelevant content, etc.)
+    last_checked = Column(DateTime(timezone=True), server_default=func.now())
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    
+    # Relationships
+    vendor_score = relationship("VendorScore", back_populates="url_validations") 
+
+class TMFProcess(Base):
+    __tablename__ = "tmf_processes"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    process_id = Column(String, unique=True, nullable=False)  # e.g., "CUST_001"
+    name = Column(String, nullable=False)  # e.g., "Order Handling"
+    description = Column(Text)
+    domain = Column(String, nullable=False)  # Market Sales, Customer, Product, etc.
+    phase = Column(String, nullable=False)  # Strategy to Readiness, Operations, Billing
+    position_x = Column(Integer, default=0)
+    position_y = Column(Integer, default=0)
+    size_width = Column(Integer, default=100)
+    size_height = Column(Integer, default=60)
+    color = Column(String, default="#90caf9")
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    
+    # Relationships
+    capability_mappings = relationship("ProcessCapabilityMapping", back_populates="process", cascade="all, delete-orphan")
+    vendor_scores = relationship("ProcessVendorScore", back_populates="process", cascade="all, delete-orphan")
+
+class ProcessCapabilityMapping(Base):
+    __tablename__ = "process_capability_mappings"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    process_id = Column(Integer, ForeignKey("tmf_processes.id"), nullable=False)
+    capability_id = Column(Integer, ForeignKey("capabilities.id"), nullable=False)
+    mapping_type = Column(String, default="direct")  # direct, related, supporting
+    confidence_score = Column(Float, default=1.0)  # How confident we are in this mapping
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    
+    # Relationships
+    process = relationship("TMFProcess", back_populates="capability_mappings")
+    capability = relationship("Capability")
+
+class ProcessVendorScore(Base):
+    __tablename__ = "process_vendor_scores"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    process_id = Column(Integer, ForeignKey("tmf_processes.id"), nullable=False)
+    vendor = Column(String, nullable=False)
+    score = Column(Float, nullable=False)  # 0-100 score
+    score_level = Column(String, nullable=False)  # "X - Level" format
+    evidence_url = Column(String)
+    score_decision = Column(Text)
+    research_date = Column(DateTime(timezone=True), server_default=func.now())
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    
+    # Relationships
+    process = relationship("TMFProcess", back_populates="vendor_scores")
+
+class BusinessProcessCanvas(Base):
+    __tablename__ = "business_process_canvas"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    description = Column(Text)
+    canvas_data = Column(Text)  # JSON string with canvas layout
+    version = Column(String, default="1.0")
+    is_active = Column(Boolean, default=True)
+    created_by = Column(Integer, ForeignKey("users.id"), nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
     
     # Relationships
     user = relationship("User") 

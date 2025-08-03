@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from core.database import engine
 from models import models
-from api import capabilities, domains, auth, attributes, imports, data_quality, reports, activity_logs, architecture, comprehensive_chat, uploads
+from api import capabilities, domains, auth, attributes, imports, data_quality, reports, activity_logs, architecture, comprehensive_chat, uploads, url_checker, business_process_canvas
 import os
 from dotenv import load_dotenv
 
@@ -22,6 +22,18 @@ try:
     print("✅ Database initialized with default data")
 except Exception as e:
     print(f"⚠️ Database initialization warning: {e}")
+
+# Initialize TMF processes if not already present
+try:
+    from migration.init_tmf_processes import check_tmf_processes_exist, init_tmf_processes
+    if not check_tmf_processes_exist():
+        print("🔄 Initializing TMF Business Process Framework...")
+        init_tmf_processes()
+        print("✅ TMF processes initialized")
+    else:
+        print("✅ TMF processes already exist")
+except Exception as e:
+    print(f"⚠️ TMF processes initialization warning: {e}")
 
 # Create FastAPI app
 app = FastAPI(
@@ -51,6 +63,8 @@ app.include_router(activity_logs.router)
 app.include_router(architecture.router)
 app.include_router(comprehensive_chat.router)
 app.include_router(uploads.router)
+app.include_router(url_checker.router)
+app.include_router(business_process_canvas.router)
 print("✅ Routers included successfully")
 
 @app.get("/")

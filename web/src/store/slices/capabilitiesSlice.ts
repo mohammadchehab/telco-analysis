@@ -7,7 +7,6 @@ import type {
   VendorScore, 
   WorkflowStats,
   FilterOptions,
-  BulkAction,
   WorkflowState,
   APIResponse
 } from '../../types';

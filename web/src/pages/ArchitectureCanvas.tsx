@@ -42,8 +42,7 @@ import {
   Download as DownloadIcon,
   Print as PrintIcon
 } from '@mui/icons-material';
-import { useSelector } from 'react-redux';
-import type { RootState } from '../store';
+
 import { architectureAPI } from '../utils/api';
 
 interface ArchitectureLayer {
@@ -93,7 +92,7 @@ const ArchitectureCanvas: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [selectedCapability, setSelectedCapability] = useState<ArchitectureCapability | null>(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
-  const { darkMode } = useSelector((state: RootState) => state.ui);
+
 
   useEffect(() => {
     loadArchitectureData();

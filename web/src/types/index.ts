@@ -297,3 +297,101 @@ export interface VendorAnalysisData {
   total_attributes: number;
   generated_at: string;
 } 
+
+// Business Process Canvas Types
+export interface TMFProcess {
+  id: number;
+  process_id: string;
+  name: string;
+  description?: string;
+  domain: TMFDomain;
+  phase: TMFPhase;
+  position_x: number;
+  position_y: number;
+  size_width: number;
+  size_height: number;
+  color: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  vendor_count?: number;
+  top_vendor_score?: number;
+  linked_capabilities?: string[];
+}
+
+export type TMFDomain = 
+  | 'Common'
+  | 'Market Sales'
+  | 'Customer'
+  | 'Product'
+  | 'Service'
+  | 'Resource'
+  | 'Business Partner'
+  | 'Enterprise';
+
+export type TMFPhase = 
+  | 'Strategy to Readiness'
+  | 'Operations'
+  | 'Billing & Revenue Management';
+
+export interface ProcessCapabilityMapping {
+  id: number;
+  process_id: number;
+  capability_id: number;
+  mapping_type: 'direct' | 'related' | 'supporting';
+  confidence_score: number;
+  created_at: string;
+  capability?: Capability;
+}
+
+export interface ProcessVendorScore {
+  id: number;
+  process_id: number;
+  vendor: string;
+  score: number;
+  score_level: string;
+  evidence_url?: string;
+  score_decision?: string;
+  research_date: string;
+  created_at: string;
+}
+
+export interface BusinessProcessCanvas {
+  id: number;
+  name: string;
+  description?: string;
+  canvas_data: string;
+  version: string;
+  is_active: boolean;
+  created_by: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ProcessDetailView {
+  process: TMFProcess;
+  capability_mappings: ProcessCapabilityMapping[];
+  vendor_scores: ProcessVendorScore[];
+  related_processes: TMFProcess[];
+}
+
+export interface CanvasLayout {
+  processes: TMFProcess[];
+  connections: ProcessConnection[];
+  metadata: CanvasMetadata;
+}
+
+export interface ProcessConnection {
+  id: string;
+  source_process_id: number;
+  target_process_id: number;
+  connection_type: 'data_flow' | 'dependency' | 'integration';
+  description?: string;
+}
+
+export interface CanvasMetadata {
+  version: string;
+  last_modified: string;
+  created_by: string;
+  description?: string;
+} 

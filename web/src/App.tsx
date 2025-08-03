@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { store } from './store';
-import { useSelector, useDispatch } from 'react-redux';
-import { fetchUserPreferences, updateUserPreferences } from './store/slices/uiSlice';
-import type { RootState, AppDispatch } from './store';
+import { useSelector } from 'react-redux';
+
+import type { RootState } from './store';
 import Layout from './components/Layout/Layout';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
@@ -18,10 +18,12 @@ import Workflow from './pages/Workflow';
 import Reports from './pages/Reports';
 import Database from './pages/Database';
 import DataQualityChat from './pages/DataQualityChat';
-import ComprehensiveChat from './pages/ComprehensiveChat';
+
 import VendorAnalysis from './pages/VendorAnalysis';
 import UserManagement from './pages/UserManagement';
 import ArchitectureCanvas from './pages/ArchitectureCanvas';
+import BusinessProcessCanvas from './pages/BusinessProcessCanvas';
+import EvidenceReview from './pages/EvidenceReview';
 import NotificationSystem from './components/UI/NotificationSystem';
 import LoadingOverlay from './components/UI/LoadingOverlay';
 
@@ -138,8 +140,7 @@ const createAppTheme = (darkMode: boolean) => createTheme({
 });
 
 function AppContent() {
-  const dispatch = useDispatch<AppDispatch>();
-  const { darkMode, userPreferences } = useSelector((state: RootState) => state.ui);
+  const { darkMode } = useSelector((state: RootState) => state.ui);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -153,7 +154,7 @@ function AppContent() {
       
       // If authenticated, fetch user preferences
       if (authenticated) {
-        dispatch(fetchUserPreferences());
+        // User preferences will be fetched by the Layout component
       }
     };
 
@@ -180,7 +181,7 @@ function AppContent() {
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('authChange', handleAuthChange);
     };
-  }, [dispatch]);
+  }, []);
 
   // Create theme based on dark mode preference
   const theme = createAppTheme(darkMode);
@@ -204,11 +205,13 @@ function AppContent() {
               <Route path="/workflow" element={<Workflow />} />
               <Route path="/workflow/:capabilityId" element={<Workflow />} />
               <Route path="/architecture-canvas" element={<ArchitectureCanvas />} />
+              <Route path="/business-process-canvas" element={<BusinessProcessCanvas />} />
               <Route path="/reports" element={<Reports />} />
               <Route path="/database" element={<Database />} />
               <Route path="/data-quality-chat" element={<DataQualityChat />} />
-              <Route path="/comprehensive-chat" element={<ComprehensiveChat />} />
+
               <Route path="/vendor-analysis" element={<VendorAnalysis />} />
+              <Route path="/evidence-review" element={<EvidenceReview />} />
               <Route path="/user-management" element={<UserManagement />} />
               <Route path="/login" element={<Navigate to="/" replace />} />
             </Routes>

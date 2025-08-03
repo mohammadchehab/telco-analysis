@@ -77,7 +77,7 @@ export const uploadResearchFile = createAsyncThunk(
 
 export const validateResearchData = createAsyncThunk(
   'workflow/validateResearchData',
-  async ({ capabilityId, jsonData, expectedType }: { capabilityId: number; jsonData: any; expectedType: 'domain_analysis' | 'comprehensive_research' }) => {
+  async ({ capabilityId, jsonData }: { capabilityId: number; jsonData: any }) => {
     const response = await capabilityAPI.validateResearchData(capabilityId, jsonData);
     
     if (!response.success) {

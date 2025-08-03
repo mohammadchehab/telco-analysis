@@ -12,23 +12,15 @@ import {
   Paper,
   Alert,
   CircularProgress,
-  TextField,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
-  FormControlLabel,
-  Radio,
-  RadioGroup,
-  Divider,
   Chip,
   IconButton,
-  Tooltip,
   List,
   ListItem,
   ListItemText,
-  ListItemSecondaryAction,
-  IconButton as MuiIconButton,
   Tabs,
   Tab,
 } from '@mui/material';
@@ -37,12 +29,10 @@ import {
   CheckCircle as CheckIcon,
   Error as ErrorIcon,
   PlayArrow as StartIcon,
-  Download as DownloadIcon,
   Visibility as ViewIcon,
   ArrowBack as BackIcon,
   ContentCopy as CopyIcon,
   Delete as DeleteIcon,
-  FileUpload as FileUploadIcon,
 
 } from '@mui/icons-material';
 import { useDispatch, useSelector } from 'react-redux';
@@ -296,7 +286,6 @@ const Workflow: React.FC = () => {
         await dispatch(validateResearchData({
           capabilityId: selectedCapabilityObj.id,
           jsonData: uploadedFile.data,
-          expectedType: uploadedFile.type,
         })).unwrap();
       }
       
@@ -432,31 +421,31 @@ const Workflow: React.FC = () => {
 
 
 
-  const handleGeneratePrompt = async () => {
-    if (!selectedCapability || !capabilityId) return;
+  // const handleGeneratePrompt = async () => {
+  //   if (!selectedCapability || !capabilityId) return;
 
-    try {
-      const selectedCapabilityObj = capabilitySummaries.find(c => c.name === selectedCapability);
-      if (!selectedCapabilityObj) {
-        throw new Error('Capability not found');
-      }
+  //   try {
+  //     const selectedCapabilityObj = capabilitySummaries.find(c => c.name === selectedCapability);
+  //     if (!selectedCapabilityObj) {
+  //       throw new Error('Capability not found');
+  //     }
 
-      await dispatch(generatePrompt({
-        capabilityId: selectedCapabilityObj.id,
-        promptType: promptType,
-      })).unwrap();
+  //     await dispatch(generatePrompt({
+  //       capabilityId: selectedCapabilityObj.id,
+  //       promptType: promptType,
+  //     })).unwrap();
 
-      dispatch(addNotification({
-        type: 'success',
-        message: 'Research prompt generated successfully',
-      }));
-    } catch (error: any) {
-      dispatch(addNotification({
-        type: 'error',
-        message: `Failed to generate prompt: ${error.message || error}`,
-      }));
-    }
-  };
+  //     dispatch(addNotification({
+  //       type: 'success',
+  //       message: 'Research prompt generated successfully',
+  //     }));
+  //   } catch (error: any) {
+  //     dispatch(addNotification({
+  //       type: 'error',
+  //       message: `Failed to generate prompt: ${error.message || error}`,
+  //     }));
+  //   }
+  // };
 
   const handleViewPrompt = () => {
     setMarkdownViewerOpen(true);
@@ -772,7 +761,7 @@ const Workflow: React.FC = () => {
                   <Box>
                     <Tabs 
                       value={promptType} 
-                      onChange={(e, newValue) => {
+                      onChange={(_e, newValue) => {
                         const newPromptType = newValue as 'domain_analysis' | 'comprehensive_research';
                         setPromptType(newPromptType);
                         // Auto-generate prompt when tab is selected
@@ -843,7 +832,7 @@ const Workflow: React.FC = () => {
                     <Card sx={{ mb: 3 }}>
                       <Tabs 
                         value={uploadMethod} 
-                        onChange={(e, newValue) => setUploadMethod(newValue)}
+                        onChange={(_e, newValue) => setUploadMethod(newValue)}
                         sx={{ borderBottom: 1, borderColor: 'divider' }}
                       >
                         <Tab 
@@ -940,7 +929,7 @@ const Workflow: React.FC = () => {
                           Research Data Items:
                         </Typography>
                         <List dense>
-                          {uploadedFiles.map((file, index) => (
+                          {uploadedFiles.map((file) => (
                             <ListItem
                               key={file.id}
                               secondaryAction={
@@ -1053,7 +1042,7 @@ const Workflow: React.FC = () => {
                       </Alert>
                     ) : (
                       <Box>
-                        {uploadedFiles.map((file, index) => (
+                        {uploadedFiles.map((file) => (
                           <Box key={file.id} sx={{ mb: 2, p: 2, border: '1px solid #ddd', borderRadius: 1 }}>
                             <Typography variant="subtitle2" gutterBottom>
                               {file.name} ({file.type.replace('_', ' ')})

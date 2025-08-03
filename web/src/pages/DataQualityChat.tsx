@@ -7,16 +7,10 @@ import {
   Button,
   List,
   ListItem,
-  ListItemText,
   ListItemIcon,
-  Divider,
   Chip,
-  Alert,
   CircularProgress,
   IconButton,
-  Tooltip,
-  Card,
-  CardContent,
   Accordion,
   AccordionSummary,
   AccordionDetails,
@@ -26,22 +20,30 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-} from '@mui/material';
+  Tabs,
+  Tab,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  } from '@mui/material';
 import {
   Send as SendIcon,
   Download as DownloadIcon,
   Refresh as RefreshIcon,
-  CheckCircle as SuccessIcon,
-  Error as ErrorIcon,
-  Warning as WarningIcon,
   Info as InfoIcon,
   ExpandMore as ExpandMoreIcon,
   SmartToy as BotIcon,
   Person as UserIcon,
   KeyboardArrowDown as ScrollToBottomIcon,
+  Architecture as ArchitectureIcon,
+  Assessment as ReportsIcon,
+  Search as SearchIcon,
+  Upload as UploadIcon,
+  DataUsage as DataQualityIcon,
 } from '@mui/icons-material';
-import { useSelector, useDispatch } from 'react-redux';
-import type { RootState, AppDispatch } from '../store';
+import { useDispatch } from 'react-redux';
+import type { AppDispatch } from '../store';
 import { addNotification } from '../store/slices/uiSlice';
 
 interface ChatMessage {
@@ -51,6 +53,8 @@ interface ChatMessage {
   timestamp: Date;
   data?: any;
   loading?: boolean;
+  intent?: string;
+  context?: any;
 }
 
 interface QueryResult {
@@ -59,6 +63,30 @@ interface QueryResult {
   exportData?: any;
   suggestions?: string[];
   sql_query?: string;
+  intent?: string;
+  context?: any;
+}
+
+interface TabPanelProps {
+  children?: React.ReactNode;
+  index: number;
+  value: number;
+}
+
+function TabPanel(props: TabPanelProps) {
+  const { children, value, index, ...other } = props;
+
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`chat-tabpanel-${index}`}
+      aria-labelledby={`chat-tab-${index}`}
+      {...other}
+    >
+      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
+    </div>
+  );
 }
 
 const DataQualityChat: React.FC = () => {
@@ -67,7 +95,7 @@ const DataQualityChat: React.FC = () => {
     {
       id: '1',
       type: 'assistant',
-      content: 'Hello! I can help you analyze data quality in your telco capability system. Try asking me things like:\n\n• "Check for broken URLs in evidence links"\n• "Find duplicate domain names"\n• "Show capabilities missing vendor scores"\n• "Are we checking ServiceNow and LogiAI for all capabilities?"',
+      content: 'Hello! I\'m your comprehensive telco capability assistant. I can help you with:\n\n🏗️ **Architecture Analysis** - TM Forum layers, capability mapping, vendor recommendations\n📊 **Reports & Analytics** - Generate vendor comparisons, radar charts, score distributions\n📄 **Document Search** - Search uploaded documents for relevant information\n🔍 **Data Quality** - Check for issues, duplicates, missing data\n\nTry asking me anything about your telco capabilities!',
       timestamp: new Date(),
     }
   ]);
@@ -75,6 +103,8 @@ const DataQualityChat: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
   const [thinkingDots, setThinkingDots] = useState(0);
+  const [tabValue, setTabValue] = useState(0);
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
@@ -140,64 +170,22 @@ const DataQualityChat: React.FC = () => {
     setIsProcessing(true);
 
     try {
-      const result = await processDataQualityQuery(inputValue);
+      const result = await processComprehensiveQuery(inputValue);
 
-      // Check if this is a general chat response (no SQL query)
-      if (!result.sql_query) {
-        // For general chat, show response immediately without thinking steps
-        const assistantMessage: ChatMessage = {
-          id: thinkingMessage.id,
-          type: 'assistant',
-          content: result.summary,
-          timestamp: new Date(),
-          data: result,
-        };
+      // Update thinking message with actual response
+      const assistantMessage: ChatMessage = {
+        id: thinkingMessage.id,
+        type: 'assistant',
+        content: result.summary,
+        timestamp: new Date(),
+        data: result,
+        intent: result.intent,
+        context: result.context,
+      };
 
-        setMessages(prev => prev.map(msg => 
-          msg.id === thinkingMessage.id ? assistantMessage : msg
-        ));
-      } else {
-        // For data queries, show thinking steps
-        // Step 1: Show intent understanding
-        setTimeout(() => {
-          setMessages(prev => prev.map(msg => 
-            msg.id === thinkingMessage.id 
-              ? { ...msg, content: '🔍 Analyzing your data quality question...' }
-              : msg
-          ));
-        }, 1000);
-
-        // Step 2: Show SQL generation
-        setTimeout(() => {
-          setMessages(prev => prev.map(msg => 
-            msg.id === thinkingMessage.id 
-              ? { ...msg, content: '⚡ Generating SQL query...' }
-              : msg
-          ));
-        }, 2000);
-
-        // Step 3: Show execution
-        setTimeout(() => {
-          setMessages(prev => prev.map(msg => 
-            msg.id === thinkingMessage.id 
-              ? { ...msg, content: '📊 Executing query and analyzing results...' }
-              : msg
-          ));
-        }, 3000);
-
-        // Replace thinking message with actual response
-        const assistantMessage: ChatMessage = {
-          id: thinkingMessage.id,
-          type: 'assistant',
-          content: result.summary,
-          timestamp: new Date(),
-          data: result,
-        };
-
-        setMessages(prev => prev.map(msg => 
-          msg.id === thinkingMessage.id ? assistantMessage : msg
-        ));
-      }
+      setMessages(prev => prev.map(msg => 
+        msg.id === thinkingMessage.id ? assistantMessage : msg
+      ));
 
     } catch (error) {
       console.error('Error processing query:', error);
@@ -207,7 +195,6 @@ const DataQualityChat: React.FC = () => {
       if (error instanceof Error) {
         if (error.message.includes('authentication') || error.message.includes('auth')) {
           errorMessage = 'Authentication failed. Please log in again.';
-          // Redirect to login after a short delay
           setTimeout(() => {
             window.location.href = '/login';
           }, 2000);
@@ -231,7 +218,7 @@ const DataQualityChat: React.FC = () => {
     }
   };
 
-  const processDataQualityQuery = async (query: string): Promise<QueryResult> => {
+  const processComprehensiveQuery = async (query: string): Promise<QueryResult> => {
     try {
       const token = localStorage.getItem('authToken');
       console.log('Using token:', token ? token.substring(0, 20) + '...' : 'No token found');
@@ -240,7 +227,7 @@ const DataQualityChat: React.FC = () => {
         throw new Error('No authentication token found. Please log in again.');
       }
 
-      const response = await fetch('/api/data-quality/chat', {
+      const response = await fetch('/api/comprehensive-chat/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -267,9 +254,11 @@ const DataQualityChat: React.FC = () => {
         details: result.data.details,
         sql_query: result.data.sql_query,
         suggestions: result.data.suggestions,
+        intent: result.data.intent,
+        context: result.data.context,
       };
     } catch (error) {
-      console.error('Error calling data quality API:', error);
+      console.error('Error calling comprehensive chat API:', error);
       throw error;
     }
   };
@@ -282,7 +271,7 @@ const DataQualityChat: React.FC = () => {
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "data_quality_results.csv");
+    link.setAttribute("download", "comprehensive_chat_results.csv");
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -292,6 +281,40 @@ const DataQualityChat: React.FC = () => {
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();
       handleSendMessage();
+    }
+  };
+
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
+    setTabValue(newValue);
+  };
+
+  const getIntentIcon = (intent?: string) => {
+    switch (intent) {
+      case 'architecture':
+        return <ArchitectureIcon color="primary" />;
+      case 'reports':
+        return <ReportsIcon color="secondary" />;
+      case 'rag':
+        return <SearchIcon color="info" />;
+      case 'data_quality':
+        return <DataQualityIcon color="warning" />;
+      default:
+        return <InfoIcon color="action" />;
+    }
+  };
+
+  const getIntentColor = (intent?: string) => {
+    switch (intent) {
+      case 'architecture':
+        return 'primary';
+      case 'reports':
+        return 'secondary';
+      case 'rag':
+        return 'info';
+      case 'data_quality':
+        return 'warning';
+      default:
+        return 'default';
     }
   };
 
@@ -314,6 +337,15 @@ const DataQualityChat: React.FC = () => {
           <Typography variant="caption" color="text.secondary">
             {message.timestamp.toLocaleTimeString()}
           </Typography>
+          {message.intent && (
+            <Chip
+              icon={getIntentIcon(message.intent)}
+              label={message.intent?.replace('_', ' ').toUpperCase()}
+              color={getIntentColor(message.intent) as any}
+              size="small"
+              sx={{ ml: 1 }}
+            />
+          )}
         </Box>
         
         <Paper
@@ -508,13 +540,101 @@ const DataQualityChat: React.FC = () => {
         borderColor: 'divider',
         flexShrink: 0
       }}>
-        <Typography variant="h4" component="h1" gutterBottom>
-          Data Quality Chat
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          Ask me anything about your data quality. I can help you find issues, analyze coverage, and validate your telco capability data.
-        </Typography>
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+          <Box display="flex" alignItems="center" gap={2}>
+            <BotIcon sx={{ fontSize: 40, color: 'primary.main' }} />
+            <Box>
+              <Typography variant="h4" component="h1" gutterBottom>
+                Comprehensive Telco Assistant
+              </Typography>
+              <Typography variant="body1" color="text.secondary">
+                Your AI-powered assistant for architecture, reports, document search, and data quality
+              </Typography>
+            </Box>
+          </Box>
+          <Box display="flex" gap={1}>
+            <Button
+              variant="outlined"
+              startIcon={<UploadIcon />}
+              onClick={() => setUploadDialogOpen(true)}
+            >
+              Upload Documents
+            </Button>
+            <Button
+              variant="outlined"
+              startIcon={<RefreshIcon />}
+              onClick={() => window.location.reload()}
+            >
+              Refresh
+            </Button>
+          </Box>
+        </Box>
+
+        {/* Quick Actions Tabs */}
+        <Tabs value={tabValue} onChange={handleTabChange} variant="scrollable" scrollButtons="auto">
+          <Tab icon={<ArchitectureIcon />} label="Architecture" />
+          <Tab icon={<ReportsIcon />} label="Reports" />
+          <Tab icon={<SearchIcon />} label="Document Search" />
+          <Tab icon={<DataQualityIcon />} label="Data Quality" />
+        </Tabs>
       </Box>
+
+      {/* Tab Panels */}
+      <TabPanel value={tabValue} index={0}>
+        <Typography variant="h6" gutterBottom>
+          Architecture Analysis
+        </Typography>
+        <Typography variant="body2" color="text.secondary" mb={2}>
+          Ask about TM Forum layers, capability mapping, vendor recommendations, and architecture insights.
+        </Typography>
+        <Box display="flex" gap={1} flexWrap="wrap">
+          <Chip label="Show architecture canvas" onClick={() => setInputValue("Show me the architecture canvas")} />
+          <Chip label="Vendor recommendations" onClick={() => setInputValue("What are the top vendor recommendations?")} />
+          <Chip label="TM Forum mapping" onClick={() => setInputValue("Map capabilities to TM Forum layers")} />
+        </Box>
+      </TabPanel>
+
+      <TabPanel value={tabValue} index={1}>
+        <Typography variant="h6" gutterBottom>
+          Reports & Analytics
+        </Typography>
+        <Typography variant="body2" color="text.secondary" mb={2}>
+          Generate vendor comparisons, radar charts, score distributions, and comprehensive reports.
+        </Typography>
+        <Box display="flex" gap={1} flexWrap="wrap">
+          <Chip label="Vendor comparison" onClick={() => setInputValue("Generate a vendor comparison report")} />
+          <Chip label="Radar chart" onClick={() => setInputValue("Create a radar chart for capabilities")} />
+          <Chip label="Score distribution" onClick={() => setInputValue("Show score distribution analysis")} />
+        </Box>
+      </TabPanel>
+
+      <TabPanel value={tabValue} index={2}>
+        <Typography variant="h6" gutterBottom>
+          Document Search
+        </Typography>
+        <Typography variant="body2" color="text.secondary" mb={2}>
+          Search uploaded documents for relevant information and insights.
+        </Typography>
+        <Box display="flex" gap={1} flexWrap="wrap">
+          <Chip label="Search ServiceNow" onClick={() => setInputValue("Search documents about ServiceNow")} />
+          <Chip label="Find architecture docs" onClick={() => setInputValue("Find architecture-related documents")} />
+          <Chip label="Recent uploads" onClick={() => setInputValue("What documents were recently uploaded?")} />
+        </Box>
+      </TabPanel>
+
+      <TabPanel value={tabValue} index={3}>
+        <Typography variant="h6" gutterBottom>
+          Data Quality
+        </Typography>
+        <Typography variant="body2" color="text.secondary" mb={2}>
+          Check for data quality issues, duplicates, missing information, and validation problems.
+        </Typography>
+        <Box display="flex" gap={1} flexWrap="wrap">
+          <Chip label="Check broken URLs" onClick={() => setInputValue("Check for broken URLs in evidence links")} />
+          <Chip label="Find duplicates" onClick={() => setInputValue("Find duplicate domain names")} />
+          <Chip label="Data completeness" onClick={() => setInputValue("Check data completeness")} />
+        </Box>
+      </TabPanel>
 
       {/* Messages Area - Takes remaining space */}
       <Box 
@@ -576,7 +696,7 @@ const DataQualityChat: React.FC = () => {
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder="Ask me about data quality... (e.g., 'Check for broken URLs', 'Find duplicate domains')"
+            placeholder="Ask me anything about telco capabilities, architecture, reports, or search documents..."
             disabled={isProcessing}
             variant="outlined"
             size="small"
@@ -609,6 +729,42 @@ const DataQualityChat: React.FC = () => {
           </Button>
         </Box>
       </Box>
+
+      {/* Upload Dialog */}
+      <Dialog 
+        open={uploadDialogOpen} 
+        onClose={() => setUploadDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Upload Documents for RAG</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary" mb={2}>
+            Upload documents (PDF, DOCX, TXT) to enable document search functionality.
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Supported formats: PDF, DOCX, DOC, TXT
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setUploadDialogOpen(false)}>
+            Close
+          </Button>
+          <Button 
+            variant="contained" 
+            onClick={() => {
+              setUploadDialogOpen(false);
+              // TODO: Implement file upload functionality
+              dispatch(addNotification({
+                type: 'info',
+                message: 'File upload functionality coming soon!'
+              }));
+            }}
+          >
+            Upload Files
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

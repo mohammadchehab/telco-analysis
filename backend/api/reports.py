@@ -11,6 +11,7 @@ from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter, A4
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from urllib.parse import unquote
 
 from core.database import get_db
 from services.capability_service import CapabilityService
@@ -258,8 +259,8 @@ async def get_vendor_analysis_data(
         if not capability:
             return APIResponse(success=False, error="Capability not found")
         
-        # Parse vendors from query parameter
-        vendor_list = [v.strip() for v in vendors.split(",")]
+        # Parse vendors from query parameter with URL decoding
+        vendor_list = [unquote(v.strip()) for v in vendors.split(",")]
         
         # Get detailed vendor analysis data
         analysis_data = CapabilityService.generate_vendor_analysis_data(db, capability_id, vendor_list)
@@ -280,8 +281,8 @@ async def export_vendor_analysis(
         if not capability:
             return APIResponse(success=False, error="Capability not found")
         
-        # Parse vendors from query parameter
-        vendor_list = [v.strip() for v in vendors.split(",")]
+        # Parse vendors from query parameter with URL decoding
+        vendor_list = [unquote(v.strip()) for v in vendors.split(",")]
         
         # Get detailed vendor analysis data
         analysis_data = CapabilityService.generate_vendor_analysis_data(db, capability_id, vendor_list)
@@ -309,8 +310,8 @@ async def export_all_vendor_analysis(
 ):
     """Export vendor analysis data for all capabilities"""
     try:
-        # Parse vendors from query parameter
-        vendor_list = [v.strip() for v in vendors.split(",")]
+        # Parse vendors from query parameter with URL decoding
+        vendor_list = [unquote(v.strip()) for v in vendors.split(",")]
         
         # Get all completed capabilities
         capabilities = db.query(Capability).filter(Capability.status == "completed").all()
@@ -352,10 +353,10 @@ async def get_filtered_reports(
         if capability.status != "completed":
             return APIResponse(success=False, error="Capability research is not completed")
         
-        # Parse filter parameters
-        domain_list = [d.strip() for d in domains.split(",") if d.strip()] if domains else []
-        vendor_list = [v.strip() for v in vendors.split(",") if v.strip()] if vendors else []
-        attribute_list = [a.strip() for a in attributes.split(",") if a.strip()] if attributes else []
+        # Parse filter parameters with URL decoding
+        domain_list = [unquote(d.strip()) for d in domains.split(",") if d.strip()] if domains else []
+        vendor_list = [unquote(v.strip()) for v in vendors.split(",") if v.strip()] if vendors else []
+        attribute_list = [unquote(a.strip()) for a in attributes.split(",") if a.strip()] if attributes else []
         
         # Get filtered data
         filtered_data = CapabilityService.generate_filtered_reports_data(

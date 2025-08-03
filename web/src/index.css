@@ -75,3 +75,8 @@ button:focus-visible {
     color: #ffffff;
   }
 }
+
+/* Override MUI AppBar z-index */
+.MuiPaper-root.MuiAppBar-root {
+  z-index: 1100 !important;
+}

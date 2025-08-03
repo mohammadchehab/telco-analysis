@@ -12,7 +12,7 @@ import {
   ListItemText,
   Toolbar,
   Typography,
-  useTheme,
+
   ThemeProvider,
   createTheme,
   Switch,
@@ -26,7 +26,7 @@ import {
   List as ListIcon,
   Timeline as TimelineIcon,
   Assessment as AssessmentIcon,
-  Storage as StorageIcon,
+
   Brightness4 as DarkModeIcon,
   Brightness7 as LightModeIcon,
   Logout as LogoutIcon,
@@ -36,7 +36,9 @@ import {
   Group as GroupIcon,
   PushPin as PinIcon,
   PushPinOutlined as PinOutlinedIcon,
-  Architecture as ArchitectureIcon
+  Architecture as ArchitectureIcon,
+  Link as LinkIcon,
+  Business as BusinessIcon
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
@@ -137,10 +139,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     { text: 'Capabilities', icon: <ListIcon />, path: '/capabilities' },
     { text: 'Workflow', icon: <TimelineIcon />, path: '/workflow' },
     { text: 'Architecture Canvas', icon: <ArchitectureIcon />, path: '/architecture-canvas' },
+    { text: 'Business Process Canvas', icon: <BusinessIcon />, path: '/business-process-canvas' },
     { text: 'Reports', icon: <AssessmentIcon />, path: '/reports' },
     { text: 'Vendor Analysis', icon: <CompareIcon />, path: '/vendor-analysis' },
-          { text: 'Data Quality Chat', icon: <BotIcon />, path: '/data-quality-chat' },
-      { text: 'Comprehensive Chat', icon: <BotIcon />, path: '/comprehensive-chat' },
+    { text: 'Evidence Review', icon: <LinkIcon />, path: '/evidence-review' },
+    { text: 'AI Assistant', icon: <BotIcon />, path: '/data-quality-chat' },
+
     ...(hasAdminAccess ? [{ text: 'User Management', icon: <GroupIcon />, path: '/user-management' }] : []),
   ];
 
@@ -394,7 +398,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           sx={{
             width: { sm: sidebarOpen ? `calc(100% - ${drawerWidth}px)` : '100%' },
             ml: { sm: sidebarOpen ? `${drawerWidth}px` : 0 },
-            zIndex: 10000,
+            zIndex: 1100,
             transition: 'width 0.3s ease, margin-left 0.3s ease',
           }}
         >

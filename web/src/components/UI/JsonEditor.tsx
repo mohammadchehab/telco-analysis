@@ -15,7 +15,7 @@ interface JsonEditorProps {
 const JsonEditor: React.FC<JsonEditorProps> = ({
   value,
   onChange,
-  placeholder = "Paste your JSON data here...",
+
   error,
   height = 400,
   readOnly = false

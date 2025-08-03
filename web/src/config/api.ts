@@ -58,6 +58,13 @@ export const API_CONFIG = {
     UPLOAD_BY_ID: (id: number) => `/api/uploads/${id}`,
     UPLOAD_SEARCH: (query: string) => `/api/uploads/search/${encodeURIComponent(query)}`,
     UPLOAD_STATS: '/api/uploads/stats/summary',
+    
+    // Business Process Canvas
+    BUSINESS_PROCESS_CANVAS_PROCESSES: '/api/business-process-canvas/processes',
+    BUSINESS_PROCESS_CANVAS_PROCESS_BY_ID: (id: number) => `/api/business-process-canvas/processes/${id}`,
+    BUSINESS_PROCESS_CANVAS_AUTO_MAP: '/api/business-process-canvas/auto-map',
+    BUSINESS_PROCESS_CANVAS_SEARCH: '/api/business-process-canvas/search',
+    BUSINESS_PROCESS_CANVAS_MAPPING_STATS: '/api/business-process-canvas/mapping-stats',
   },
   
   // Request Configuration

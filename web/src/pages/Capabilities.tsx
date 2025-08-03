@@ -28,23 +28,20 @@ import {
   Edit as EditIcon,
   Delete as DeleteIcon,
   Save as SaveIcon,
-  Cancel as CancelIcon,
+
 } from '@mui/icons-material';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import type { RootState, AppDispatch } from '../store';
 import { 
   fetchCapabilities, 
-  setFilters, 
   clearFilters, 
-  setSelectedCapabilities,
   toggleCapabilitySelection,
-  clearSelection,
   startResearchWorkflow
 } from '../store/slices/capabilitiesSlice';
 import { addNotification } from '../store/slices/uiSlice';
 import { capabilityAPI } from '../utils/api';
-import type { WorkflowState, FilterOptions, BulkAction, Capability } from '../types';
+import type { WorkflowState, BulkAction, Capability } from '../types';
 
 const Capabilities: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -52,10 +49,8 @@ const Capabilities: React.FC = () => {
   
   const { 
     capabilitySummaries, 
-    workflowStats, 
     loading, 
     error,
-    filters,
     selectedCapabilities 
   } = useSelector((state: RootState) => state.capabilities);
 
@@ -107,7 +102,7 @@ const Capabilities: React.FC = () => {
     }
   };
 
-  const handleViewReports = (capabilityName: string) => {
+  const handleViewReports = (_capabilityName: string) => {
     navigate(`/reports`);
   };
 

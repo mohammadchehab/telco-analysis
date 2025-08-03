@@ -12,8 +12,7 @@ import {
   TableRow,
   Paper,
   Chip,
-  IconButton,
-  Tooltip,
+
   CircularProgress,
   Alert,
   TablePagination,
@@ -125,7 +124,7 @@ const RecentActivity: React.FC = () => {
     return new Date(timestamp).toLocaleString();
   };
 
-  const handleChangePage = (event: unknown, newPage: number) => {
+  const handleChangePage = (_event: unknown, newPage: number) => {
     setPage(newPage);
   };
 

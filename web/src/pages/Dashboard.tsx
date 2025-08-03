@@ -4,7 +4,7 @@ import {
   Typography,
   Card,
   CardContent,
-  Grid,
+
   Paper,
   Chip,
   CircularProgress,
@@ -16,7 +16,7 @@ import {
   Divider
 } from '@mui/material';
 import {
-  Dashboard as DashboardIcon,
+
   TrendingUp as TrendingUpIcon,
   Assignment as AssignmentIcon,
   CheckCircle as CheckCircleIcon,
@@ -33,22 +33,7 @@ import { fetchCapabilities } from '../store/slices/capabilitiesSlice';
 import { addNotification } from '../store/slices/uiSlice';
 import RecentActivity from '../components/RecentActivity';
 
-interface CapabilitySummary {
-  id: number;
-  name: string;
-  status: string;
-  domains_count: number;
-  attributes_count: number;
-  last_updated: string;
-}
 
-interface WorkflowStats {
-  total: number;
-  readyForResearch: number;
-  reviewRequired: number;
-  domainAnalysis: number;
-  completed: number;
-}
 
 interface RecentActivity {
   id: string;
@@ -94,7 +79,7 @@ const Dashboard: React.FC = () => {
           .sort((a, b) => new Date(b.last_updated).getTime() - new Date(a.last_updated).getTime())
           .slice(0, 3);
 
-        recentCapabilities.forEach((cap, index) => {
+        recentCapabilities.forEach((cap) => {
           activities.push({
             id: `cap-${cap.id}`,
             type: cap.status === 'completed' ? 'research_completed' : 'status_updated',
