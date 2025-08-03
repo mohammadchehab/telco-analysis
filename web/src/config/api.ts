@@ -97,14 +97,15 @@ export const getApiConfig = () => {
     console.log('Using development localhost:', baseUrl);
   }
   
+  // CRITICAL: If we're on telco-platform.openbiocure.ai, ALWAYS use HTTPS
+  if (window.location.hostname === 'telco-platform.openbiocure.ai') {
+    baseUrl = 'https://telco-platform.openbiocure.ai';
+    console.log('Forcing production URL for telco-platform.openbiocure.ai:', baseUrl);
+  }
+  
   // Override any HTTP URLs with HTTPS in production
   if (isProduction && baseUrl && baseUrl.startsWith('http://')) {
     baseUrl = baseUrl.replace('http://', 'https://');
-  }
-  
-  // Additional safety: if we're on openbiocure.ai, force the correct URL
-  if (window.location.hostname === 'telco-platform.openbiocure.ai') {
-    baseUrl = 'https://telco-platform.openbiocure.ai';
   }
   
   // Final safety check: ANY HTTP URL in production should be HTTPS
