@@ -14,5 +14,8 @@ export default defineConfig({
         secure: false,
       }
     }
+  },
+  preview: {
+    allowedHosts: ['telco-platform.lab']
   }
 })
