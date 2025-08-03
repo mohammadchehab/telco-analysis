@@ -83,6 +83,13 @@ export const getApiConfig = () => {
   
   let baseUrl = import.meta.env.VITE_API_BASE_URL;
   
+  console.log('🔧 API Config Debug:', {
+    hostname: window.location.hostname,
+    isProduction,
+    envBaseUrl: import.meta.env.VITE_API_BASE_URL,
+    initialBaseUrl: baseUrl
+  });
+  
   // Force HTTPS in production regardless of environment variable
   if (isProduction) {
     baseUrl = `https://${window.location.hostname}`;
@@ -100,6 +107,19 @@ export const getApiConfig = () => {
   if (window.location.hostname === 'telco-platform.openbiocure.ai') {
     baseUrl = 'https://telco-platform.openbiocure.ai';
   }
+  
+  // Final safety check: ANY HTTP URL in production should be HTTPS
+  if (isProduction && baseUrl && baseUrl.includes('http://')) {
+    baseUrl = baseUrl.replace('http://', 'https://');
+  }
+  
+  console.log('🔧 Final API Config:', {
+    baseUrl,
+    finalConfig: {
+      ...API_CONFIG,
+      BASE_URL: baseUrl,
+    }
+  });
   
   return {
     ...API_CONFIG,
