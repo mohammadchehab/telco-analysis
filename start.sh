@@ -83,6 +83,12 @@ if [ -f "backend/config.env" ]; then
     export $(cat backend/config.env | grep -v '^#' | xargs)
 fi
 
+# Set production environment variables
+if [ "$MODE" = "prod" ]; then
+    echo "🔧 Setting production environment variables..."
+    export VITE_API_BASE_URL=https://telco-platform.openbiocure.ai
+fi
+
 # Start backend based on mode
 if [ "$MODE" = "prod" ]; then
     echo "🔧 Starting modular backend API server in production mode (nohup)..."
@@ -111,8 +117,6 @@ fi
 if [ "$MODE" = "prod" ]; then
     echo "🌐 Building and starting frontend in production mode (nohup)..."
     cd web
-    # Set production API URL
-    export VITE_API_BASE_URL=https://telco-platform.openbiocure.ai
     npm run build
     nohup npm run start:prod > frontend.log 2>&1 &
     FRONTEND_PID=$!
