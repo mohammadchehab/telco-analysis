@@ -40,7 +40,7 @@ class VersionManager:
     
     @staticmethod
     def generate_domain_hash(domain_data: dict) -> str:
-        """Generate hash for domain content"""
+        """Generate hash for domain content (using SHA256 for content hashing, not passwords)"""
         # Create a normalized representation for hashing
         hash_data = {
             'domain_name': domain_data.get('domain_name', ''),
@@ -53,7 +53,7 @@ class VersionManager:
     
     @staticmethod
     def generate_attribute_hash(attribute_data: dict) -> str:
-        """Generate hash for attribute content"""
+        """Generate hash for attribute content (using SHA256 for content hashing, not passwords)"""
         hash_data = {
             'domain_name': attribute_data.get('domain_name', ''),
             'attribute_name': attribute_data.get('attribute_name', ''),

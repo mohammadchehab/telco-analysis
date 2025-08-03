@@ -270,8 +270,9 @@ async def create_user(
                 error="Username or email already exists"
             )
         
-        # Hash password
-        password_hash = hashlib.sha256(user_data.password.encode()).hexdigest()
+        # Hash password with bcrypt
+        import bcrypt
+        password_hash = bcrypt.hashpw(user_data.password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
         
         # Create new user
         new_user = User(
@@ -345,7 +346,8 @@ async def update_user(
         user.role = user_data.role
         
         if user_data.password:
-            user.password_hash = hashlib.sha256(user_data.password.encode()).hexdigest()
+            import bcrypt
+            user.password_hash = bcrypt.hashpw(user_data.password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
         
         db.commit()
         
@@ -472,8 +474,9 @@ async def change_user_password(
         if not user:
             return APIResponse(success=False, error="User not found")
         
-        # Hash new password
-        password_hash = hashlib.sha256(password_data.new_password.encode()).hexdigest()
+        # Hash new password with bcrypt
+        import bcrypt
+        password_hash = bcrypt.hashpw(password_data.new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
         user.password_hash = password_hash
         
         db.commit()
@@ -511,12 +514,12 @@ async def change_own_password(
             return APIResponse(success=False, error="User not found")
         
         # Verify current password
-        current_password_hash = hashlib.sha256(password_data.current_password.encode()).hexdigest()
-        if user.password_hash != current_password_hash:
+        import bcrypt
+        if not bcrypt.checkpw(password_data.current_password.encode('utf-8'), user.password_hash.encode('utf-8')):
             return APIResponse(success=False, error="Current password is incorrect")
         
         # Hash new password
-        new_password_hash = hashlib.sha256(password_data.new_password.encode()).hexdigest()
+        new_password_hash = bcrypt.hashpw(password_data.new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
         user.password_hash = new_password_hash
         
         db.commit()
