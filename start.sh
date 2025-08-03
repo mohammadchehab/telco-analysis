@@ -29,7 +29,6 @@ cleanup() {
     echo "🧹 Final cleanup..."
     pkill -f "npm.*dev" 2>/dev/null || true
     pkill -f "python.*app.py" 2>/dev/null || true
-    pkill -f "python.*main.py" 2>/dev/null || true
     echo "✅ All services stopped"
     exit 0
 }
@@ -40,7 +39,6 @@ trap cleanup SIGINT SIGTERM
 echo "🔍 Checking for existing processes..."
 pkill -f "npm.*dev" 2>/dev/null || true
 pkill -f "python.*app.py" 2>/dev/null || true
-pkill -f "python.*main.py" 2>/dev/null || true
 echo "🧹 Cleaned up existing processes"
 
 # Install frontend dependencies

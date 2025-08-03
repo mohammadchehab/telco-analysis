@@ -73,7 +73,12 @@ class SimpleAuthProvider(AuthProvider):
     
     def verify_password(self, password: str, password_hash: str) -> bool:
         """Verify password against hash"""
-        return hashlib.sha256(password.encode()).hexdigest() == password_hash
+        try:
+            import bcrypt
+            return bcrypt.checkpw(password.encode('utf-8'), password_hash.encode('utf-8'))
+        except Exception:
+            # Fallback to SHA256 for backward compatibility
+            return hashlib.sha256(password.encode()).hexdigest() == password_hash
     
     def get_user_by_username(self, username: str) -> Optional[User]:
         """Get user by username"""
