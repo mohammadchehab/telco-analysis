@@ -20,6 +20,7 @@ import Database from './pages/Database';
 import DataQualityChat from './pages/DataQualityChat';
 import VendorAnalysis from './pages/VendorAnalysis';
 import UserManagement from './pages/UserManagement';
+import ArchitectureCanvas from './pages/ArchitectureCanvas';
 import NotificationSystem from './components/UI/NotificationSystem';
 import LoadingOverlay from './components/UI/LoadingOverlay';
 
@@ -120,6 +121,18 @@ const createAppTheme = (darkMode: boolean) => createTheme({
         },
       },
     },
+    MuiCssBaseline: {
+      styleOverrides: {
+        body: {
+          overflowY: 'auto !important',
+          overflowX: 'hidden !important',
+        },
+        html: {
+          overflowY: 'auto !important',
+          overflowX: 'hidden !important',
+        },
+      },
+    },
   },
 });
 
@@ -189,6 +202,7 @@ function AppContent() {
               <Route path="/capabilities/:capabilityId/attributes" element={<AttributeManagement />} />
               <Route path="/workflow" element={<Workflow />} />
               <Route path="/workflow/:capabilityId" element={<Workflow />} />
+              <Route path="/architecture-canvas" element={<ArchitectureCanvas />} />
               <Route path="/reports" element={<Reports />} />
               <Route path="/database" element={<Database />} />
               <Route path="/data-quality-chat" element={<DataQualityChat />} />

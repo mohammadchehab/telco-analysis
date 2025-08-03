@@ -98,6 +98,7 @@ const VendorAnalysis: React.FC = () => {
   const [filterAttribute, setFilterAttribute] = useState<string>('');
   const [filterScore, setFilterScore] = useState<string>('');
   const [expandedAttribute, setExpandedAttribute] = useState<string | null>(null);
+  const [expandedAttributes, setExpandedAttributes] = useState<Set<string>>(new Set());
 
   const availableVendors = [
     'comarch', 'servicenow', 'salesforce', 'oracle', 'ibm', 'microsoft'
@@ -251,23 +252,32 @@ const VendorAnalysis: React.FC = () => {
 
 
 
-  const getScoreLabel = (score: number) => {
-    if (score >= 4) return 'Excellent';
-    if (score >= 3) return 'Good';
-    if (score >= 2) return 'Basic';
-    return 'Poor';
+  const getScoreLabel = (scoreString: string) => {
+    // Use the actual score string from the data (e.g., "3 - Good")
+    return scoreString;
+  };
+
+  const getScoreLabelFromNumeric = (score: number) => {
+    // Use the actual rubric from prompts.py
+    if (score >= 5) return 'Excellent/Leading';
+    if (score >= 4) return 'Very Good/Strong';
+    if (score >= 3) return 'Good/Adequate';
+    if (score >= 2) return 'Basic/Partial';
+    return 'Poor/Not Available';
   };
 
   const getScoreIcon = (score: number) => {
-    if (score >= 4) return <CheckCircleIcon />;
+    if (score >= 5) return <CheckCircleIcon />;
+    if (score >= 4) return <StarIcon />;
     if (score >= 3) return <StarIcon />;
     if (score >= 2) return <InfoIcon />;
     return <ErrorIcon />;
   };
 
   const getScoreColor = (score: number) => {
-    if (score >= 4) return '#2e7d32'; // Dark green for excellent
-    if (score >= 3) return '#4caf50'; // Green for good
+    if (score >= 5) return '#1b5e20'; // Dark green for excellent
+    if (score >= 4) return '#2e7d32'; // Green for very good
+    if (score >= 3) return '#4caf50'; // Light green for good
     if (score >= 2) return '#ff9800'; // Orange for basic
     return '#f44336'; // Red for poor
   };
@@ -292,6 +302,25 @@ const VendorAnalysis: React.FC = () => {
   const getUniqueAttributes = () => {
     if (!analysisData) return [];
     return [...new Set(analysisData.analysis_items.map(item => item.attribute_name))];
+  };
+
+  const handleExpandAll = () => {
+    const allAttributes = new Set(filteredData.map(item => item.attribute_name));
+    setExpandedAttributes(allAttributes);
+  };
+
+  const handleCollapseAll = () => {
+    setExpandedAttributes(new Set());
+  };
+
+  const handleToggleAttribute = (attributeName: string) => {
+    const newExpanded = new Set(expandedAttributes);
+    if (newExpanded.has(attributeName)) {
+      newExpanded.delete(attributeName);
+    } else {
+      newExpanded.add(attributeName);
+    }
+    setExpandedAttributes(newExpanded);
   };
 
   const filteredData = getFilteredAndSortedData();
@@ -381,6 +410,24 @@ const VendorAnalysis: React.FC = () => {
                   color={showFilters ? 'primary' : 'default'}
                 >
                   <FilterIcon />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="Expand All">
+                <IconButton
+                  onClick={handleExpandAll}
+                  disabled={!analysisData || filteredData.length === 0}
+                  color="primary"
+                >
+                  <ExpandMoreIcon />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="Collapse All">
+                <IconButton
+                  onClick={handleCollapseAll}
+                  disabled={!analysisData || expandedAttributes.size === 0}
+                  color="default"
+                >
+                  <ExpandMoreIcon sx={{ transform: 'rotate(180deg)' }} />
                 </IconButton>
               </Tooltip>
               <Tooltip title="Export Data">
@@ -511,6 +558,11 @@ const VendorAnalysis: React.FC = () => {
                   </Typography>
                   <Typography variant="body1">
                     {filteredData.length} of {analysisData.total_attributes} attributes analyzed
+                    {expandedAttributes.size > 0 && (
+                      <span style={{ marginLeft: '8px', opacity: 0.9 }}>
+                        • {expandedAttributes.size} expanded
+                      </span>
+                    )}
                   </Typography>
                 </Box>
                 <Box sx={{ textAlign: 'right' }}>
@@ -587,7 +639,7 @@ const VendorAnalysis: React.FC = () => {
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
                         {getScoreIcon(avgScore)}
                         <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                          {getScoreLabel(avgScore)}
+                          {avgScore.toFixed(1)} - {getScoreLabelFromNumeric(avgScore)}
                         </Typography>
                       </Box>
                     </Paper>
@@ -599,13 +651,25 @@ const VendorAnalysis: React.FC = () => {
 
           {/* Attribute Comparison */}
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            {expandedAttributes.size > 0 && (
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                <Typography variant="body2" color="text.secondary">
+                  {expandedAttributes.size} of {filteredData.length} attributes expanded
+                </Typography>
+                <Button
+                  size="small"
+                  onClick={handleCollapseAll}
+                  startIcon={<ExpandMoreIcon sx={{ transform: 'rotate(180deg)' }} />}
+                >
+                  Collapse All
+                </Button>
+              </Box>
+            )}
             {filteredData.map((item, index) => (
               <Accordion 
                 key={index}
-                expanded={expandedAttribute === item.attribute_name}
-                onChange={() => setExpandedAttribute(
-                  expandedAttribute === item.attribute_name ? null : item.attribute_name
-                )}
+                expanded={expandedAttributes.has(item.attribute_name)}
+                onChange={() => handleToggleAttribute(item.attribute_name)}
                 sx={{ 
                   boxShadow: 2,
                   '&:before': { display: 'none' }
@@ -633,7 +697,7 @@ const VendorAnalysis: React.FC = () => {
                           <Chip
                             key={vendor}
                             icon={getScoreIcon(vendorData.score_numeric)}
-                            label={`${vendorData.score} - ${getScoreLabel(vendorData.score_numeric)}`}
+                            label={vendorData.score}
                             sx={{
                               bgcolor: getScoreColor(vendorData.score_numeric),
                               color: 'white',
@@ -704,7 +768,7 @@ const VendorAnalysis: React.FC = () => {
                                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                                     {getScoreIcon(vendorData.score_numeric)}
                                     <Typography variant="caption" color="text.secondary">
-                                      {getScoreLabel(vendorData.score_numeric)}
+                                      {getScoreLabelFromNumeric(vendorData.score_numeric)}
                                     </Typography>
                                   </Box>
                                 </Box>

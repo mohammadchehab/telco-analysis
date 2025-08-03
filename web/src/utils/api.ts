@@ -504,6 +504,7 @@ export const userPreferencesAPI = {
   updatePreferences: async (preferences: {
     email?: string;
     dark_mode_preference?: boolean;
+    pinned_menu_items?: string[];
   }): Promise<APIResponse<any>> => {
     return apiClient.put(apiConfig.ENDPOINTS.AUTH_PREFERENCES, preferences);
   },
@@ -533,4 +534,61 @@ export const vendorAnalysisAPI = {
     const vendorsParam = vendors.join(',');
     return apiClient.get<APIResponse<{excel_data: string, filename: string}>>(`/api/reports/vendor-analysis/export-all?vendors=${vendorsParam}&format=excel`);
   },
+};
+
+// Architecture API methods
+export const architectureAPI = {
+  async getCanvas(): Promise<APIResponse<{
+    layers: Array<{
+      id: string;
+      name: string;
+      description: string;
+      color: string;
+      capabilities: Array<{
+        id: string;
+        name: string;
+        description: string;
+        tmForumMapping: string;
+        recommendedVendor: string;
+        vendorScore: number;
+        vendorScores: {
+          comarch: number;
+          servicenow: number;
+          salesforce: number;
+        };
+        status: 'excellent' | 'good' | 'fair' | 'poor' | 'no-data';
+        evidence: string[];
+      }>;
+    }>;
+    summary: {
+      totalCapabilities: number;
+      excellentVendors: number;
+      goodVendors: number;
+      fairVendors: number;
+      poorVendors: number;
+      noData: number;
+    };
+    recommendations: {
+      topVendors: string[];
+      criticalGaps: string[];
+      nextSteps: string[];
+    };
+  }>> {
+    return apiClient.get('/api/architecture/canvas');
+  },
+
+  async getCapabilityDetails(capabilityId: number): Promise<APIResponse<{
+    capability: {
+      id: number;
+      name: string;
+      description: string;
+      status: string;
+      tmForumMapping: string;
+      layer: any;
+      attributes_count: number;
+      vendor_performance: any;
+    };
+  }>> {
+    return apiClient.get(`/api/architecture/capability/${capabilityId}/details`);
+  }
 }; 

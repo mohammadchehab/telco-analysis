@@ -13,8 +13,10 @@ interface UIState {
   notifications: Notification[];
   loading: boolean;
   darkMode: boolean;
+  sidebarOpen: boolean;
   userPreferences: {
     dark_mode_preference: boolean;
+    pinned_menu_items: string[];
     email?: string;
   } | null;
 }
@@ -23,6 +25,7 @@ const initialState: UIState = {
   notifications: [],
   loading: false,
   darkMode: true, // Default to dark mode
+  sidebarOpen: true, // Default to open on desktop
   userPreferences: null,
 };
 
@@ -40,7 +43,7 @@ export const fetchUserPreferences = createAsyncThunk(
 
 export const updateUserPreferences = createAsyncThunk(
   'ui/updateUserPreferences',
-  async (preferences: { dark_mode_preference?: boolean; email?: string }) => {
+  async (preferences: { dark_mode_preference?: boolean; email?: string; pinned_menu_items?: string[] }) => {
     const response = await userPreferencesAPI.updatePreferences(preferences);
     if (!response.success) {
       throw new Error(response.error || 'Failed to update user preferences');
@@ -71,6 +74,12 @@ const uiSlice = createSlice({
     },
     setLoading: (state, action: PayloadAction<boolean>) => {
       state.loading = action.payload;
+    },
+    toggleSidebar: (state) => {
+      state.sidebarOpen = !state.sidebarOpen;
+    },
+    setSidebarOpen: (state, action: PayloadAction<boolean>) => {
+      state.sidebarOpen = action.payload;
     },
   },
   extraReducers: (builder) => {
@@ -113,6 +122,8 @@ export const {
   setDarkMode,
   toggleDarkMode,
   setLoading,
+  toggleSidebar,
+  setSidebarOpen,
 } = uiSlice.actions;
 
 export default uiSlice.reducer; 

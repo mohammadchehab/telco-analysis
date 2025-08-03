@@ -146,6 +146,7 @@ class User(Base):
     role = Column(String, default="viewer")  # admin, editor, both, viewer
     is_active = Column(Boolean, default=True)
     dark_mode_preference = Column(Boolean, default=True)  # True for dark mode, False for light mode
+    pinned_menu_items = Column(Text, default="[]")  # JSON array of pinned menu item paths
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     last_login = Column(DateTime(timezone=True))
 

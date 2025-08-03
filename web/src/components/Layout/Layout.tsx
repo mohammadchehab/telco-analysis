@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   AppBar,
   Box,
@@ -33,12 +33,15 @@ import {
   Person as PersonIcon,
   SmartToy as BotIcon,
   Compare as CompareIcon,
-  Group as GroupIcon
+  Group as GroupIcon,
+  PushPin as PinIcon,
+  PushPinOutlined as PinOutlinedIcon,
+  Architecture as ArchitectureIcon
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import type { RootState, AppDispatch } from '../../store';
-import { toggleDarkMode, addNotification, updateUserPreferences } from '../../store/slices/uiSlice';
+import { toggleDarkMode, addNotification, updateUserPreferences, toggleSidebar, setSidebarOpen, fetchUserPreferences } from '../../store/slices/uiSlice';
 import { authAPI } from '../../utils/api';
 
 const drawerWidth = 240;
@@ -51,8 +54,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch<AppDispatch>();
-  const { darkMode } = useSelector((state: RootState) => state.ui);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { darkMode, sidebarOpen, userPreferences } = useSelector((state: RootState) => state.ui);
+  const [pinnedMenuItems, setPinnedMenuItems] = useState<string[]>([]);
 
   // Create theme based on dark mode preference
   const theme = createTheme({
@@ -133,14 +136,69 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     { text: 'Dashboard', icon: <DashboardIcon />, path: '/' },
     { text: 'Capabilities', icon: <ListIcon />, path: '/capabilities' },
     { text: 'Workflow', icon: <TimelineIcon />, path: '/workflow' },
+    { text: 'Architecture Canvas', icon: <ArchitectureIcon />, path: '/architecture-canvas' },
     { text: 'Reports', icon: <AssessmentIcon />, path: '/reports' },
     { text: 'Vendor Analysis', icon: <CompareIcon />, path: '/vendor-analysis' },
     { text: 'Data Quality Chat', icon: <BotIcon />, path: '/data-quality-chat' },
     ...(hasAdminAccess ? [{ text: 'User Management', icon: <GroupIcon />, path: '/user-management' }] : []),
   ];
 
+  // Load user preferences on mount
+  useEffect(() => {
+    dispatch(fetchUserPreferences());
+  }, [dispatch]);
+
+  // Load pinned menu items from user preferences
+  useEffect(() => {
+    if (userPreferences?.pinned_menu_items) {
+      setPinnedMenuItems(userPreferences.pinned_menu_items);
+    }
+  }, [userPreferences]);
+
+  // Handle responsive behavior
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768 && sidebarOpen) {
+        dispatch(setSidebarOpen(false));
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [sidebarOpen, dispatch]);
+
+  // Separate pinned and regular menu items
+  const pinnedItems = menuItems.filter(item => pinnedMenuItems.includes(item.path));
+  const regularItems = menuItems.filter(item => !pinnedMenuItems.includes(item.path));
+
   const handleDrawerToggle = () => {
-    setSidebarOpen(!sidebarOpen);
+    dispatch(toggleSidebar());
+  };
+
+  const handlePinMenuItem = async (path: string) => {
+    try {
+      const wasPinned = pinnedMenuItems.includes(path);
+      const newPinnedItems = wasPinned
+        ? pinnedMenuItems.filter(item => item !== path)
+        : [...pinnedMenuItems, path];
+      
+      setPinnedMenuItems(newPinnedItems);
+      
+      // Save to database
+      await dispatch(updateUserPreferences({ pinned_menu_items: newPinnedItems })).unwrap();
+      
+      dispatch(addNotification({
+        type: 'success',
+        message: `Menu item ${wasPinned ? 'unpinned' : 'pinned'} successfully`,
+        duration: 3000,
+      }));
+    } catch (error: any) {
+      dispatch(addNotification({
+        type: 'error',
+        message: 'Failed to update menu preferences',
+        duration: 5000,
+      }));
+    }
   };
 
   const handleDarkModeToggle = async () => {
@@ -196,7 +254,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     navigate(path);
     // Close sidebar on mobile after navigation
     if (window.innerWidth < 768) {
-      setSidebarOpen(false);
+      dispatch(setSidebarOpen(false));
     }
   };
 
@@ -208,8 +266,61 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         </Typography>
       </Toolbar>
       <Divider />
+      
+      {/* Pinned Menu Items */}
+      {pinnedItems.length > 0 && (
+        <>
+          <Box sx={{ px: 2, py: 1 }}>
+            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
+              PINNED
+            </Typography>
+          </Box>
+          <List>
+            {pinnedItems.map((item) => (
+              <ListItem key={item.text} disablePadding>
+                <ListItemButton
+                  selected={location.pathname === item.path}
+                  onClick={() => handleNavigation(item.path)}
+                  sx={{
+                    '&.Mui-selected': {
+                      backgroundColor: theme.palette.mode === 'dark' ? 'rgba(25, 118, 210, 0.2)' : 'rgba(25, 118, 210, 0.1)',
+                      '&:hover': {
+                        backgroundColor: theme.palette.mode === 'dark' ? 'rgba(25, 118, 210, 0.3)' : 'rgba(25, 118, 210, 0.2)',
+                      },
+                    },
+                  }}
+                >
+                  <ListItemIcon sx={{ color: location.pathname === item.path ? theme.palette.primary.main : 'inherit' }}>
+                    {item.icon}
+                  </ListItemIcon>
+                  <ListItemText 
+                    primary={item.text} 
+                    sx={{ 
+                      color: location.pathname === item.path ? theme.palette.primary.main : 'inherit',
+                      fontWeight: location.pathname === item.path ? 600 : 400,
+                    }}
+                  />
+                  <IconButton
+                    size="small"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handlePinMenuItem(item.path);
+                    }}
+                    sx={{ color: theme.palette.primary.main }}
+                  >
+                    <PinIcon fontSize="small" />
+                  </IconButton>
+                </ListItemButton>
+              </ListItem>
+            ))}
+          </List>
+          <Divider />
+        </>
+      )}
+      
+      {/* Regular Menu Items */}
       <List>
-        {menuItems.map((item) => (
+        {regularItems.map((item) => (
           <ListItem key={item.text} disablePadding>
             <ListItemButton
               selected={location.pathname === item.path}
@@ -233,6 +344,16 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   fontWeight: location.pathname === item.path ? 600 : 400,
                 }}
               />
+              <IconButton
+                size="small"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handlePinMenuItem(item.path);
+                }}
+                sx={{ color: 'text.secondary' }}
+              >
+                <PinOutlinedIcon fontSize="small" />
+              </IconButton>
             </ListItemButton>
           </ListItem>
         ))}
@@ -270,18 +391,19 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         <AppBar
           position="fixed"
           sx={{
-            width: { sm: `calc(100% - ${drawerWidth}px)` },
-            ml: { sm: `${drawerWidth}px` },
+            width: { sm: sidebarOpen ? `calc(100% - ${drawerWidth}px)` : '100%' },
+            ml: { sm: sidebarOpen ? `${drawerWidth}px` : 0 },
             zIndex: 10000,
+            transition: 'width 0.3s ease, margin-left 0.3s ease',
           }}
         >
           <Toolbar>
             <IconButton
               color="inherit"
-              aria-label="open drawer"
+              aria-label="toggle drawer"
               edge="start"
               onClick={handleDrawerToggle}
-              sx={{ mr: 2, display: { sm: 'none' } }}
+              sx={{ mr: 2 }}
             >
               <MenuIcon />
             </IconButton>
@@ -328,7 +450,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         {/* Sidebar */}
         <Box
           component="nav"
-          sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
+          sx={{ width: { sm: sidebarOpen ? drawerWidth : 0 }, flexShrink: { sm: 0 } }}
           aria-label="mailbox folders"
         >
           {/* Mobile drawer */}
@@ -358,11 +480,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               display: { xs: 'none', sm: 'block' },
               '& .MuiDrawer-paper': { 
                 boxSizing: 'border-box', 
-                width: drawerWidth,
+                width: sidebarOpen ? drawerWidth : 0,
                 backgroundColor: theme.palette.background.paper,
+                overflow: 'hidden',
+                transition: 'width 0.3s ease',
               },
             }}
-            open
+            open={sidebarOpen}
           >
             {drawer}
           </Drawer>
@@ -374,9 +498,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           sx={{
             flexGrow: 1,
             p: 3,
-            width: { sm: `calc(100% - ${drawerWidth}px)` },
+            width: { sm: sidebarOpen ? `calc(100% - ${drawerWidth}px)` : '100%' },
             backgroundColor: theme.palette.background.default,
             minHeight: '100vh',
+            transition: 'width 0.3s ease',
+            overflowY: 'auto',
+            overflowX: 'hidden',
           }}
         >
           <Toolbar /> {/* This creates space below the AppBar */}

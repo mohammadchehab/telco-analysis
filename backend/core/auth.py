@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 from core.database import get_db
 from models.models import User, ActivityLog
 import hashlib
+import json
 
 # Security scheme
 security = HTTPBearer(auto_error=False)
@@ -97,7 +98,8 @@ class SimpleAuthProvider(AuthProvider):
             "email": user.email,
             "role": user.role,
             "is_active": user.is_active,
-            "dark_mode_preference": user.dark_mode_preference
+            "dark_mode_preference": user.dark_mode_preference,
+            "pinned_menu_items": json.loads(user.pinned_menu_items) if user.pinned_menu_items else []
         }
     
     def validate_token(self, token: str) -> Optional[Dict[str, Any]]:

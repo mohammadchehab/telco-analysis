@@ -681,7 +681,17 @@ const UserManagement: React.FC = () => {
       </TabPanel>
 
       {/* User Dialog */}
-      <Dialog open={userDialogOpen} onClose={() => setUserDialogOpen(false)} maxWidth="sm" fullWidth>
+      <Dialog 
+        open={userDialogOpen} 
+        onClose={() => setUserDialogOpen(false)} 
+        maxWidth="sm" 
+        fullWidth
+        sx={{
+          '& .MuiDialog-paper': {
+            zIndex: 1300,
+          },
+        }}
+      >
         <DialogTitle>
           {editingUser ? 'Edit User' : 'Add New User'}
         </DialogTitle>
@@ -737,7 +747,17 @@ const UserManagement: React.FC = () => {
       </Dialog>
 
       {/* Password Dialog */}
-      <Dialog open={passwordDialogOpen} onClose={() => setPasswordDialogOpen(false)} maxWidth="sm" fullWidth>
+      <Dialog 
+        open={passwordDialogOpen} 
+        onClose={() => setPasswordDialogOpen(false)} 
+        maxWidth="sm" 
+        fullWidth
+        sx={{
+          '& .MuiDialog-paper': {
+            zIndex: 1300,
+          },
+        }}
+      >
         <DialogTitle>
           Change Password for {passwordUser?.username}
         </DialogTitle>
@@ -767,7 +787,18 @@ const UserManagement: React.FC = () => {
       </Dialog>
 
       {/* Activity Dialog */}
-      <Dialog open={activityDialogOpen} onClose={() => setActivityDialogOpen(false)} maxWidth="md" fullWidth>
+      <Dialog 
+        open={activityDialogOpen} 
+        onClose={() => setActivityDialogOpen(false)} 
+        maxWidth="md" 
+        fullWidth
+        sx={{
+          '& .MuiDialog-paper': {
+            zIndex: 1300, // Higher than the AppBar which is typically 1200
+            maxHeight: '80vh',
+          },
+        }}
+      >
         <DialogTitle>
           Activities for {selectedUser?.username}
         </DialogTitle>

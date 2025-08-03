@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Query
 from sqlalchemy.orm import Session
 from typing import Dict, Any, Optional
 import hashlib
+import json
 from datetime import datetime, timedelta
 
 from core.database import get_db
@@ -10,7 +11,7 @@ from schemas.schemas import (
     UserLogin, UserCreate, UserResponse, UserUpdate, APIResponse,
     UserPasswordChange, UserPasswordReset, UserActivityFilter, ActivityLogResponse
 )
-from core.auth import get_current_user, get_current_active_user, require_role
+from core.auth import get_current_user, get_current_active_user, require_role, auth_manager
 import logging
 
 logger = logging.getLogger(__name__)
@@ -37,17 +38,17 @@ async def login(user_credentials: UserLogin, request: Request, db: Session = Dep
         # Create token
         token = auth_manager.create_token(user_data, db)
         
-        # Log activity (for simple auth)
-        if auth_manager.provider_type == "simple":
-            from core.auth import log_activity
-            log_activity(
-                user_id=user_data.get("id"),
-                username=user_data.get("username"),
-                action="login",
-                entity_type="user",
-                ip_address=request.client.host if request.client else None,
-                user_agent=request.headers.get("user-agent")
-            )
+        # Log activity
+        from core.auth import log_activity
+        log_activity(
+            user_id=user_data.get("id"),
+            username=user_data.get("username"),
+            action="login",
+            entity_type="user",
+            ip_address=request.client.host if request.client else None,
+            user_agent=request.headers.get("user-agent"),
+            db=db
+        )
         
         return APIResponse(
             success=True,
@@ -60,7 +61,8 @@ async def login(user_credentials: UserLogin, request: Request, db: Session = Dep
                     "email": user_data.get("email"),
                     "role": user_data.get("role"),
                     "is_active": user_data.get("is_active", True),
-                    "dark_mode_preference": user_data.get("dark_mode_preference", True)
+                    "dark_mode_preference": user_data.get("dark_mode_preference", True),
+                    "pinned_menu_items": user_data.get("pinned_menu_items", [])
                 }
             },
             message="Login successful"
@@ -87,6 +89,7 @@ async def get_current_user_info(current_user: Dict[str, Any] = Depends(get_curre
                     "role": user.role,
                     "is_active": user.is_active,
                     "dark_mode_preference": user.dark_mode_preference,
+                    "pinned_menu_items": json.loads(user.pinned_menu_items) if user.pinned_menu_items else [],
                     "created_at": user.created_at.isoformat() if user.created_at else None,
                     "last_login": user.last_login.isoformat() if user.last_login else None
                 }
@@ -120,7 +123,32 @@ async def update_user_preferences(
         if preferences.dark_mode_preference is not None:
             user.dark_mode_preference = preferences.dark_mode_preference
         
+        if preferences.pinned_menu_items is not None:
+            user.pinned_menu_items = json.dumps(preferences.pinned_menu_items)
+        
         db.commit()
+        
+        # Log activity if any changes were made
+        from core.auth import log_activity
+        changes = []
+        if preferences.email is not None:
+            changes.append("email updated")
+        if preferences.dark_mode_preference is not None:
+            changes.append("dark mode preference updated")
+        if preferences.pinned_menu_items is not None:
+            changes.append("pinned menu items updated")
+        
+        if changes:
+            log_activity(
+                user_id=current_user.get("id"),
+                username=current_user.get("username"),
+                action="update_preferences",
+                entity_type="user",
+                entity_id=user.id,
+                entity_name=user.username,
+                details=f"Updated preferences: {', '.join(changes)}",
+                db=db
+            )
         
         return APIResponse(
             success=True,
@@ -132,6 +160,7 @@ async def update_user_preferences(
                     "role": user.role,
                     "is_active": user.is_active,
                     "dark_mode_preference": user.dark_mode_preference,
+                    "pinned_menu_items": json.loads(user.pinned_menu_items) if user.pinned_menu_items else [],
                     "created_at": user.created_at.isoformat() if user.created_at else None,
                     "last_login": user.last_login.isoformat() if user.last_login else None
                 }
@@ -142,20 +171,20 @@ async def update_user_preferences(
         return APIResponse(success=False, error=str(e))
 
 @router.post("/logout", response_model=APIResponse)
-async def logout(request: Request, current_user: Dict[str, Any] = Depends(get_current_active_user)):
+async def logout(request: Request, current_user: Dict[str, Any] = Depends(get_current_active_user), db: Session = Depends(get_db)):
     """Logout endpoint"""
     try:
-        # Log activity (for simple auth)
-        if auth_manager.provider_type == "simple":
-            from core.auth import log_activity
-            log_activity(
-                user_id=current_user.get("id"),
-                username=current_user.get("username"),
-                action="logout",
-                entity_type="user",
-                ip_address=request.client.host if request.client else None,
-                user_agent=request.headers.get("user-agent")
-            )
+        # Log activity
+        from core.auth import log_activity
+        log_activity(
+            user_id=current_user.get("id"),
+            username=current_user.get("username"),
+            action="logout",
+            entity_type="user",
+            ip_address=request.client.host if request.client else None,
+            user_agent=request.headers.get("user-agent"),
+            db=db
+        )
         
         return APIResponse(
             success=True,
@@ -204,6 +233,17 @@ async def get_users(
                 "last_login": user.last_login
             })
         
+        # Log activity
+        from core.auth import log_activity
+        log_activity(
+            user_id=current_user.get("id"),
+            username=current_user.get("username"),
+            action="view",
+            entity_type="users",
+            details=f"Viewed list of {len(user_list)} users",
+            db=db
+        )
+        
         return APIResponse(
             success=True,
             data={"users": user_list}
@@ -247,6 +287,19 @@ async def create_user(
         db.commit()
         db.refresh(new_user)
         
+        # Log activity
+        from core.auth import log_activity
+        log_activity(
+            user_id=current_user.get("id"),
+            username=current_user.get("username"),
+            action="create",
+            entity_type="user",
+            entity_id=new_user.id,
+            entity_name=new_user.username,
+            details=f"Created user with role: {user_data.role}",
+            db=db
+        )
+        
         return APIResponse(
             success=True,
             data={
@@ -282,6 +335,10 @@ async def update_user(
                 error="Username or email already exists"
             )
         
+        # Store old values for logging
+        old_username = user.username
+        old_role = user.role
+        
         # Update user
         user.username = user_data.username
         user.email = user_data.email
@@ -291,6 +348,19 @@ async def update_user(
             user.password_hash = hashlib.sha256(user_data.password.encode()).hexdigest()
         
         db.commit()
+        
+        # Log activity
+        from core.auth import log_activity
+        log_activity(
+            user_id=current_user.get("id"),
+            username=current_user.get("username"),
+            action="update",
+            entity_type="user",
+            entity_id=user.id,
+            entity_name=user.username,
+            details=f"Updated user from {old_username} to {user.username}, role: {old_role} → {user.role}",
+            db=db
+        )
         
         return APIResponse(
             success=True,
@@ -318,12 +388,29 @@ async def delete_user(
                 error="Cannot delete your own account"
             )
         
+        # Store user info for logging before deletion
+        deleted_username = user.username
+        deleted_role = user.role
+        
         db.delete(user)
         db.commit()
         
+        # Log activity
+        from core.auth import log_activity
+        log_activity(
+            user_id=current_user.get("id"),
+            username=current_user.get("username"),
+            action="delete",
+            entity_type="user",
+            entity_id=user_id,
+            entity_name=deleted_username,
+            details=f"Deleted user with role: {deleted_role}",
+            db=db
+        )
+        
         return APIResponse(
             success=True,
-            message=f"User {user.username} deleted successfully"
+            message=f"User {deleted_username} deleted successfully"
         )
     except Exception as e:
         return APIResponse(success=False, error=str(e))
@@ -348,8 +435,22 @@ async def update_user_status(
                 error="Cannot deactivate your own account"
             )
         
+        old_status = user.is_active
         user.is_active = status_update.get("is_active", True)
         db.commit()
+        
+        # Log activity
+        from core.auth import log_activity
+        log_activity(
+            user_id=current_user.get("id"),
+            username=current_user.get("username"),
+            action="update_status",
+            entity_type="user",
+            entity_id=user.id,
+            entity_name=user.username,
+            details=f"Changed user status from {'active' if old_status else 'inactive'} to {'active' if user.is_active else 'inactive'}",
+            db=db
+        )
         
         return APIResponse(
             success=True,
@@ -376,6 +477,19 @@ async def change_user_password(
         user.password_hash = password_hash
         
         db.commit()
+        
+        # Log activity
+        from core.auth import log_activity
+        log_activity(
+            user_id=current_user.get("id"),
+            username=current_user.get("username"),
+            action="change_password",
+            entity_type="user",
+            entity_id=user.id,
+            entity_name=user.username,
+            details=f"Changed password for user {user.username}",
+            db=db
+        )
         
         return APIResponse(
             success=True,
@@ -406,6 +520,19 @@ async def change_own_password(
         user.password_hash = new_password_hash
         
         db.commit()
+        
+        # Log activity
+        from core.auth import log_activity
+        log_activity(
+            user_id=current_user.get("id"),
+            username=current_user.get("username"),
+            action="change_own_password",
+            entity_type="user",
+            entity_id=user.id,
+            entity_name=user.username,
+            details="Changed own password",
+            db=db
+        )
         
         return APIResponse(
             success=True,
@@ -478,6 +605,19 @@ async def get_user_activities(
             for log in logs
         ]
         
+        # Log activity
+        from core.auth import log_activity
+        log_activity(
+            user_id=current_user.get("id"),
+            username=current_user.get("username"),
+            action="view",
+            entity_type="user_activities",
+            entity_id=user.id,
+            entity_name=user.username,
+            details=f"Viewed {len(log_responses)} activities for user {user.username}",
+            db=db
+        )
+        
         return APIResponse(
             success=True,
             data={
@@ -527,6 +667,17 @@ async def get_user_stats(
         recent_activity_users = db.query(User).filter(
             User.last_login >= seven_days_ago
         ).count()
+        
+        # Log activity
+        from core.auth import log_activity
+        log_activity(
+            user_id=current_user.get("id"),
+            username=current_user.get("username"),
+            action="view",
+            entity_type="user_stats",
+            details=f"Viewed user statistics: {total_users} total users, {active_users} active",
+            db=db
+        )
         
         return APIResponse(
             success=True,

@@ -24,6 +24,7 @@ class UserResponse(Base):
     role: str
     is_active: bool
     dark_mode_preference: bool
+    pinned_menu_items: List[str] = []
     created_at: str
     last_login: Optional[str] = None
 
@@ -32,6 +33,7 @@ class UserUpdate(Base):
     role: Optional[str] = None
     is_active: Optional[bool] = None
     dark_mode_preference: Optional[bool] = None
+    pinned_menu_items: Optional[List[str]] = None
 
 class UserPasswordChange(Base):
     current_password: str
