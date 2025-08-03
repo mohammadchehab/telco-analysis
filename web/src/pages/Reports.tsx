@@ -131,7 +131,7 @@ interface FilteredReportsData {
         score: string;
         score_numeric: number;
         observation: string;
-        evidence_url: string;
+        evidence_url: string[] | string;
         score_decision: string;
         weight: number;
       };
@@ -860,38 +860,42 @@ const Reports: React.FC = () => {
                         <strong>Evidence:</strong>
                       </Typography>
                       {(() => {
-                        try {
-                          const evidence = JSON.parse(data.evidence_url);
-                          if (Array.isArray(evidence)) {
-                            if (evidence.length === 0) {
-                              return (
-                                <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
-                                  No evidence URLs provided
-                                </Typography>
-                              );
-                            }
+                        const evidence = data.evidence_url;
+                        if (Array.isArray(evidence)) {
+                          if (evidence.length === 0) {
                             return (
-                              <Box component="ul" sx={{ m: 0, pl: 2 }}>
-                                {evidence.map((url, idx) => (
-                                  <Box key={idx} component="li" sx={{ mb: 0.5 }}>
-                                    <Typography variant="body2">
-                                      <Link href={url} target="_blank" rel="noopener noreferrer">
-                                        {url}
-                                      </Link>
-                                    </Typography>
-                                  </Box>
-                                ))}
-                              </Box>
+                              <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                                No evidence URLs provided
+                              </Typography>
                             );
                           }
-                        } catch (e) {
-                          // If parsing fails, display as plain text
+                          return (
+                            <Box component="ul" sx={{ m: 0, pl: 2 }}>
+                              {evidence.map((url, idx) => (
+                                <Box key={idx} component="li" sx={{ mb: 0.5 }}>
+                                  <Typography variant="body2">
+                                    <Link href={url} target="_blank" rel="noopener noreferrer">
+                                      {url}
+                                    </Link>
+                                  </Typography>
+                                </Box>
+                              ))}
+                            </Box>
+                          );
+                        } else if (typeof evidence === 'string') {
+                          // Fallback for legacy string format
+                          return (
+                            <Typography variant="body2">
+                              {evidence}
+                            </Typography>
+                          );
+                        } else {
+                          return (
+                            <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                              No evidence URLs provided
+                            </Typography>
+                          );
                         }
-                        return (
-                          <Typography variant="body2">
-                            {data.evidence_url}
-                          </Typography>
-                        );
                       })()}
                     </Box>
                   </AccordionDetails>

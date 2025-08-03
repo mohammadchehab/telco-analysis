@@ -33,6 +33,22 @@ class UserUpdate(Base):
     is_active: Optional[bool] = None
     dark_mode_preference: Optional[bool] = None
 
+class UserPasswordChange(Base):
+    current_password: str
+    new_password: str
+
+class UserPasswordReset(Base):
+    new_password: str
+
+class UserActivityFilter(Base):
+    username: Optional[str] = None
+    action: Optional[str] = None
+    entity_type: Optional[str] = None
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
+    limit: int = 50
+    offset: int = 0
+
 class ActivityLogResponse(Base):
     id: int
     user_id: Optional[int] = None

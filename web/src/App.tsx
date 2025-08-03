@@ -19,6 +19,7 @@ import Reports from './pages/Reports';
 import Database from './pages/Database';
 import DataQualityChat from './pages/DataQualityChat';
 import VendorAnalysis from './pages/VendorAnalysis';
+import UserManagement from './pages/UserManagement';
 import NotificationSystem from './components/UI/NotificationSystem';
 import LoadingOverlay from './components/UI/LoadingOverlay';
 
@@ -192,6 +193,7 @@ function AppContent() {
               <Route path="/database" element={<Database />} />
               <Route path="/data-quality-chat" element={<DataQualityChat />} />
               <Route path="/vendor-analysis" element={<VendorAnalysis />} />
+              <Route path="/user-management" element={<UserManagement />} />
               <Route path="/login" element={<Navigate to="/" replace />} />
             </Routes>
           </Layout>

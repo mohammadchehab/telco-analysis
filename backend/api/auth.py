@@ -1,13 +1,19 @@
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, Query
 from sqlalchemy.orm import Session
-from typing import Dict, Any
-from datetime import datetime
+from typing import Dict, Any, Optional
+import hashlib
+from datetime import datetime, timedelta
 
 from core.database import get_db
-from core.auth import auth_manager, get_current_user, get_current_active_user, require_role
-from schemas.schemas import UserLogin, UserCreate, UserResponse, UserUpdate, APIResponse
-from models.models import User
-import hashlib
+from models.models import User, ActivityLog
+from schemas.schemas import (
+    UserLogin, UserCreate, UserResponse, UserUpdate, APIResponse,
+    UserPasswordChange, UserPasswordReset, UserActivityFilter, ActivityLogResponse
+)
+from core.auth import get_current_user, get_current_active_user, require_role
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/auth", tags=["authentication"])
 
@@ -350,4 +356,190 @@ async def update_user_status(
             message=f"User {user.username} status updated successfully"
         )
     except Exception as e:
-        return APIResponse(success=False, error=str(e)) 
+        return APIResponse(success=False, error=str(e))
+
+@router.post("/users/{user_id}/change-password", response_model=APIResponse)
+async def change_user_password(
+    user_id: int,
+    password_data: UserPasswordReset,
+    current_user: Dict[str, Any] = Depends(require_role("admin")),
+    db: Session = Depends(get_db)
+):
+    """Change user password (admin only)"""
+    try:
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user:
+            return APIResponse(success=False, error="User not found")
+        
+        # Hash new password
+        password_hash = hashlib.sha256(password_data.new_password.encode()).hexdigest()
+        user.password_hash = password_hash
+        
+        db.commit()
+        
+        return APIResponse(
+            success=True,
+            message=f"Password for user {user.username} changed successfully"
+        )
+    except Exception as e:
+        return APIResponse(success=False, error=str(e))
+
+@router.post("/change-password", response_model=APIResponse)
+async def change_own_password(
+    password_data: UserPasswordChange,
+    current_user: Dict[str, Any] = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Change own password"""
+    try:
+        user = db.query(User).filter(User.id == current_user.get("id")).first()
+        if not user:
+            return APIResponse(success=False, error="User not found")
+        
+        # Verify current password
+        current_password_hash = hashlib.sha256(password_data.current_password.encode()).hexdigest()
+        if user.password_hash != current_password_hash:
+            return APIResponse(success=False, error="Current password is incorrect")
+        
+        # Hash new password
+        new_password_hash = hashlib.sha256(password_data.new_password.encode()).hexdigest()
+        user.password_hash = new_password_hash
+        
+        db.commit()
+        
+        return APIResponse(
+            success=True,
+            message="Password changed successfully"
+        )
+    except Exception as e:
+        return APIResponse(success=False, error=str(e))
+
+@router.get("/users/{user_id}/activities", response_model=APIResponse)
+async def get_user_activities(
+    user_id: int,
+    limit: int = Query(50, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    action: Optional[str] = Query(None),
+    entity_type: Optional[str] = Query(None),
+    start_date: Optional[str] = Query(None),
+    end_date: Optional[str] = Query(None),
+    current_user: Dict[str, Any] = Depends(require_role("admin")),
+    db: Session = Depends(get_db)
+):
+    """Get activities for a specific user (admin only)"""
+    try:
+        # Verify user exists
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user:
+            return APIResponse(success=False, error="User not found")
+        
+        query = db.query(ActivityLog).filter(ActivityLog.user_id == user_id)
+        
+        # Apply filters
+        if action:
+            query = query.filter(ActivityLog.action.contains(action))
+        if entity_type:
+            query = query.filter(ActivityLog.entity_type.contains(entity_type))
+        if start_date:
+            try:
+                start_dt = datetime.fromisoformat(start_date.replace('Z', '+00:00'))
+                query = query.filter(ActivityLog.created_at >= start_dt)
+            except ValueError:
+                return APIResponse(success=False, error="Invalid start_date format")
+        if end_date:
+            try:
+                end_dt = datetime.fromisoformat(end_date.replace('Z', '+00:00'))
+                query = query.filter(ActivityLog.created_at <= end_dt)
+            except ValueError:
+                return APIResponse(success=False, error="Invalid end_date format")
+        
+        # Order by most recent first
+        query = query.order_by(ActivityLog.created_at.desc())
+        
+        # Apply pagination
+        total_count = query.count()
+        logs = query.offset(offset).limit(limit).all()
+        
+        # Convert to response format
+        log_responses = [
+            ActivityLogResponse(
+                id=log.id,
+                user_id=log.user_id,
+                username=log.username,
+                action=log.action,
+                entity_type=log.entity_type,
+                entity_id=log.entity_id,
+                entity_name=log.entity_name,
+                details=log.details,
+                ip_address=log.ip_address,
+                user_agent=log.user_agent,
+                created_at=log.created_at.isoformat() if log.created_at else None
+            )
+            for log in logs
+        ]
+        
+        return APIResponse(
+            success=True,
+            data={
+                "logs": log_responses,
+                "total_count": total_count,
+                "limit": limit,
+                "offset": offset,
+                "user": {
+                    "id": user.id,
+                    "username": user.username,
+                    "email": user.email
+                }
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"Error fetching user activities: {str(e)}")
+        return APIResponse(success=False, error=f"Failed to fetch user activities: {str(e)}")
+
+@router.get("/users/stats", response_model=APIResponse)
+async def get_user_stats(
+    current_user: Dict[str, Any] = Depends(require_role("admin")),
+    db: Session = Depends(get_db)
+):
+    """Get user statistics (admin only)"""
+    try:
+        # Total users
+        total_users = db.query(User).count()
+        
+        # Active users
+        active_users = db.query(User).filter(User.is_active == True).count()
+        
+        # Users by role
+        role_stats = db.query(
+            User.role,
+            db.func.count(User.id).label('count')
+        ).group_by(User.role).all()
+        
+        # Recent registrations (last 30 days)
+        thirty_days_ago = datetime.now() - timedelta(days=30)
+        recent_registrations = db.query(User).filter(
+            User.created_at >= thirty_days_ago
+        ).count()
+        
+        # Users with recent activity (last 7 days)
+        seven_days_ago = datetime.now() - timedelta(days=7)
+        recent_activity_users = db.query(User).filter(
+            User.last_login >= seven_days_ago
+        ).count()
+        
+        return APIResponse(
+            success=True,
+            data={
+                "total_users": total_users,
+                "active_users": active_users,
+                "inactive_users": total_users - active_users,
+                "role_stats": [{"role": stat.role, "count": stat.count} for stat in role_stats],
+                "recent_registrations_30d": recent_registrations,
+                "recent_activity_7d": recent_activity_users
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"Error fetching user stats: {str(e)}")
+        return APIResponse(success=False, error=f"Failed to fetch user stats: {str(e)}") 

@@ -32,7 +32,8 @@ import {
   Logout as LogoutIcon,
   Person as PersonIcon,
   SmartToy as BotIcon,
-  Compare as CompareIcon
+  Compare as CompareIcon,
+  Group as GroupIcon
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
@@ -125,6 +126,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     },
   });
 
+  const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+  const hasAdminAccess = currentUser?.role === 'admin';
+
   const menuItems = [
     { text: 'Dashboard', icon: <DashboardIcon />, path: '/' },
     { text: 'Capabilities', icon: <ListIcon />, path: '/capabilities' },
@@ -132,6 +136,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     { text: 'Reports', icon: <AssessmentIcon />, path: '/reports' },
     { text: 'Vendor Analysis', icon: <CompareIcon />, path: '/vendor-analysis' },
     { text: 'Data Quality Chat', icon: <BotIcon />, path: '/data-quality-chat' },
+    ...(hasAdminAccess ? [{ text: 'User Management', icon: <GroupIcon />, path: '/user-management' }] : []),
   ];
 
   const handleDrawerToggle = () => {
@@ -186,8 +191,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       navigate('/login');
     }
   };
-
-  const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
 
   const handleNavigation = (path: string) => {
     navigate(path);

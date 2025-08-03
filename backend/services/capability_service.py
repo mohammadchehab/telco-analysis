@@ -1110,11 +1110,32 @@ class CapabilityService:
                 ).first()
                 
                 if score:
+                    # Get observations for this vendor score
+                    observations = db.query(VendorScoreObservation).filter(
+                        VendorScoreObservation.vendor_score_id == score.id
+                    ).all()
+                    
+                    # Convert observations to list of dicts
+                    observation_list = []
+                    for obs in observations:
+                        observation_list.append({
+                            'observation': obs.observation,
+                            'type': obs.observation_type.value
+                        })
+                    
+                    # Parse evidence_url back to array if it's a comma-separated string
+                    evidence_urls = []
+                    if score.evidence_url:
+                        if ',' in score.evidence_url:
+                            evidence_urls = [url.strip() for url in score.evidence_url.split(',')]
+                        else:
+                            evidence_urls = [score.evidence_url.strip()]
+                    
                     attr_data['vendors'][vendor] = {
                         'score': score.score,
                         'score_numeric': score.score_numeric,
-                        'observation': score.observation,
-                        'evidence_url': score.evidence_url,
+                        'observations': observation_list,
+                        'evidence_url': evidence_urls,
                         'score_decision': score.score_decision,
                         'weight': score.weight
                     }
@@ -1122,7 +1143,7 @@ class CapabilityService:
                     attr_data['vendors'][vendor] = {
                         'score': 'N/A',
                         'score_numeric': 0,
-                        'observation': 'No data available',
+                        'observations': [],
                         'evidence_url': 'N/A',
                         'score_decision': 'No data available',
                         'weight': 50
