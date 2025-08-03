@@ -18,6 +18,7 @@ import Workflow from './pages/Workflow';
 import Reports from './pages/Reports';
 import Database from './pages/Database';
 import DataQualityChat from './pages/DataQualityChat';
+import ComprehensiveChat from './pages/ComprehensiveChat';
 import VendorAnalysis from './pages/VendorAnalysis';
 import UserManagement from './pages/UserManagement';
 import ArchitectureCanvas from './pages/ArchitectureCanvas';
@@ -206,6 +207,7 @@ function AppContent() {
               <Route path="/reports" element={<Reports />} />
               <Route path="/database" element={<Database />} />
               <Route path="/data-quality-chat" element={<DataQualityChat />} />
+              <Route path="/comprehensive-chat" element={<ComprehensiveChat />} />
               <Route path="/vendor-analysis" element={<VendorAnalysis />} />
               <Route path="/user-management" element={<UserManagement />} />
               <Route path="/login" element={<Navigate to="/" replace />} />

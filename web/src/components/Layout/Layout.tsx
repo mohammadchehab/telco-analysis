@@ -139,7 +139,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     { text: 'Architecture Canvas', icon: <ArchitectureIcon />, path: '/architecture-canvas' },
     { text: 'Reports', icon: <AssessmentIcon />, path: '/reports' },
     { text: 'Vendor Analysis', icon: <CompareIcon />, path: '/vendor-analysis' },
-    { text: 'Data Quality Chat', icon: <BotIcon />, path: '/data-quality-chat' },
+          { text: 'Data Quality Chat', icon: <BotIcon />, path: '/data-quality-chat' },
+      { text: 'Comprehensive Chat', icon: <BotIcon />, path: '/comprehensive-chat' },
     ...(hasAdminAccess ? [{ text: 'User Management', icon: <GroupIcon />, path: '/user-management' }] : []),
   ];
 

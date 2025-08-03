@@ -4,7 +4,6 @@ import {
   Card,
   CardContent,
   Typography,
-  Grid,
   Chip,
   Button,
   CircularProgress,
@@ -110,7 +109,11 @@ const ArchitectureCanvas: React.FC = () => {
         throw new Error(response.error || 'Failed to load architecture data');
       }
 
-      setArchitectureData(response.data);
+      if (response.data) {
+        setArchitectureData(response.data);
+      } else {
+        throw new Error('No data received from server');
+      }
     } catch (err: any) {
       setError(err.message || 'Failed to load architecture data');
     } finally {

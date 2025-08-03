@@ -47,6 +47,17 @@ export const API_CONFIG = {
     // Analysis
     ANALYSIS: '/api/analysis',
     ANALYSIS_BY_CAPABILITY: (capabilityName: string) => `/api/analysis/${encodeURIComponent(capabilityName)}`,
+    
+    // Comprehensive Chat
+    COMPREHENSIVE_CHAT: '/api/comprehensive-chat/chat',
+    COMPREHENSIVE_CHAT_TEST: '/api/comprehensive-chat/test-ai',
+    
+    // Uploads
+    UPLOADS: '/api/uploads',
+    UPLOAD_FILE: '/api/uploads/upload',
+    UPLOAD_BY_ID: (id: number) => `/api/uploads/${id}`,
+    UPLOAD_SEARCH: (query: string) => `/api/uploads/search/${encodeURIComponent(query)}`,
+    UPLOAD_STATS: '/api/uploads/stats/summary',
   },
   
   // Request Configuration

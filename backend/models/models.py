@@ -136,6 +136,25 @@ class ResearchResult(Base):
     # Relationships
     capability = relationship("Capability", back_populates="research_results")
 
+class Upload(Base):
+    __tablename__ = "uploads"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    filename = Column(String, nullable=False)
+    original_filename = Column(String, nullable=False)
+    file_type = Column(String, nullable=False)  # pdf, docx, txt, etc.
+    file_size = Column(Integer, nullable=False)
+    content = Column(Text)  # Extracted text content for RAG
+    content_hash = Column(String, nullable=False)  # Hash of content for deduplication
+    uploaded_by = Column(Integer, ForeignKey("users.id"), nullable=False)
+    uploaded_at = Column(DateTime(timezone=True), server_default=func.now())
+    is_active = Column(Boolean, default=True)
+    tags = Column(Text)  # JSON array of tags for categorization
+    description = Column(Text)
+    
+    # Relationships
+    user = relationship("User")
+
 class User(Base):
     __tablename__ = "users"
     

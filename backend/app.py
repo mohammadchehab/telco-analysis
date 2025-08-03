@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from core.database import engine
 from models import models
-from api import capabilities, domains, auth, attributes, imports, data_quality, reports, activity_logs, architecture
+from api import capabilities, domains, auth, attributes, imports, data_quality, reports, activity_logs, architecture, comprehensive_chat, uploads
 import os
 from dotenv import load_dotenv
 
@@ -49,6 +49,8 @@ app.include_router(data_quality.router)
 app.include_router(reports.router)
 app.include_router(activity_logs.router)
 app.include_router(architecture.router)
+app.include_router(comprehensive_chat.router)
+app.include_router(uploads.router)
 print("✅ Routers included successfully")
 
 @app.get("/")
