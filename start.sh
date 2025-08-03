@@ -1,6 +1,18 @@
 #!/bin/bash
 
-echo "🚀 Starting Telco Capability Analysis System..."
+# Default to dev mode if no parameter provided
+MODE=${1:-dev}
+
+# Show usage if invalid mode
+if [ "$MODE" != "dev" ] && [ "$MODE" != "prod" ]; then
+    echo "❌ Invalid mode: $MODE"
+    echo "Usage: ./start.sh [dev|prod]"
+    echo "  dev  - Development mode (default)"
+    echo "  prod - Production mode"
+    exit 1
+fi
+
+echo "🚀 Starting Telco Capability Analysis System in $MODE mode..."
 
 # Check prerequisites
 if ! command -v node &> /dev/null; then
@@ -86,12 +98,23 @@ if ! kill -0 $BACKEND_PID 2>/dev/null; then
     cleanup
 fi
 
-# Start frontend
-echo "🌐 Starting frontend development server..."
-cd web
-npm run dev &
-FRONTEND_PID=$!
-cd ..
+# Start frontend based on mode
+if [ "$MODE" = "prod" ]; then
+    echo "🌐 Building and starting frontend in production mode..."
+    cd web
+    # Set production API URL
+    export VITE_API_BASE_URL=https://telco-platform.openbiocure.ai
+    npm run build
+    npm run start:prod &
+    FRONTEND_PID=$!
+    cd ..
+else
+    echo "🌐 Starting frontend development server..."
+    cd web
+    npm run dev &
+    FRONTEND_PID=$!
+    cd ..
+fi
 
 # Wait a moment for frontend to start
 sleep 3
@@ -103,9 +126,15 @@ if ! kill -0 $FRONTEND_PID 2>/dev/null; then
 fi
 
 echo "✅ All services started successfully!"
-echo "🌐 Frontend: http://localhost:5173"
-echo "🔧 Backend: http://localhost:8000"
-echo "📚 API Docs: http://localhost:8000/docs"
+if [ "$MODE" = "prod" ]; then
+    echo "🌐 Frontend: http://localhost:3000 (Production)"
+    echo "🔧 Backend: http://localhost:8000"
+    echo "📚 API Docs: http://localhost:8000/docs"
+else
+    echo "🌐 Frontend: http://localhost:5173 (Development)"
+    echo "🔧 Backend: http://localhost:8000"
+    echo "📚 API Docs: http://localhost:8000/docs"
+fi
 echo ""
 echo "🔐 Default Users:"
 echo "  👤 Admin: admin/admin123"
