@@ -9,7 +9,7 @@ import {
   Alert,
   CircularProgress,
   Container,
-  // useTheme,
+  useTheme,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
@@ -25,7 +25,7 @@ interface LoginForm {
 const Login: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  // const theme = useTheme();
+  const theme = useTheme();
   const { darkMode } = useSelector((state: RootState) => state.ui);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

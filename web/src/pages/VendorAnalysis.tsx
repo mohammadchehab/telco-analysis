@@ -16,6 +16,7 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  Divider,
   Rating,
   Link,
   LinearProgress,
@@ -31,17 +32,19 @@ import {
   Download as DownloadIcon,
   Refresh as RefreshIcon,
   FilterList as FilterIcon,
-  // Sort as SortIcon,
+  Sort as SortIcon,
   ExpandMore as ExpandMoreIcon,
   Link as LinkIcon,
-  // Assessment as AssessmentIcon,
+  Assessment as AssessmentIcon,
   Compare as CompareIcon,
   TrendingUp as TrendingUpIcon,
   TrendingDown as TrendingDownIcon,
   Info as InfoIcon,
   Star as StarIcon,
+  StarBorder as StarBorderIcon,
+  StarHalf as StarHalfIcon,
   CheckCircle as CheckCircleIcon,
-  // Warning as WarningIcon,
+  Warning as WarningIcon,
   Error as ErrorIcon
 } from '@mui/icons-material';
 import { apiClient, vendorAnalysisAPI } from '../utils/api';
@@ -94,7 +97,7 @@ const VendorAnalysis: React.FC = () => {
   const [filterDomain, setFilterDomain] = useState<string>('');
   const [filterAttribute, setFilterAttribute] = useState<string>('');
   const [filterScore, setFilterScore] = useState<string>('');
-  // const [expandedAttribute, setExpandedAttribute] = useState<string | null>(null);
+  const [expandedAttribute, setExpandedAttribute] = useState<string | null>(null);
   const [expandedAttributes, setExpandedAttributes] = useState<Set<string>>(new Set());
 
   const availableVendors = [
@@ -249,10 +252,10 @@ const VendorAnalysis: React.FC = () => {
 
 
 
-  // const getScoreLabel = (scoreString: string) => {
-  //   // Use the actual score string from the data (e.g., "3 - Good")
-  //   return scoreString;
-  // };
+  const getScoreLabel = (scoreString: string) => {
+    // Use the actual score string from the data (e.g., "3 - Good")
+    return scoreString;
+  };
 
   const getScoreLabelFromNumeric = (score: number) => {
     // Use the actual rubric from prompts.py

@@ -25,6 +25,7 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  OutlinedInput,
   Tabs,
   Tab,
 } from '@mui/material';
@@ -34,8 +35,9 @@ import {
   Delete as DeleteIcon,
   ArrowBack as ArrowBackIcon,
   Save as SaveIcon,
-  // Cancel as CancelIcon,
+  Cancel as CancelIcon,
   Settings as SettingsIcon,
+  List as ListIcon,
   Upload as UploadIcon,
 } from '@mui/icons-material';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -681,7 +683,7 @@ const DomainManagement: React.FC = () => {
               Upload a JSON file with domains and attributes. The system supports two formats:
             </Typography>
             
-            <Tabs value={importTabValue} onChange={(_e, newValue) => setImportTabValue(newValue)} sx={{ mb: 2 }}>
+            <Tabs value={importTabValue} onChange={(e, newValue) => setImportTabValue(newValue)} sx={{ mb: 2 }}>
               <Tab label="Simple Domains Format" />
               <Tab label="Research File Format" />
             </Tabs>
