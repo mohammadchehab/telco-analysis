@@ -78,7 +78,21 @@ export const API_CONFIG = {
 
 // Environment-based configuration
 export const getApiConfig = () => {
-  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
+  // Check if we're in production (hosted on openbiocure.ai)
+  const isProduction = window.location.hostname.includes('openbiocure.ai') || 
+                      window.location.hostname.includes('telco-platform.lab');
+  
+  let baseUrl = import.meta.env.VITE_API_BASE_URL;
+  
+  if (!baseUrl) {
+    if (isProduction) {
+      // In production, use the same domain as the frontend with HTTPS
+      baseUrl = `https://${window.location.hostname}`;
+    } else {
+      // In development, use localhost
+      baseUrl = 'http://127.0.0.1:8000';
+    }
+  }
   
   return {
     ...API_CONFIG,
