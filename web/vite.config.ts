@@ -16,6 +16,6 @@ export default defineConfig({
     }
   },
   preview: {
-    allowedHosts: ['telco-platform.lab']
+    allowedHosts: ['telco-platform.lab', 'telco-platform.openbiocure.ai']
   }
 })
