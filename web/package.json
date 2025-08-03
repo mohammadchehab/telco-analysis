@@ -6,9 +6,15 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:dist": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "prod": "vite --host 0.0.0.0"
+    "serve": "vite preview --host 0.0.0.0 --port 4173",
+    "serve:dist": "vite preview --host 0.0.0.0 --port 4173",
+    "serve:npx": "npx serve dist -p 8080 -l 0.0.0.0",
+    "prod": "vite --host 0.0.0.0 --port 3000",
+    "start": "vite preview --host 0.0.0.0 --port 3000",
+    "start:prod": "npm run build && vite preview --host 0.0.0.0 --port 3000"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
