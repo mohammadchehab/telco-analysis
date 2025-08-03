@@ -29,20 +29,20 @@ echo "✅ Prerequisites check passed"
 
 # Function to preserve correct build files
 preserve_build() {
-    if [ -f "web/dist/assets/index-DRdd_7VG.js" ]; then
+    if [ -f "web/dist/assets/index-DsIUDoLN.js" ]; then
         echo "💾 Preserving correct build files..."
-        cp web/dist/assets/index-DRdd_7VG.js web/dist/assets/index-DRdd_7VG.js.backup 2>/dev/null || true
+        cp web/dist/assets/index-DsIUDoLN.js web/dist/assets/index-DsIUDoLN.js.backup 2>/dev/null || true
         cp web/dist/index.html web/dist/index.html.backup 2>/dev/null || true
     fi
 }
 
 # Function to restore correct build files
 restore_build() {
-    if [ -f "web/dist/assets/index-DRdd_7VG.js.backup" ]; then
+    if [ -f "web/dist/assets/index-DsIUDoLN.js.backup" ]; then
         echo "🔄 Restoring correct build files..."
-        cp web/dist/assets/index-DRdd_7VG.js.backup web/dist/assets/index-DRdd_7VG.js 2>/dev/null || true
+        cp web/dist/assets/index-DsIUDoLN.js.backup web/dist/assets/index-DsIUDoLN.js 2>/dev/null || true
         cp web/dist/index.html.backup web/dist/index.html 2>/dev/null || true
-        rm web/dist/assets/index-DRdd_7VG.js.backup 2>/dev/null || true
+        rm web/dist/assets/index-DsIUDoLN.js.backup 2>/dev/null || true
         rm web/dist/index.html.backup 2>/dev/null || true
     fi
 }
@@ -144,11 +144,11 @@ if [ "$MODE" = "prod" ]; then
     cd web
     
     # Check if we already have the correct build files
-    if [ -f "dist/assets/index-DRdd_7VG.js" ]; then
-        echo "✅ Using existing production build (index-DRdd_7VG.js)"
+    if [ -f "dist/assets/index-DsIUDoLN.js" ]; then
+        echo "✅ Using existing production build (index-DsIUDoLN.js)"
     else
         echo "🔨 Building frontend for production..."
-        npm run build
+        VITE_API_BASE_URL=https://telco-platform.openbiocure.ai npm run build
         # Restore correct build files if they were overwritten
         restore_build
     fi
