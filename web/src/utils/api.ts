@@ -592,3 +592,21 @@ export const architectureAPI = {
     return apiClient.get(`/api/architecture/capability/${capabilityId}/details`);
   }
 }; 
+
+// API utility functions
+export const getApiBaseUrl = (): string => {
+  // Check if we're in production (hosted on openbiocure.ai)
+  const isProduction = window.location.hostname.includes('openbiocure.ai');
+  
+  if (isProduction) {
+    // Force HTTPS in production
+    return `https://${window.location.hostname}`;
+  }
+  
+  // Use environment variable or default to localhost
+  return import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
+};
+
+export const getApiUrl = (endpoint: string): string => {
+  return `${getApiBaseUrl()}${endpoint}`;
+}; 
