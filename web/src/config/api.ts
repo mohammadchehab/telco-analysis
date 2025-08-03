@@ -96,6 +96,11 @@ export const getApiConfig = () => {
     baseUrl = baseUrl.replace('http://', 'https://');
   }
   
+  // Additional safety: if we're on openbiocure.ai, force the correct URL
+  if (window.location.hostname === 'telco-platform.openbiocure.ai') {
+    baseUrl = 'https://telco-platform.openbiocure.ai';
+  }
+  
   return {
     ...API_CONFIG,
     BASE_URL: baseUrl,
