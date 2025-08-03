@@ -27,6 +27,26 @@ fi
 
 echo "✅ Prerequisites check passed"
 
+# Function to preserve correct build files
+preserve_build() {
+    if [ -f "web/dist/assets/index-DRdd_7VG.js" ]; then
+        echo "💾 Preserving correct build files..."
+        cp web/dist/assets/index-DRdd_7VG.js web/dist/assets/index-DRdd_7VG.js.backup 2>/dev/null || true
+        cp web/dist/index.html web/dist/index.html.backup 2>/dev/null || true
+    fi
+}
+
+# Function to restore correct build files
+restore_build() {
+    if [ -f "web/dist/assets/index-DRdd_7VG.js.backup" ]; then
+        echo "🔄 Restoring correct build files..."
+        cp web/dist/assets/index-DRdd_7VG.js.backup web/dist/assets/index-DRdd_7VG.js 2>/dev/null || true
+        cp web/dist/index.html.backup web/dist/index.html 2>/dev/null || true
+        rm web/dist/assets/index-DRdd_7VG.js.backup 2>/dev/null || true
+        rm web/dist/index.html.backup 2>/dev/null || true
+    fi
+}
+
 # Cleanup function
 cleanup() {
     echo "🛑 Shutting down services..."
@@ -115,9 +135,23 @@ fi
 
 # Start frontend based on mode
 if [ "$MODE" = "prod" ]; then
-    echo "🌐 Building and starting frontend in production mode (nohup)..."
+    echo "🌐 Starting frontend in production mode (nohup)..."
+    
+    # Preserve correct build files before any operations
+    preserve_build
+    
     cd web
-    npm run build
+    
+    # Check if we already have the correct build files
+    if [ -f "dist/assets/index-DRdd_7VG.js" ]; then
+        echo "✅ Using existing production build (index-DRdd_7VG.js)"
+    else
+        echo "🔨 Building frontend for production..."
+        npm run build
+        # Restore correct build files if they were overwritten
+        restore_build
+    fi
+    
     nohup npm run start:prod > frontend.log 2>&1 &
     FRONTEND_PID=$!
     cd ..
