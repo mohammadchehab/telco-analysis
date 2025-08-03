@@ -107,6 +107,7 @@ fi
 if [ "$MODE" = "prod" ]; then
     echo "🔧 Setting production environment variables..."
     export VITE_API_BASE_URL=https://telco-platform.openbiocure.ai
+    echo "✅ VITE_API_BASE_URL set to: $VITE_API_BASE_URL"
 fi
 
 # Start backend based on mode

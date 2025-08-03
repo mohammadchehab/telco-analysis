@@ -83,12 +83,18 @@ export const getApiConfig = () => {
   
   let baseUrl = import.meta.env.VITE_API_BASE_URL;
   
+  // If environment variable is set, use it (this takes priority)
+  if (baseUrl) {
+    console.log('Using VITE_API_BASE_URL from environment:', baseUrl);
+  }
   // Force HTTPS in production regardless of environment variable
-  if (isProduction) {
+  else if (isProduction) {
     baseUrl = `https://${window.location.hostname}`;
-  } else if (!baseUrl) {
+    console.log('Using production hostname:', baseUrl);
+  } else {
     // In development, use localhost
     baseUrl = 'http://127.0.0.1:8000';
+    console.log('Using development localhost:', baseUrl);
   }
   
   // Override any HTTP URLs with HTTPS in production
