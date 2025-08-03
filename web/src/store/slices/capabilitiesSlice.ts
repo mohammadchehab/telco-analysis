@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
+import apiConfig from '../../config/api';
 import type { 
   Capability, 
   CapabilitySummary, 
@@ -48,7 +49,7 @@ const initialState: CapabilitiesState = {
 export const fetchCapabilities = createAsyncThunk(
   'capabilities/fetchCapabilities',
   async () => {
-    const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/capabilities`);
+    const response = await fetch(`${apiConfig.BASE_URL}/api/capabilities`);
     const data: APIResponse<{
       capabilities: CapabilitySummary[];
       stats: WorkflowStats;
@@ -65,12 +66,7 @@ export const fetchCapabilities = createAsyncThunk(
 export const fetchCapabilityDetails = createAsyncThunk(
   'capabilities/fetchCapabilityDetails',
   async (capabilityId: number) => {
-    const baseUrl = import.meta.env.VITE_API_BASE_URL;
-    if (!baseUrl) {
-      throw new Error('VITE_API_BASE_URL environment variable is required');
-    }
-    
-    const response = await fetch(`${baseUrl}/api/capabilities/${capabilityId}`);
+    const response = await fetch(`${apiConfig.BASE_URL}/api/capabilities/${capabilityId}`);
     const data: APIResponse<Capability> = await response.json();
     
     if (!data.success) {
@@ -84,12 +80,7 @@ export const fetchCapabilityDetails = createAsyncThunk(
 export const fetchCapabilityStatus = createAsyncThunk(
   'capabilities/fetchCapabilityStatus',
   async (capabilityId: number) => {
-    const baseUrl = import.meta.env.VITE_API_BASE_URL;
-    if (!baseUrl) {
-      throw new Error('VITE_API_BASE_URL environment variable is required');
-    }
-    
-    const response = await fetch(`${baseUrl}/api/capabilities/${capabilityId}/status`);
+    const response = await fetch(`${apiConfig.BASE_URL}/api/capabilities/${capabilityId}/status`);
     const data: APIResponse<CapabilityTracker> = await response.json();
     
     return data.data!;
@@ -99,14 +90,9 @@ export const fetchCapabilityStatus = createAsyncThunk(
 export const fetchVendorScores = createAsyncThunk(
   'capabilities/fetchVendorScores',
   async (capabilityId?: number) => {
-    const baseUrl = import.meta.env.VITE_API_BASE_URL;
-    if (!baseUrl) {
-      throw new Error('VITE_API_BASE_URL environment variable is required');
-    }
-    
     const url = capabilityId 
-      ? `${baseUrl}/api/capabilities/${capabilityId}/vendor-scores`
-      : `${baseUrl}/api/vendor-scores`;
+      ? `${apiConfig.BASE_URL}/api/capabilities/${capabilityId}/vendor-scores`
+      : `${apiConfig.BASE_URL}/api/vendor-scores`;
     const response = await fetch(url);
     const data: APIResponse<VendorScore[]> = await response.json();
     
@@ -121,12 +107,7 @@ export const fetchVendorScores = createAsyncThunk(
 export const updateCapabilityStatus = createAsyncThunk(
   'capabilities/updateCapabilityStatus',
   async ({ capabilityName, status }: { capabilityName: string; status: WorkflowState }) => {
-    const baseUrl = import.meta.env.VITE_API_BASE_URL;
-    if (!baseUrl) {
-      throw new Error('VITE_API_BASE_URL environment variable is required');
-    }
-    
-    const response = await fetch(`${baseUrl}/api/capabilities/${capabilityName}/status`, {
+    const response = await fetch(`${apiConfig.BASE_URL}/api/capabilities/${capabilityName}/status`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status }),

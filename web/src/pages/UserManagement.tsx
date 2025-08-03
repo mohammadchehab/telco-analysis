@@ -50,6 +50,7 @@ import {
   Timeline as ActivityIcon,
   Group as GroupIcon
 } from '@mui/icons-material';
+import apiConfig from '../config/api';
 
 
 interface User {
@@ -164,7 +165,7 @@ const UserManagement: React.FC = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/users`, {
+      const response = await fetch(`${apiConfig.BASE_URL}/api/auth/users`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('authToken')}`
         }
@@ -185,7 +186,7 @@ const UserManagement: React.FC = () => {
 
   const fetchUserStats = async () => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/users/stats`, {
+      const response = await fetch(`${apiConfig.BASE_URL}/api/auth/users/stats`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('authToken')}`
         }
@@ -234,7 +235,7 @@ const UserManagement: React.FC = () => {
 
     if (window.confirm(`Are you sure you want to delete user "${user.username}"?`)) {
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/users/${user.id}`, {
+        const response = await fetch(`${apiConfig.BASE_URL}/api/auth/users/${user.id}`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('authToken')}`
@@ -262,7 +263,7 @@ const UserManagement: React.FC = () => {
     }
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/users/${user.id}/status`, {
+      const response = await fetch(`${apiConfig.BASE_URL}/api/auth/users/${user.id}/status`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
@@ -300,7 +301,7 @@ const UserManagement: React.FC = () => {
     try {
       setActivityLoading(true);
       const response = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/api/auth/users/${userId}/activities?limit=50`,
+        `${apiConfig.BASE_URL}/api/auth/users/${userId}/activities?limit=50`,
         {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('authToken')}`
@@ -324,8 +325,8 @@ const UserManagement: React.FC = () => {
   const handleSaveUser = async () => {
     try {
       const url = editingUser 
-        ? `${import.meta.env.VITE_API_BASE_URL}/api/auth/users/${editingUser.id}`
-        : `${import.meta.env.VITE_API_BASE_URL}/api/auth/users`;
+        ? `${apiConfig.BASE_URL}/api/auth/users/${editingUser.id}`
+        : `${apiConfig.BASE_URL}/api/auth/users`;
       
       const method = editingUser ? 'PUT' : 'POST';
       const body = editingUser && !userForm.password 
@@ -362,7 +363,7 @@ const UserManagement: React.FC = () => {
     if (!passwordUser || !newPassword) return;
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/users/${passwordUser.id}/change-password`, {
+      const response = await fetch(`${apiConfig.BASE_URL}/api/auth/users/${passwordUser.id}/change-password`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('authToken')}`,

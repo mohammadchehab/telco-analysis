@@ -27,6 +27,7 @@ import {
   Login as LoginIcon,
   Logout as LogoutIcon,
 } from '@mui/icons-material';
+import apiConfig from '../config/api';
 
 interface ActivityLog {
   id: number;
@@ -57,7 +58,7 @@ const RecentActivity: React.FC = () => {
     try {
       setLoading(true);
       const response = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/api/activity-logs?limit=${rowsPerPage}&offset=${page * rowsPerPage}`
+        `${apiConfig.BASE_URL}/api/activity-logs?limit=${rowsPerPage}&offset=${page * rowsPerPage}`
       );
       const data = await response.json();
 
