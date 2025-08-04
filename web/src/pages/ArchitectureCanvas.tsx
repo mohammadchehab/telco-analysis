@@ -43,7 +43,7 @@ import {
   Print as PrintIcon
 } from '@mui/icons-material';
 
-import { architectureAPI } from '../utils/api';
+import { architectureAPI, apiClient } from '../utils/api';
 
 interface ArchitectureLayer {
   id: string;
@@ -159,6 +159,50 @@ const ArchitectureCanvas: React.FC = () => {
     loadArchitectureData();
   };
 
+  const handleExport = async () => {
+    try {
+      setLoading(true);
+      const response = await apiClient.get('/api/architecture/canvas/export/pdf') as any;
+      
+      if (response.success) {
+        const { data } = response;
+        const fileData = data.pdf_data;
+        const filename = data.filename;
+        
+        // Convert base64 to blob and download
+        const byteCharacters = atob(fileData);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { 
+          type: 'application/pdf'
+        });
+        
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      } else {
+        setError('Failed to export report');
+      }
+    } catch (error) {
+      setError('Error exporting report');
+      console.error('Export error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePrint = () => {
+    window.print();
+  };
+
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
@@ -213,12 +257,14 @@ const ArchitectureCanvas: React.FC = () => {
           <Button
             variant="outlined"
             startIcon={<DownloadIcon />}
+            onClick={handleExport}
           >
             Export
           </Button>
           <Button
             variant="outlined"
             startIcon={<PrintIcon />}
+            onClick={handlePrint}
           >
             Print
           </Button>

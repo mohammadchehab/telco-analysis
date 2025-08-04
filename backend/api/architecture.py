@@ -2,6 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List, Dict, Any
 from datetime import datetime
+import base64
+import io
 
 from core.database import get_db
 from core.auth import get_current_user
@@ -98,55 +100,212 @@ async def get_architecture_canvas(db: Session = Depends(get_db)):
                 architecture_capability = {
                     "id": str(capability.id),
                     "name": capability.name,
-                    "description": capability.description or "",
+                    "description": capability.description or "No description available",
                     "tmForumMapping": get_tmf_mapping(capability.name),
                     "recommendedVendor": vendor_performance["bestVendor"],
                     "vendorScore": vendor_performance["bestScore"],
                     "vendorScores": vendor_performance["scores"],
                     "status": vendor_performance["status"],
-                    "evidence": vendor_performance["evidence"]
+                    "evidence": [f"Score: {vendor_performance['bestScore']}/5 for {vendor_performance['bestVendor']}"]
                 }
-
+                
                 layer["capabilities"].append(architecture_capability)
                 total_capabilities += 1
-
-                # Update counters
-                status = vendor_performance["status"]
-                if status == "excellent":
+                
+                # Update summary statistics
+                if vendor_performance["status"] == "excellent":
                     excellent_vendors += 1
-                elif status == "good":
+                elif vendor_performance["status"] == "good":
                     good_vendors += 1
-                elif status == "fair":
+                elif vendor_performance["status"] == "fair":
                     fair_vendors += 1
-                elif status == "poor":
+                elif vendor_performance["status"] == "poor":
                     poor_vendors += 1
                 else:
                     no_data += 1
 
         # Generate recommendations
         recommendations = generate_recommendations(architecture_layers)
-
+        
+        # Create summary
+        summary = {
+            "totalCapabilities": total_capabilities,
+            "excellentVendors": excellent_vendors,
+            "goodVendors": good_vendors,
+            "fairVendors": fair_vendors,
+            "poorVendors": poor_vendors,
+            "noData": no_data
+        }
+        
         # Filter out empty layers
-        populated_layers = [layer for layer in architecture_layers if layer["capabilities"]]
+        architecture_layers = [layer for layer in architecture_layers if layer["capabilities"]]
+        
+        canvas_data = {
+            "layers": architecture_layers,
+            "summary": summary,
+            "recommendations": recommendations,
+            "generatedAt": datetime.now().isoformat()
+        }
+        
+        return APIResponse(success=True, data=canvas_data)
+        
+    except Exception as e:
+        return APIResponse(success=False, error=str(e))
 
+@router.get("/canvas/export/pdf", response_model=APIResponse)
+async def export_architecture_canvas_pdf(db: Session = Depends(get_db)):
+    """Export Architecture Canvas as PDF"""
+    try:
+        # Get canvas data
+        canvas_response = await get_architecture_canvas(db)
+        if not canvas_response.success:
+            return canvas_response
+        
+        canvas_data = canvas_response.data
+        
+        # Generate PDF
+        pdf_data = generate_architecture_canvas_pdf(canvas_data)
+        
         return APIResponse(
             success=True,
             data={
-                "layers": populated_layers,
-                "summary": {
-                    "totalCapabilities": total_capabilities,
-                    "excellentVendors": excellent_vendors,
-                    "goodVendors": good_vendors,
-                    "fairVendors": fair_vendors,
-                    "poorVendors": poor_vendors,
-                    "noData": no_data
-                },
-                "recommendations": recommendations
+                "pdf_data": pdf_data,
+                "filename": f"TM_Forum_Architecture_Canvas_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
             }
         )
-
+        
     except Exception as e:
         return APIResponse(success=False, error=str(e))
+
+def generate_architecture_canvas_pdf(canvas_data: Dict[str, Any]) -> str:
+    """Generate PDF report for Architecture Canvas"""
+    try:
+        from reportlab.lib import colors
+        from reportlab.lib.pagesizes import A4, letter
+        from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+        from reportlab.lib.units import inch
+        
+        # Create PDF buffer
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=72, leftMargin=72, topMargin=72, bottomMargin=18)
+        
+        # Get styles
+        styles = getSampleStyleSheet()
+        title_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Heading1'],
+            fontSize=16,
+            spaceAfter=30,
+            alignment=1  # Center alignment
+        )
+        
+        # Build story
+        story = []
+        
+        # Title
+        story.append(Paragraph("TM Forum Telco Architecture Canvas", title_style))
+        story.append(Spacer(1, 12))
+        
+        # Summary
+        summary = canvas_data["summary"]
+        story.append(Paragraph("Executive Summary", styles['Heading2']))
+        story.append(Spacer(1, 12))
+        
+        summary_data = [
+            ["Metric", "Count"],
+            ["Total Capabilities", str(summary["totalCapabilities"])],
+            ["Excellent Vendors", str(summary["excellentVendors"])],
+            ["Good Vendors", str(summary["goodVendors"])],
+            ["Fair Vendors", str(summary["fairVendors"])],
+            ["Poor Vendors", str(summary["poorVendors"])],
+            ["No Data", str(summary["noData"])]
+        ]
+        
+        summary_table = Table(summary_data)
+        summary_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 14),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black)
+        ]))
+        story.append(summary_table)
+        story.append(Spacer(1, 20))
+        
+        # Architecture Layers
+        story.append(Paragraph("Architecture Layers & Capabilities", styles['Heading2']))
+        story.append(Spacer(1, 12))
+        
+        for layer in canvas_data["layers"]:
+            story.append(Paragraph(f"Layer: {layer['name']}", styles['Heading3']))
+            story.append(Paragraph(f"Description: {layer['description']}", styles['Normal']))
+            story.append(Spacer(1, 12))
+            
+            if layer["capabilities"]:
+                # Create capabilities table
+                cap_data = [["Capability", "Recommended Vendor", "Score", "Status", "TM Forum Mapping"]]
+                
+                for cap in layer["capabilities"]:
+                    cap_data.append([
+                        cap["name"],
+                        cap["recommendedVendor"],
+                        str(cap["vendorScore"]),
+                        cap["status"].title(),
+                        cap["tmForumMapping"]
+                    ])
+                
+                cap_table = Table(cap_data)
+                cap_table.setStyle(TableStyle([
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                    ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                    ('FONTSIZE', (0, 0), (-1, 0), 12),
+                    ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                    ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+                    ('GRID', (0, 0), (-1, -1), 1, colors.black),
+                    ('FONTSIZE', (0, 1), (-1, -1), 10),
+                    ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.beige, colors.white])
+                ]))
+                story.append(cap_table)
+            else:
+                story.append(Paragraph("No capabilities mapped to this layer", styles['Italic']))
+            
+            story.append(Spacer(1, 20))
+        
+        # Recommendations
+        recommendations = canvas_data["recommendations"]
+        story.append(Paragraph("Strategic Recommendations", styles['Heading2']))
+        story.append(Spacer(1, 12))
+        
+        story.append(Paragraph("Top Recommended Vendors:", styles['Heading4']))
+        for vendor in recommendations["topVendors"]:
+            story.append(Paragraph(f"• {vendor}", styles['Normal']))
+        
+        story.append(Spacer(1, 12))
+        story.append(Paragraph("Critical Gaps:", styles['Heading4']))
+        for gap in recommendations["criticalGaps"]:
+            story.append(Paragraph(f"• {gap}", styles['Normal']))
+        
+        story.append(Spacer(1, 12))
+        story.append(Paragraph("Next Steps:", styles['Heading4']))
+        for step in recommendations["nextSteps"]:
+            story.append(Paragraph(f"• {step}", styles['Normal']))
+        
+        # Build PDF
+        doc.build(story)
+        buffer.seek(0)
+        
+        # Convert to base64
+        pdf_base64 = base64.b64encode(buffer.getvalue()).decode()
+        return pdf_base64
+        
+    except Exception as e:
+        raise Exception(f"Error generating PDF: {str(e)}")
 
 def analyze_vendor_performance(vendor_scores: List[VendorScore]) -> Dict[str, Any]:
     """Analyze vendor performance for a capability"""
