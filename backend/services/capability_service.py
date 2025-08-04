@@ -76,7 +76,7 @@ class CapabilityService:
             LEFT JOIN domains d ON c.id = d.capability_id
             LEFT JOIN attributes a ON c.id = a.capability_id
             LEFT JOIN capability_tracker ct ON c.name = ct.capability_name
-            GROUP BY c.id, c.name, c.status, c.created_at, c.version_major, c.version_minor, c.version_patch, c.version_build
+            GROUP BY c.id, c.name, c.status, c.created_at, c.version_major, c.version_minor, c.version_patch, c.version_build, ct.last_updated
             ORDER BY c.name
         """)
         
