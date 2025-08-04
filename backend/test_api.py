@@ -10,7 +10,7 @@ def test_capabilities_api():
     """Test the capabilities API endpoint"""
     try:
         # Test the capabilities endpoint
-        url = "http://localhost:8000/api/capabilities/"
+        url = "http://127.0.0.1:8000/api/capabilities/"
         print(f"Testing API endpoint: {url}")
         
         response = requests.get(url)

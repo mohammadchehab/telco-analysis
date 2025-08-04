@@ -183,8 +183,8 @@ const capabilitiesSlice = createSlice({
       })
       .addCase(fetchCapabilities.fulfilled, (state, action) => {
         state.loading = false;
-        state.capabilitySummaries = action.payload.capabilities;
-        state.workflowStats = action.payload.stats;
+        state.capabilitySummaries = action.payload.data.capabilities;
+        state.workflowStats = action.payload.data.stats;
       })
       .addCase(fetchCapabilities.rejected, (state, action) => {
         state.loading = false;
