@@ -228,7 +228,7 @@ Please provide your research in the following JSON format:
 
 ```json
 {{
-  "capability": "has-domains",
+  "capability": "{capability_name}",
   "research_date": "YYYY-MM-DD",
   "current_framework": {{
     "domains_count": 0,
@@ -340,7 +340,7 @@ def format_domains_summary(capability_data: dict) -> str:
 def get_json_template(capability_name: str, capability_data: dict = None) -> str:
     """Generate the JSON template for comprehensive research"""
     return '''{{
-  "capability": "has-domains",
+  "capability": "''' + capability_name + '''",
   "research_date": "YYYY-MM-DD",
   "current_framework": {{
     "domains_count": 0,

@@ -38,6 +38,7 @@ import {
   Save as SaveIcon,
   ViewModule as GridViewIcon,
   ViewList as ListViewIcon,
+  Dashboard as KanbanIcon,
 } from '@mui/icons-material';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
@@ -51,6 +52,8 @@ import {
 import { addNotification } from '../store/slices/uiSlice';
 import { capabilityAPI } from '../utils/api';
 import type { WorkflowState, BulkAction, Capability } from '../types';
+import { useCapabilitiesLocalStorage } from '../hooks/useLocalStorage';
+import KanbanBoard from '../components/UI/KanbanBoard';
 
 const Capabilities: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -63,10 +66,7 @@ const Capabilities: React.FC = () => {
     selectedCapabilities 
   } = useSelector((state: RootState) => state.capabilities);
 
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<WorkflowState | ''>('');
-  const [showFilters, setShowFilters] = useState(false);
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const { settings, updateSettings, clearSettings, isLoaded } = useCapabilitiesLocalStorage();
   const selectAllCheckboxRef = useRef<HTMLInputElement>(null);
   
   // CRUD State
@@ -92,8 +92,8 @@ const Capabilities: React.FC = () => {
 
   // Filter capabilities based on search and status
   const filteredCapabilities = (capabilitySummaries || []).filter(capability => {
-    const matchesSearch = capability.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = !statusFilter || capability.status === statusFilter;
+    const matchesSearch = capability.name.toLowerCase().includes(settings.searchTerm.toLowerCase());
+    const matchesStatus = !settings.statusFilter || capability.status === settings.statusFilter;
     return matchesSearch && matchesStatus;
   });
 
@@ -106,6 +106,16 @@ const Capabilities: React.FC = () => {
   }, [selectedCapabilities.length, filteredCapabilities.length]);
 
   const handleStartResearch = async (capabilityId: number, capabilityName: string) => {
+    // Check if capability is completed - prevent workflow for completed capabilities
+    const capability = capabilitySummaries.find(c => c.id === capabilityId);
+    if (capability?.status === 'completed') {
+      dispatch(addNotification({
+        type: 'error',
+        message: `Cannot start research workflow for completed capability "${capabilityName}"`,
+      }));
+      return;
+    }
+
     try {
       await dispatch(startResearchWorkflow(capabilityId)).unwrap();
       dispatch(addNotification({
@@ -123,6 +133,36 @@ const Capabilities: React.FC = () => {
 
   const handleViewReports = (_capabilityName: string) => {
     navigate(`/reports`);
+  };
+
+  const handleStatusChange = async (capabilityId: number, newStatus: WorkflowState) => {
+    try {
+      const capability = capabilitySummaries.find(c => c.id === capabilityId);
+      if (!capability) return;
+
+      const response = await capabilityAPI.update(capabilityId, {
+        name: capability.name,
+        status: newStatus,
+      });
+
+      if (response.success) {
+        dispatch(addNotification({
+          type: 'success',
+          message: `Capability "${capability.name}" status updated to ${newStatus}`,
+        }));
+        dispatch(fetchCapabilities()); // Refresh the list
+      } else {
+        dispatch(addNotification({
+          type: 'error',
+          message: response.error || 'Failed to update capability status',
+        }));
+      }
+    } catch (error: any) {
+      dispatch(addNotification({
+        type: 'error',
+        message: `Failed to update capability status: ${error.message || error}`,
+      }));
+    }
   };
 
   // CRUD Functions
@@ -366,7 +406,7 @@ const Capabilities: React.FC = () => {
     }
   };
 
-  if (loading) {
+  if (loading || !isLoaded) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
         <CircularProgress />
@@ -432,17 +472,17 @@ const Capabilities: React.FC = () => {
             label="Search Capabilities"
             variant="outlined"
             size="small"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            value={settings.searchTerm}
+            onChange={(e) => updateSettings({ searchTerm: e.target.value })}
             sx={{ minWidth: 200 }}
           />
           
           <FormControl size="small" sx={{ minWidth: 150 }}>
             <InputLabel>Status</InputLabel>
             <Select
-              value={statusFilter}
+              value={settings.statusFilter}
               label="Status"
-              onChange={(e) => setStatusFilter(e.target.value as WorkflowState | '')}
+              onChange={(e) => updateSettings({ statusFilter: e.target.value as WorkflowState | '' })}
             >
               <MenuItem value="">All Statuses</MenuItem>
               <MenuItem value="new">Domain Analysis</MenuItem>
@@ -455,17 +495,16 @@ const Capabilities: React.FC = () => {
           <Button
             variant="outlined"
             startIcon={<FilterIcon />}
-            onClick={() => setShowFilters(!showFilters)}
+            onClick={() => updateSettings({ showFilters: !settings.showFilters })}
           >
-            {showFilters ? 'Hide' : 'Show'} Filters
+            {settings.showFilters ? 'Hide' : 'Show'} Filters
           </Button>
 
           <Button
             variant="outlined"
             startIcon={<ClearIcon />}
             onClick={() => {
-              setSearchTerm('');
-              setStatusFilter('');
+              clearSettings();
               dispatch(clearFilters());
             }}
           >
@@ -476,11 +515,11 @@ const Capabilities: React.FC = () => {
 
           {/* View Toggle */}
           <ToggleButtonGroup
-            value={viewMode}
+            value={settings.viewMode}
             exclusive
             onChange={(_, newViewMode) => {
               if (newViewMode !== null) {
-                setViewMode(newViewMode);
+                updateSettings({ viewMode: newViewMode });
               }
             }}
             size="small"
@@ -490,6 +529,9 @@ const Capabilities: React.FC = () => {
             </ToggleButton>
             <ToggleButton value="list" aria-label="list view">
               <ListViewIcon />
+            </ToggleButton>
+            <ToggleButton value="kanban" aria-label="kanban view">
+              <KanbanIcon />
             </ToggleButton>
           </ToggleButtonGroup>
 
@@ -536,7 +578,27 @@ const Capabilities: React.FC = () => {
       )}
 
       {/* Capabilities Display */}
-      {viewMode === 'grid' ? (
+      {settings.viewMode === 'kanban' ? (
+        // Kanban View
+        <KanbanBoard
+          capabilities={filteredCapabilities}
+          onCapabilityClick={(capability) => dispatch(toggleCapabilitySelection(capability.name))}
+          onStartResearch={handleStartResearch}
+          onViewReports={handleViewReports}
+          onEditClick={handleEditClick}
+          onDeleteClick={(capability) => setDeletingCapability({
+            id: capability.id,
+            name: capability.name,
+            description: '',
+            status: capability.status,
+            created_at: capability.last_updated
+          })}
+          onViewDetails={(capabilityId) => navigate(`/capabilities/${capabilityId}`)}
+          onStatusChange={handleStatusChange}
+          onManageDomains={(capabilityId) => navigate(`/capabilities/${capabilityId}/domains`)}
+          onManageAttributes={(capabilityId) => navigate(`/capabilities/${capabilityId}/attributes`)}
+        />
+      ) : settings.viewMode === 'grid' ? (
         // Grid View (Cards)
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
           {filteredCapabilities.map((capability) => (

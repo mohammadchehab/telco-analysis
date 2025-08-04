@@ -41,6 +41,7 @@ import {
   Search as SearchIcon,
   Upload as UploadIcon,
   DataUsage as DataQualityIcon,
+  Chat as ChatIcon,
 } from '@mui/icons-material';
 import { useDispatch } from 'react-redux';
 import type { AppDispatch } from '../store';
@@ -54,7 +55,7 @@ interface ChatMessage {
   timestamp: Date;
   data?: any;
   loading?: boolean;
-  intent?: string;
+  intent?: string | { intent_type: string; analysis_focus?: string; context_needed?: string[]; complexity?: string };
   context?: any;
 }
 
@@ -64,7 +65,7 @@ interface QueryResult {
   exportData?: any;
   suggestions?: string[];
   sql_query?: string;
-  intent?: string;
+  intent?: string | { intent_type: string; analysis_focus?: string; context_needed?: string[]; complexity?: string };
   context?: any;
 }
 
@@ -221,14 +222,37 @@ const DataQualityChat: React.FC = () => {
 
   const processComprehensiveQuery = async (query: string): Promise<QueryResult> => {
     try {
-      const token = localStorage.getItem('authToken');
+      let token = localStorage.getItem('authToken');
       console.log('Using token:', token ? token.substring(0, 20) + '...' : 'No token found');
       
       if (!token) {
         throw new Error('No authentication token found. Please log in again.');
       }
 
-      const response = await fetch(`${getApiConfig().BASE_URL}/api/comprehensive-chat/chat`, {
+      // Debug: Check token status first
+      try {
+        const debugResponse = await fetch(`${getApiConfig().BASE_URL}/api/auth/debug-token`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+        
+        if (debugResponse.ok) {
+          const debugData = await debugResponse.json();
+          console.log('Token debug info:', debugData);
+          
+          if (debugData.data?.expired) {
+            console.log('Token is expired, will attempt refresh');
+          }
+        }
+      } catch (debugError) {
+        console.log('Debug endpoint not available or failed:', debugError);
+      }
+
+      // First attempt with current token
+      let response = await fetch(`${getApiConfig().BASE_URL}/api/comprehensive-chat/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -237,10 +261,48 @@ const DataQualityChat: React.FC = () => {
         body: JSON.stringify({ query }),
       });
 
-      if (!response.ok) {
-        if (response.status === 401) {
+      // If 401, try to refresh the token
+      if (response.status === 401) {
+        console.log('Token expired, attempting refresh...');
+        try {
+          const refreshResponse = await fetch(`${getApiConfig().BASE_URL}/api/auth/refresh`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`,
+            },
+          });
+          
+          if (refreshResponse.ok) {
+            const refreshData = await refreshResponse.json();
+            if (refreshData.success && refreshData.data?.access_token) {
+              // Update token in localStorage
+              localStorage.setItem('authToken', refreshData.data.access_token);
+              token = refreshData.data.access_token;
+              console.log('Token refreshed successfully');
+              
+              // Retry the original request with new token
+              response = await fetch(`${getApiConfig().BASE_URL}/api/comprehensive-chat/chat`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify({ query }),
+              });
+            } else {
+              throw new Error('Token refresh failed');
+            }
+          } else {
+            throw new Error('Token refresh failed');
+          }
+        } catch (refreshError) {
+          console.error('Token refresh failed:', refreshError);
           throw new Error('Authentication failed. Please log in again.');
         }
+      }
+
+      if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
@@ -299,6 +361,8 @@ const DataQualityChat: React.FC = () => {
         return <SearchIcon color="info" />;
       case 'data_quality':
         return <DataQualityIcon color="warning" />;
+      case 'general_chat':
+        return <ChatIcon color="success" />;
       default:
         return <InfoIcon color="action" />;
     }
@@ -314,6 +378,8 @@ const DataQualityChat: React.FC = () => {
         return 'info';
       case 'data_quality':
         return 'warning';
+      case 'general_chat':
+        return 'success';
       default:
         return 'default';
     }
@@ -340,9 +406,9 @@ const DataQualityChat: React.FC = () => {
           </Typography>
           {message.intent && (
             <Chip
-              icon={getIntentIcon(message.intent)}
-              label={message.intent?.replace('_', ' ').toUpperCase()}
-              color={getIntentColor(message.intent) as any}
+              icon={getIntentIcon(typeof message.intent === 'string' ? message.intent : message.intent.intent_type)}
+              label={(typeof message.intent === 'string' ? message.intent : message.intent.intent_type)?.replace('_', ' ').toUpperCase()}
+              color={getIntentColor(typeof message.intent === 'string' ? message.intent : message.intent.intent_type) as any}
               size="small"
               sx={{ ml: 1 }}
             />

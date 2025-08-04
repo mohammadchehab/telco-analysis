@@ -105,6 +105,7 @@ deploy-backend:
 		--exclude='.git' \
 		--exclude='*.log' \
 		--exclude='.env' \
+		--exclude='config.env' \
 		--exclude='.DS_Store' \
 		--exclude='node_modules' \
 		--exclude='*.db' \

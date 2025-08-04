@@ -194,20 +194,123 @@ async def logout(request: Request, current_user: Dict[str, Any] = Depends(get_cu
         return APIResponse(success=False, error=str(e))
 
 @router.post("/refresh", response_model=APIResponse)
-async def refresh_token(current_user: Dict[str, Any] = Depends(get_current_user)):
-    """Refresh token endpoint"""
+async def refresh_token(
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    """Refresh token endpoint - allows expired tokens for refresh"""
     try:
-        # Create new token
-        token = auth_manager.create_token(current_user)
+        # Get the token from the Authorization header
+        auth_header = request.headers.get("Authorization")
+        if not auth_header or not auth_header.startswith("Bearer "):
+            return APIResponse(success=False, error="Invalid authorization header")
         
-        return APIResponse(
-            success=True,
-            data={
-                "access_token": token,
-                "token_type": "bearer"
-            },
-            message="Token refreshed successfully"
-        )
+        token = auth_header.split(" ")[1]
+        
+        # For refresh, we'll try to decode the token even if expired
+        try:
+            import jwt
+            secret_key = os.getenv("JWT_SECRET_KEY", "your-secret-key-change-in-production")
+            algorithm = "HS256"
+            
+            # Decode without expiration check for refresh
+            payload = jwt.decode(token, secret_key, algorithms=[algorithm], options={"verify_exp": False})
+            username: str = payload.get("sub")
+            user_id: int = payload.get("user_id")
+            
+            if not username or not user_id:
+                return APIResponse(success=False, error="Invalid token payload")
+            
+            # Get user from database
+            user = db.query(User).filter(
+                User.username == username, 
+                User.id == user_id,
+                User.is_active == True
+            ).first()
+            
+            if not user:
+                return APIResponse(success=False, error="User not found or inactive")
+            
+            # Create new token
+            user_data = {
+                "id": user.id,
+                "username": user.username,
+                "email": user.email,
+                "role": user.role,
+                "is_active": user.is_active
+            }
+            
+            new_token = auth_manager.create_token(user_data)
+            
+            return APIResponse(
+                success=True,
+                data={
+                    "access_token": new_token,
+                    "token_type": "bearer"
+                },
+                message="Token refreshed successfully"
+            )
+            
+        except jwt.PyJWTError as e:
+            return APIResponse(success=False, error=f"Invalid token: {str(e)}")
+            
+    except Exception as e:
+        return APIResponse(success=False, error=str(e))
+
+@router.post("/debug-token", response_model=APIResponse)
+async def debug_token(request: Request):
+    """Debug endpoint to check token status"""
+    try:
+        import os
+        import jwt
+        
+        auth_header = request.headers.get("Authorization")
+        if not auth_header or not auth_header.startswith("Bearer "):
+            return APIResponse(success=False, error="No authorization header")
+        
+        token = auth_header.split(" ")[1]
+        
+        secret_key = os.getenv("JWT_SECRET_KEY", "your-secret-key-change-in-production")
+        algorithm = "HS256"
+        
+        try:
+            # Try to decode with expiration check
+            payload = jwt.decode(token, secret_key, algorithms=[algorithm])
+            return APIResponse(
+                success=True,
+                data={
+                    "valid": True,
+                    "expired": False,
+                    "username": payload.get("sub"),
+                    "user_id": payload.get("user_id"),
+                    "role": payload.get("role"),
+                    "exp": payload.get("exp")
+                }
+            )
+        except jwt.ExpiredSignatureError:
+            # Token is expired but can be decoded
+            payload = jwt.decode(token, secret_key, algorithms=[algorithm], options={"verify_exp": False})
+            return APIResponse(
+                success=True,
+                data={
+                    "valid": False,
+                    "expired": True,
+                    "username": payload.get("sub"),
+                    "user_id": payload.get("user_id"),
+                    "role": payload.get("role"),
+                    "exp": payload.get("exp")
+                }
+            )
+        except jwt.PyJWTError as e:
+            return APIResponse(
+                success=False,
+                data={
+                    "valid": False,
+                    "expired": False,
+                    "error": str(e)
+                }
+            )
+            
     except Exception as e:
         return APIResponse(success=False, error=str(e))
 

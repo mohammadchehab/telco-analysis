@@ -33,12 +33,12 @@ export const API_CONFIG = {
     // Attributes
     ATTRIBUTES: '/api/attributes',
     ATTRIBUTES_BY_CAPABILITY: (capabilityId: number) => `/api/capabilities/${capabilityId}/attributes`,
-    ATTRIBUTE_BY_ID: (id: number) => `/api/attributes/attributes/${id}`,
+    ATTRIBUTE_BY_ID: (id: number) => `/api/capabilities/attributes/${id}`,
     
     // Domains
     DOMAINS: '/api/domains',
     DOMAINS_BY_CAPABILITY: (capabilityId: number) => `/api/capabilities/${capabilityId}/domains`,
-    DOMAIN_BY_ID: (id: number) => `/api/domains/domains/${id}`,
+    DOMAIN_BY_ID: (id: number) => `/api/capabilities/domains/${id}`,
     
     // Reports
     REPORTS: '/api/reports',

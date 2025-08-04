@@ -322,11 +322,16 @@ async def understand_comprehensive_intent(user_query: str) -> dict:
     try:
         api_key = os.getenv("OPENROUTER_API_KEY")
         if not api_key:
-            raise Exception("OpenRouter API key not configured")
+            # Fallback to pattern matching
+            return _fallback_intent_understanding(user_query)
         
         client = openai.OpenAI(
             api_key=api_key,
-            base_url="https://openrouter.ai/api/v1"
+            base_url="https://openrouter.ai/api/v1",
+            default_headers={
+                "HTTP-Referer": "https://telco-platform.openbiocure.ai",
+                "X-Title": "Telco Capability Analysis Platform"
+            }
         )
         
         intent_prompt = f"""
@@ -359,39 +364,45 @@ Examples:
 - For "what's the weather": {{"intent_type": "general_chat", "analysis_focus": "I'm focused on telco capability analysis. I can help with architecture, reports, document search, and data quality.", "context_needed": [], "complexity": "simple"}}
 """
         
-        response = client.chat.completions.create(
-            model="openai/gpt-3.5-turbo",
-            messages=[{"role": "user", "content": intent_prompt}],
-            temperature=0.1,
-            max_tokens=200
-        )
+        try:
+            response = client.chat.completions.create(
+                model="mistralai/mistral-7b-instruct:free",
+                messages=[{"role": "user", "content": intent_prompt}],
+                temperature=0.1,
+                max_tokens=200
+            )
         
-        intent_result = response.choices[0].message.content.strip()
-        return json.loads(intent_result)
-        
+            intent_result = response.choices[0].message.content.strip()
+            return json.loads(intent_result)
+        except Exception as ai_error:
+            print(f"AI intent understanding failed: {ai_error}")
+            return _fallback_intent_understanding(user_query)
     except Exception as e:
         print(f"Intent understanding failed: {e}")
-        # Fallback to simple pattern matching
-        user_query_lower = user_query.lower()
-        
-        # Architecture queries
-        if any(word in user_query_lower for word in ["architecture", "canvas", "tm forum", "layers", "bss", "oss"]):
-            return {"intent_type": "architecture", "analysis_focus": "Architecture analysis", "context_needed": ["architecture"], "complexity": "simple"}
-        
-        # Reports queries
-        elif any(word in user_query_lower for word in ["report", "export", "chart", "radar", "comparison"]):
-            return {"intent_type": "reports", "analysis_focus": "Report generation", "context_needed": ["reports"], "complexity": "complex"}
-        
-        # RAG queries
-        elif any(word in user_query_lower for word in ["search", "document", "upload", "find", "look for"]):
-            return {"intent_type": "rag", "analysis_focus": "Document search", "context_needed": ["rag"], "complexity": "simple"}
-        
-        # Data quality queries
-        elif any(word in user_query_lower for word in ["quality", "broken", "duplicate", "missing", "validate"]):
-            return {"intent_type": "data_quality", "analysis_focus": "Data quality analysis", "context_needed": [], "complexity": "simple"}
-        
-        else:
-            return {"intent_type": "general_chat", "analysis_focus": "General telco capability assistance", "context_needed": ["architecture", "reports", "rag"], "complexity": "simple"}
+        return _fallback_intent_understanding(user_query)
+
+def _fallback_intent_understanding(user_query: str) -> dict:
+    """Fallback intent understanding using pattern matching"""
+    user_query_lower = user_query.lower()
+    
+    # Architecture queries
+    if any(word in user_query_lower for word in ["architecture", "canvas", "tm forum", "layers", "bss", "oss"]):
+        return {"intent_type": "architecture", "analysis_focus": "Architecture analysis", "context_needed": ["architecture"], "complexity": "simple"}
+    
+    # Reports queries
+    elif any(word in user_query_lower for word in ["report", "export", "chart", "radar", "comparison"]):
+        return {"intent_type": "reports", "analysis_focus": "Report generation", "context_needed": ["reports"], "complexity": "complex"}
+    
+    # RAG queries
+    elif any(word in user_query_lower for word in ["search", "document", "upload", "find", "look for"]):
+        return {"intent_type": "rag", "analysis_focus": "Document search", "context_needed": ["rag"], "complexity": "simple"}
+    
+    # Data quality queries
+    elif any(word in user_query_lower for word in ["quality", "broken", "duplicate", "missing", "validate"]):
+        return {"intent_type": "data_quality", "analysis_focus": "Data quality analysis", "context_needed": [], "complexity": "simple"}
+    
+    else:
+        return {"intent_type": "general_chat", "analysis_focus": "General telco capability assistance", "context_needed": ["architecture", "reports", "rag"], "complexity": "simple"}
 
 async def process_with_comprehensive_ai(user_query: str, intent: dict, context: dict, db: Session) -> APIResponse:
     """Use AI to process comprehensive queries"""
@@ -402,11 +413,28 @@ async def process_with_comprehensive_ai(user_query: str, intent: dict, context: 
         # Configure OpenRouter
         api_key = os.getenv("OPENROUTER_API_KEY")
         if not api_key:
-            raise Exception("OpenRouter API key not configured")
+            # Fallback to simple response without AI
+            return APIResponse(
+                success=True,
+                data={
+                    "summary": f"I understand you're asking about: {user_query}. This appears to be a {intent.get('intent_type', 'general')} query. To provide a detailed response, please configure a valid OpenRouter API key in your config.env file.",
+                    "intent": intent,
+                    "context": context,
+                    "suggestions": [
+                        "Configure OpenRouter API key",
+                        "Try a specific capability query",
+                        "Check the documentation"
+                    ]
+                }
+            )
         
         client = openai.OpenAI(
             api_key=api_key,
-            base_url="https://openrouter.ai/api/v1"
+            base_url="https://openrouter.ai/api/v1",
+            default_headers={
+                "HTTP-Referer": "https://telco-platform.openbiocure.ai",
+                "X-Title": "Telco Capability Analysis Platform"
+            }
         )
         
         # Build comprehensive prompt
@@ -449,14 +477,31 @@ If the query is about documents, use the RAG context provided.
         
         # Generate response with AI
         print(f"Generating comprehensive response for: {user_query}")
-        response = client.chat.completions.create(
-            model="openai/gpt-3.5-turbo",
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.3,
-            max_tokens=1000
-        )
-        
-        ai_response = response.choices[0].message.content.strip()
+        try:
+            response = client.chat.completions.create(
+                model="mistralai/mistral-7b-instruct:free",
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.3,
+                max_tokens=1000
+            )
+            
+            ai_response = response.choices[0].message.content.strip()
+        except Exception as ai_error:
+            print(f"AI processing failed: {ai_error}")
+            # Fallback response when AI fails
+            return APIResponse(
+                success=True,
+                data={
+                    "summary": f"I understand you're asking about: {user_query}. This appears to be a {intent.get('intent_type', 'general')} query. The AI service is currently unavailable. Please try again later or contact support.",
+                    "intent": intent,
+                    "context": context,
+                    "suggestions": [
+                        "Try again later",
+                        "Check your API key",
+                        "Contact support"
+                    ]
+                }
+            )
         
         # Check if AI wants to execute SQL
         if "SELECT" in ai_response.upper():
@@ -552,11 +597,15 @@ async def test_ai_connection():
         
         client = openai.OpenAI(
             api_key=api_key,
-            base_url="https://openrouter.ai/api/v1"
+            base_url="https://openrouter.ai/api/v1",
+            default_headers={
+                "HTTP-Referer": "https://telco-platform.openbiocure.ai",
+                "X-Title": "Telco Capability Analysis Platform"
+            }
         )
         
         response = client.chat.completions.create(
-            model="openai/gpt-3.5-turbo",
+            model="mistralai/mistral-7b-instruct:free",
             messages=[{"role": "user", "content": "Say 'Hello World'"}],
             max_tokens=10
         )
