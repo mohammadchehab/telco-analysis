@@ -11,7 +11,6 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
-  Paper,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -19,7 +18,6 @@ import {
   List,
   ListItem,
   ListItemText,
-  ListItemIcon,
   Avatar,
   LinearProgress
 } from '@mui/material';
@@ -32,12 +30,12 @@ import {
   NetworkCheck as NetworkIcon,
   Analytics as AnalyticsIcon,
   Settings as SettingsIcon,
-  Info as InfoIcon,
   Star as StarIcon,
-  TrendingUp as TrendingUpIcon,
   CheckCircle as CheckCircleIcon,
+  TrendingUp as TrendingUpIcon,
   Warning as WarningIcon,
   Error as ErrorIcon,
+  Info as InfoIcon,
   Refresh as RefreshIcon,
   Download as DownloadIcon,
   Print as PrintIcon
@@ -336,159 +334,88 @@ const ArchitectureCanvas: React.FC = () => {
       </Box>
 
       {/* Architecture Layers */}
-      <Box sx={{ display: 'flex', gap: 3 }}>
-        <Box sx={{ flex: 1 }}>
-          {architectureData.layers.map((layer) => (
-            <Accordion key={layer.id} defaultExpanded sx={{ mb: 2 }}>
-              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Box display="flex" alignItems="center" gap={2} width="100%">
-                  <Avatar sx={{ bgcolor: layer.color }}>
-                    {layer.id === 'business' && <BusinessIcon />}
-                    {layer.id === 'operations' && <SettingsIcon />}
-                    {layer.id === 'data' && <AnalyticsIcon />}
-                    {layer.id === 'security' && <SecurityIcon />}
-                    {layer.id === 'network' && <NetworkIcon />}
-                    {layer.id === 'storage' && <StorageIcon />}
-                  </Avatar>
-                  <Box flex={1}>
-                    <Typography variant="h6" fontWeight="bold">
-                      {layer.name}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {layer.description}
-                    </Typography>
-                  </Box>
-                  <Chip 
-                    label={`${layer.capabilities.length} capabilities`}
-                    color="primary"
-                    variant="outlined"
-                  />
+      <Box>
+        {architectureData.layers.map((layer) => (
+          <Accordion key={layer.id} defaultExpanded sx={{ mb: 2 }}>
+            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <Box display="flex" alignItems="center" gap={2} width="100%">
+                <Avatar sx={{ bgcolor: layer.color }}>
+                  {layer.id === 'business' && <BusinessIcon />}
+                  {layer.id === 'operations' && <SettingsIcon />}
+                  {layer.id === 'data' && <AnalyticsIcon />}
+                  {layer.id === 'security' && <SecurityIcon />}
+                  {layer.id === 'network' && <NetworkIcon />}
+                  {layer.id === 'storage' && <StorageIcon />}
+                </Avatar>
+                <Box flex={1}>
+                  <Typography variant="h6" fontWeight="bold">
+                    {layer.name}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {layer.description}
+                  </Typography>
                 </Box>
-              </AccordionSummary>
-              <AccordionDetails>
-                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 2 }}>
-                  {layer.capabilities.map((capability) => (
-                    <Card 
-                      key={capability.id}
-                      sx={{ 
-                        cursor: 'pointer',
-                        border: `2px solid ${getStatusColor(capability.status)}`,
-                        '&:hover': {
-                          boxShadow: 4,
-                          transform: 'translateY(-2px)',
-                          transition: 'all 0.2s'
-                        }
-                      }}
-                      onClick={() => handleCapabilityClick(capability)}
-                    >
-                      <CardContent>
-                        <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={1}>
-                          <Typography variant="subtitle2" fontWeight="bold" noWrap>
-                            {capability.name}
-                          </Typography>
-                          {getStatusIcon(capability.status)}
-                        </Box>
-                        <Typography variant="caption" color="text.secondary" display="block" mb={1}>
-                          {capability.tmForumMapping}
+                <Chip 
+                  label={`${layer.capabilities.length} capabilities`}
+                  color="primary"
+                  variant="outlined"
+                />
+              </Box>
+            </AccordionSummary>
+            <AccordionDetails>
+              <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 2 }}>
+                {layer.capabilities.map((capability) => (
+                  <Card 
+                    key={capability.id}
+                    sx={{ 
+                      cursor: 'pointer',
+                      border: `2px solid ${getStatusColor(capability.status)}`,
+                      '&:hover': {
+                        boxShadow: 4,
+                        transform: 'translateY(-2px)',
+                        transition: 'all 0.2s'
+                      }
+                    }}
+                    onClick={() => handleCapabilityClick(capability)}
+                  >
+                    <CardContent>
+                      <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={1}>
+                        <Typography variant="subtitle2" fontWeight="bold" noWrap>
+                          {capability.name}
                         </Typography>
-                        <Box display="flex" alignItems="center" gap={1} mb={1}>
-                          <StarIcon sx={{ fontSize: 16, color: 'warning.main' }} />
-                          <Typography variant="body2" fontWeight="bold">
-                            {capability.recommendedVendor}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            ({capability.vendorScore}/5)
-                          </Typography>
-                        </Box>
-                        <LinearProgress 
-                          variant="determinate" 
-                          value={(capability.vendorScore / 5) * 100}
-                          sx={{ 
-                            height: 4, 
-                            borderRadius: 2,
-                            backgroundColor: 'rgba(0,0,0,0.1)',
-                            '& .MuiLinearProgress-bar': {
-                              backgroundColor: getStatusColor(capability.status)
-                            }
-                          }}
-                        />
-                      </CardContent>
-                    </Card>
-                  ))}
-                </Box>
-              </AccordionDetails>
-            </Accordion>
-          ))}
-        </Box>
-
-        {/* Recommendations Sidebar */}
-        <Box sx={{ width: 350, flexShrink: 0 }}>
-          <Paper sx={{ p: 3, height: 'fit-content', position: 'sticky', top: 100 }}>
-            <Typography variant="h6" fontWeight="bold" mb={3}>
-              Recommendations
-            </Typography>
-
-            {/* Top Vendors */}
-            <Box mb={3}>
-              <Typography variant="subtitle1" fontWeight="bold" mb={1}>
-                Top Recommended Vendors
-              </Typography>
-              <Box display="flex" gap={1} flexWrap="wrap">
-                {architectureData.recommendations.topVendors.map((vendor, index) => (
-                  <Chip
-                    key={vendor}
-                    label={`${index + 1}. ${vendor}`}
-                    color="primary"
-                    variant="filled"
-                    icon={<StarIcon />}
-                  />
-                ))}
-              </Box>
-            </Box>
-
-            {/* Critical Gaps */}
-            {architectureData.recommendations.criticalGaps.length > 0 && (
-              <Box mb={3}>
-                <Typography variant="subtitle1" fontWeight="bold" mb={1} color="error.main">
-                  Critical Gaps
-                </Typography>
-                <List dense>
-                  {architectureData.recommendations.criticalGaps.slice(0, 5).map((gap, index) => (
-                    <ListItem key={index} sx={{ px: 0 }}>
-                      <ListItemIcon sx={{ minWidth: 32 }}>
-                        <ErrorIcon color="error" fontSize="small" />
-                      </ListItemIcon>
-                      <ListItemText 
-                        primary={gap}
-                        primaryTypographyProps={{ variant: 'body2' }}
+                        {getStatusIcon(capability.status)}
+                      </Box>
+                      <Typography variant="caption" color="text.secondary" display="block" mb={1}>
+                        {capability.tmForumMapping}
+                      </Typography>
+                      <Box display="flex" alignItems="center" gap={1} mb={1}>
+                        <StarIcon sx={{ fontSize: 16, color: 'warning.main' }} />
+                        <Typography variant="body2" fontWeight="bold">
+                          {capability.recommendedVendor}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          ({capability.vendorScore}/5)
+                        </Typography>
+                      </Box>
+                      <LinearProgress 
+                        variant="determinate" 
+                        value={(capability.vendorScore / 5) * 100}
+                        sx={{ 
+                          height: 4, 
+                          borderRadius: 2,
+                          backgroundColor: 'rgba(0,0,0,0.1)',
+                          '& .MuiLinearProgress-bar': {
+                            backgroundColor: getStatusColor(capability.status)
+                          }
+                        }}
                       />
-                    </ListItem>
-                  ))}
-                </List>
-              </Box>
-            )}
-
-            {/* Next Steps */}
-            <Box>
-              <Typography variant="subtitle1" fontWeight="bold" mb={1}>
-                Next Steps
-              </Typography>
-              <List dense>
-                {architectureData.recommendations.nextSteps.map((step, index) => (
-                  <ListItem key={index} sx={{ px: 0 }}>
-                    <ListItemIcon sx={{ minWidth: 32 }}>
-                      <CheckCircleIcon color="primary" fontSize="small" />
-                    </ListItemIcon>
-                    <ListItemText 
-                      primary={step}
-                      primaryTypographyProps={{ variant: 'body2' }}
-                    />
-                  </ListItem>
+                    </CardContent>
+                  </Card>
                 ))}
-              </List>
-            </Box>
-          </Paper>
-        </Box>
+              </Box>
+            </AccordionDetails>
+          </Accordion>
+        ))}
       </Box>
 
       {/* Capability Detail Dialog */}
