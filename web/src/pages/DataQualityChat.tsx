@@ -27,7 +27,6 @@ import {
   DialogContent,
   DialogActions,
   } from '@mui/material';
-import apiConfig from '../config/api';
 import {
   Send as SendIcon,
   Download as DownloadIcon,
@@ -46,6 +45,7 @@ import {
 import { useDispatch } from 'react-redux';
 import type { AppDispatch } from '../store';
 import { addNotification } from '../store/slices/uiSlice';
+import getApiConfig from '../config/api';
 
 interface ChatMessage {
   id: string;
@@ -228,7 +228,7 @@ const DataQualityChat: React.FC = () => {
         throw new Error('No authentication token found. Please log in again.');
       }
 
-      const response = await fetch(`${apiConfig.BASE_URL}/api/comprehensive-chat/chat`, {
+      const response = await fetch(`${getApiConfig().BASE_URL}/api/comprehensive-chat/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

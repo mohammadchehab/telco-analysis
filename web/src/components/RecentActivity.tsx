@@ -27,7 +27,7 @@ import {
   Login as LoginIcon,
   Logout as LogoutIcon,
 } from '@mui/icons-material';
-import apiConfig from '../config/api';
+import getApiConfig from '../config/api';
 
 interface ActivityLog {
   id: number;
@@ -55,20 +55,20 @@ const RecentActivity: React.FC = () => {
   }, [page, rowsPerPage]);
 
   const fetchActivityLogs = async () => {
+    setLoading(true);
+    setError(null);
     try {
-      setLoading(true);
       const response = await fetch(
-        `${apiConfig.BASE_URL}/api/activity-logs?limit=${rowsPerPage}&offset=${page * rowsPerPage}`
+        `${getApiConfig().BASE_URL}/api/activity-logs?limit=${rowsPerPage}&offset=${page * rowsPerPage}`
       );
-      const data = await response.json();
-
-      if (data.success) {
-        setLogs(data.data.logs);
-      } else {
-        setError(data.error || 'Failed to fetch activity logs');
+      if (!response.ok) {
+        throw new Error('Failed to fetch activity logs');
       }
-    } catch (error: any) {
-      setError('Failed to fetch activity logs');
+      const data = await response.json();
+      setLogs(data.activity_logs || []);
+      // setTotalCount(data.total_count || 0); // This line was removed from the new_code, so it's removed here.
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch activity logs');
     } finally {
       setLoading(false);
     }

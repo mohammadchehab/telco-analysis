@@ -30,7 +30,6 @@ import {
   ListItemText,
   Divider
 } from '@mui/material';
-import apiConfig from '../config/api';
 import {
   Refresh as RefreshIcon,
   Edit as EditIcon,
@@ -41,6 +40,7 @@ import {
   Warning as WarningIcon,
   Schedule as ScheduleIcon
 } from '@mui/icons-material';
+import getApiConfig from '../config/api';
 
 interface FlaggedURL {
   id: number;
@@ -120,7 +120,7 @@ const EvidenceReview: React.FC = () => {
 
   const loadCapabilities = async () => {
     try {
-      const response = await fetch(`${apiConfig.BASE_URL}/api/capabilities`);
+      const response = await fetch(`${getApiConfig().BASE_URL}/api/capabilities`);
       const data = await response.json();
       if (data.success && Array.isArray(data.data)) {
         setCapabilities(data.data);
@@ -137,7 +137,7 @@ const EvidenceReview: React.FC = () => {
     setLoading(true);
     try {
       const params = selectedCapability !== 'all' ? `?capability_id=${selectedCapability}` : '';
-      const response = await fetch(`${apiConfig.BASE_URL}/api/url-checker/flagged-urls${params}`);
+      const response = await fetch(`${getApiConfig().BASE_URL}/api/url-checker/flagged-urls${params}`);
       const data = await response.json();
       if (data.success) {
         setFlaggedUrls(data.data.flagged_urls || []);
@@ -152,7 +152,7 @@ const EvidenceReview: React.FC = () => {
 
   const loadStats = async () => {
     try {
-      const response = await fetch(`${apiConfig.BASE_URL}/api/url-checker/validation-stats`);
+      const response = await fetch(`${getApiConfig().BASE_URL}/api/url-checker/validation-stats`);
       const data = await response.json();
       if (data.success) {
         setStats(data.data);
@@ -165,7 +165,7 @@ const EvidenceReview: React.FC = () => {
   const validateBatch = async () => {
     setIsValidating(true);
     try {
-      const response = await fetch(`${apiConfig.BASE_URL}/api/url-checker/validate-batch`, {
+      const response = await fetch(`${getApiConfig().BASE_URL}/api/url-checker/validate-batch`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ batch_size: batchSize })
@@ -187,7 +187,7 @@ const EvidenceReview: React.FC = () => {
   const validateAllPending = async () => {
     setIsValidating(true);
     try {
-      const response = await fetch(`${apiConfig.BASE_URL}/api/url-checker/validate-all-pending`, {
+      const response = await fetch(`${getApiConfig().BASE_URL}/api/url-checker/validate-all-pending`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
       });
@@ -207,7 +207,7 @@ const EvidenceReview: React.FC = () => {
 
   const recheckUrl = async (urlId: number) => {
     try {
-      const response = await fetch(`${apiConfig.BASE_URL}/api/url-checker/recheck-url/${urlId}`, {
+      const response = await fetch(`${getApiConfig().BASE_URL}/api/url-checker/recheck-url/${urlId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
       });
@@ -225,7 +225,7 @@ const EvidenceReview: React.FC = () => {
 
   const loadUrlDetails = async (urlId: number) => {
     try {
-      const response = await fetch(`${apiConfig.BASE_URL}/api/url-checker/validation-details/${urlId}`);
+      const response = await fetch(`${getApiConfig().BASE_URL}/api/url-checker/validation-details/${urlId}`);
       const data = await response.json();
       if (data.success) {
         setSelectedUrl(data.data);
@@ -240,7 +240,7 @@ const EvidenceReview: React.FC = () => {
     if (!editingUrlId || !newUrl.trim()) return;
 
     try {
-      const response = await fetch(`${apiConfig.BASE_URL}/api/url-checker/update-url/${editingUrlId}`, {
+      const response = await fetch(`${getApiConfig().BASE_URL}/api/url-checker/update-url/${editingUrlId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ new_url: newUrl })

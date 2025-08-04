@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
-import apiConfig from '../../config/api';
+import getApiConfig from '../../config/api';
 import type { 
   Capability, 
   CapabilitySummary, 
@@ -49,38 +49,29 @@ const initialState: CapabilitiesState = {
 export const fetchCapabilities = createAsyncThunk(
   'capabilities/fetchCapabilities',
   async () => {
-    const response = await fetch(`${apiConfig.BASE_URL}/api/capabilities`);
-    const data: APIResponse<{
-      capabilities: CapabilitySummary[];
-      stats: WorkflowStats;
-    }> = await response.json();
-    
-    if (!data.success) {
-      throw new Error(data.error || 'Failed to fetch capabilities');
+    const response = await fetch(`${getApiConfig().BASE_URL}/api/capabilities`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch capabilities');
     }
-    
-    return data.data!;
+    return response.json();
   }
 );
 
-export const fetchCapabilityDetails = createAsyncThunk(
-  'capabilities/fetchCapabilityDetails',
+export const fetchCapabilityById = createAsyncThunk(
+  'capabilities/fetchCapabilityById',
   async (capabilityId: number) => {
-    const response = await fetch(`${apiConfig.BASE_URL}/api/capabilities/${capabilityId}`);
-    const data: APIResponse<Capability> = await response.json();
-    
-    if (!data.success) {
-      throw new Error(data.error || 'Failed to fetch capability details');
+    const response = await fetch(`${getApiConfig().BASE_URL}/api/capabilities/${capabilityId}`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch capability');
     }
-    
-    return data.data!;
+    return response.json();
   }
 );
 
 export const fetchCapabilityStatus = createAsyncThunk(
   'capabilities/fetchCapabilityStatus',
   async (capabilityId: number) => {
-    const response = await fetch(`${apiConfig.BASE_URL}/api/capabilities/${capabilityId}/status`);
+    const response = await fetch(`${getApiConfig().BASE_URL}/api/capabilities/${capabilityId}/status`);
     const data: APIResponse<CapabilityTracker> = await response.json();
     
     return data.data!;
@@ -89,10 +80,10 @@ export const fetchCapabilityStatus = createAsyncThunk(
 
 export const fetchVendorScores = createAsyncThunk(
   'capabilities/fetchVendorScores',
-  async (capabilityId?: number) => {
-    const url = capabilityId 
-      ? `${apiConfig.BASE_URL}/api/capabilities/${capabilityId}/vendor-scores`
-      : `${apiConfig.BASE_URL}/api/vendor-scores`;
+  async (capabilityId: number) => {
+    const url = capabilityId
+      ? `${getApiConfig().BASE_URL}/api/capabilities/${capabilityId}/vendor-scores`
+      : `${getApiConfig().BASE_URL}/api/vendor-scores`;
     const response = await fetch(url);
     const data: APIResponse<VendorScore[]> = await response.json();
     
@@ -106,19 +97,35 @@ export const fetchVendorScores = createAsyncThunk(
 
 export const updateCapabilityStatus = createAsyncThunk(
   'capabilities/updateCapabilityStatus',
-  async ({ capabilityName, status }: { capabilityName: string; status: WorkflowState }) => {
-    const response = await fetch(`${apiConfig.BASE_URL}/api/capabilities/${capabilityName}/status`, {
+  async ({ capabilityId, status }: { capabilityId: number; status: string }) => {
+    const response = await fetch(`${getApiConfig().BASE_URL}/api/capabilities/${capabilityId}/status`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+      },
       body: JSON.stringify({ status }),
     });
-    const data: APIResponse<Capability> = await response.json();
-    
-    if (!data.success) {
-      throw new Error(data.error || 'Failed to update capability status');
+    if (!response.ok) {
+      throw new Error('Failed to update capability status');
     }
-    
-    return data.data!;
+    return response.json();
+  }
+);
+
+export const updateCapabilityStatusByName = createAsyncThunk(
+  'capabilities/updateCapabilityStatusByName',
+  async ({ capabilityName, status }: { capabilityName: string; status: string }) => {
+    const response = await fetch(`${getApiConfig().BASE_URL}/api/capabilities/${capabilityName}/status`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ status }),
+    });
+    if (!response.ok) {
+      throw new Error('Failed to update capability status');
+    }
+    return response.json();
   }
 );
 
@@ -183,7 +190,7 @@ const capabilitiesSlice = createSlice({
         state.loading = false;
         state.error = action.error.message || 'Failed to fetch capabilities';
       })
-      .addCase(fetchCapabilityDetails.fulfilled, (state, action) => {
+      .addCase(fetchCapabilityById.fulfilled, (state, action) => {
         const index = state.capabilities.findIndex(c => c.id === action.payload.id);
         if (index !== -1) {
           state.capabilities[index] = action.payload;

@@ -1,7 +1,8 @@
 // API client configuration
-import apiConfig from '../config/api';
+import getApiConfig from '../config/api';
 
-const API_BASE_URL = apiConfig.BASE_URL;
+// Get the API config lazily at runtime
+const getApiBaseUrl = () => getApiConfig().BASE_URL;
 
 // Report data types (matching Reports.tsx)
 interface RadarChartData {
@@ -48,7 +49,7 @@ const handleAuthError = (response: Response) => {
 
 export const apiClient = {
   async get<T>(endpoint: string): Promise<T> {
-    const url = endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}${endpoint}`;
+    const url = endpoint.startsWith('http') ? endpoint : `${getApiBaseUrl()}${endpoint}`;
     const response = await fetch(url, {
       method: 'GET',
       headers: getAuthHeaders(),
@@ -63,7 +64,7 @@ export const apiClient = {
   },
 
   async post<T>(endpoint: string, data?: any): Promise<T> {
-    const url = endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}${endpoint}`;
+    const url = endpoint.startsWith('http') ? endpoint : `${getApiBaseUrl()}${endpoint}`;
     const response = await fetch(url, {
       method: 'POST',
       headers: getAuthHeaders(),
@@ -79,7 +80,7 @@ export const apiClient = {
   },
 
   async postFormData<T>(endpoint: string, formData: FormData): Promise<T> {
-    const url = endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}${endpoint}`;
+    const url = endpoint.startsWith('http') ? endpoint : `${getApiBaseUrl()}${endpoint}`;
     const token = localStorage.getItem('authToken');
     const headers: Record<string, string> = {};
     if (token) {
@@ -101,7 +102,7 @@ export const apiClient = {
   },
 
   async patch<T>(endpoint: string, data: any): Promise<T> {
-    const url = endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}${endpoint}`;
+    const url = endpoint.startsWith('http') ? endpoint : `${getApiBaseUrl()}${endpoint}`;
     const response = await fetch(url, {
       method: 'PATCH',
       headers: getAuthHeaders(),
@@ -117,7 +118,7 @@ export const apiClient = {
   },
 
   async put<T>(endpoint: string, data: any): Promise<T> {
-    const url = endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}${endpoint}`;
+    const url = endpoint.startsWith('http') ? endpoint : `${getApiBaseUrl()}${endpoint}`;
     const response = await fetch(url, {
       method: 'PUT',
       headers: getAuthHeaders(),
@@ -133,7 +134,7 @@ export const apiClient = {
   },
 
   async delete<T>(endpoint: string): Promise<T> {
-    const url = endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}${endpoint}`;
+    const url = endpoint.startsWith('http') ? endpoint : `${getApiBaseUrl()}${endpoint}`;
     const response = await fetch(url, {
       method: 'DELETE',
       headers: getAuthHeaders(),
@@ -164,12 +165,12 @@ export const authAPI = {
       is_active: boolean;
     };
   }>> {
-    return apiClient.post(apiConfig.ENDPOINTS.AUTH_LOGIN, credentials);
+    return apiClient.post(getApiConfig().ENDPOINTS.AUTH_LOGIN, credentials);
   },
 
   // Logout user
   async logout(): Promise<APIResponse<{ message: string }>> {
-    return apiClient.post(apiConfig.ENDPOINTS.AUTH_LOGOUT);
+    return apiClient.post(getApiConfig().ENDPOINTS.AUTH_LOGOUT);
   },
 
   // Get current user info
@@ -182,7 +183,7 @@ export const authAPI = {
       is_active: boolean;
     };
   }>> {
-    return apiClient.get(apiConfig.ENDPOINTS.AUTH_ME);
+    return apiClient.get(getApiConfig().ENDPOINTS.AUTH_ME);
   },
 
   // Refresh token
@@ -190,7 +191,7 @@ export const authAPI = {
     access_token: string;
     token_type: string;
   }>> {
-    return apiClient.post(apiConfig.ENDPOINTS.AUTH_REFRESH);
+    return apiClient.post(getApiConfig().ENDPOINTS.AUTH_REFRESH);
   },
 
   // Get all users (admin only)
@@ -205,7 +206,7 @@ export const authAPI = {
       last_login: string | null;
     }>;
   }>> {
-    return apiClient.get(apiConfig.ENDPOINTS.AUTH_USERS);
+    return apiClient.get(getApiConfig().ENDPOINTS.AUTH_USERS);
   },
 
   // Create new user (admin only)
@@ -218,7 +219,7 @@ export const authAPI = {
     message: string;
     user_id: number;
   }>> {
-    return apiClient.post(apiConfig.ENDPOINTS.AUTH_CREATE_USER, userData);
+    return apiClient.post(getApiConfig().ENDPOINTS.AUTH_CREATE_USER, userData);
   },
 
   // Update user (admin only)
@@ -228,17 +229,17 @@ export const authAPI = {
     password?: string;
     role: string;
   }): Promise<APIResponse<{ message: string }>> {
-    return apiClient.put(apiConfig.ENDPOINTS.AUTH_UPDATE_USER(userId), userData);
+    return apiClient.put(getApiConfig().ENDPOINTS.AUTH_UPDATE_USER(userId), userData);
   },
 
   // Delete user (admin only)
   async deleteUser(userId: number): Promise<APIResponse<{ message: string }>> {
-    return apiClient.delete(apiConfig.ENDPOINTS.AUTH_DELETE_USER(userId));
+    return apiClient.delete(getApiConfig().ENDPOINTS.AUTH_DELETE_USER(userId));
   },
 
   // Update user status (admin only)
   async updateUserStatus(userId: number, status: { is_active: boolean }): Promise<APIResponse<{ message: string }>> {
-    return apiClient.patch(apiConfig.ENDPOINTS.AUTH_UPDATE_USER_STATUS(userId), status);
+    return apiClient.patch(getApiConfig().ENDPOINTS.AUTH_UPDATE_USER_STATUS(userId), status);
   },
 };
 
@@ -246,12 +247,12 @@ export const authAPI = {
 export const capabilityAPI = {
   // Get all capabilities with summary data
   async getAll(): Promise<APIResponse<{ capabilities: CapabilitySummary[]; stats: WorkflowStats }>> {
-    return apiClient.get(apiConfig.ENDPOINTS.CAPABILITIES);
+    return apiClient.get(getApiConfig().ENDPOINTS.CAPABILITIES);
   },
 
   // Get single capability by ID
   async getById(id: number): Promise<APIResponse<Capability>> {
-    return apiClient.get(apiConfig.ENDPOINTS.CAPABILITY_BY_ID(id));
+    return apiClient.get(getApiConfig().ENDPOINTS.CAPABILITY_BY_ID(id));
   },
 
   // Get single capability by name
@@ -261,17 +262,17 @@ export const capabilityAPI = {
 
   // Create new capability
   async create(data: { name: string; description?: string; status?: string }): Promise<APIResponse<Capability>> {
-    return apiClient.post(apiConfig.ENDPOINTS.CAPABILITIES, data);
+    return apiClient.post(getApiConfig().ENDPOINTS.CAPABILITIES, data);
   },
 
   // Update capability by ID
   async update(id: number, data: { name?: string; description?: string; status?: string }): Promise<APIResponse<Capability>> {
-    return apiClient.put(apiConfig.ENDPOINTS.CAPABILITY_BY_ID(id), data);
+    return apiClient.put(getApiConfig().ENDPOINTS.CAPABILITY_BY_ID(id), data);
   },
 
   // Delete capability by ID
   async delete(id: number): Promise<APIResponse<{ message: string }>> {
-    return apiClient.delete(apiConfig.ENDPOINTS.CAPABILITY_BY_ID(id));
+    return apiClient.delete(getApiConfig().ENDPOINTS.CAPABILITY_BY_ID(id));
   },
 
   // Update capability status by ID
@@ -296,12 +297,12 @@ export const capabilityAPI = {
 
   // Initialize workflow by ID
   async initializeWorkflow(id: number): Promise<APIResponse<{ message: string }>> {
-    return apiClient.post(apiConfig.ENDPOINTS.CAPABILITY_WORKFLOW_INITIALIZE(id));
+    return apiClient.post(getApiConfig().ENDPOINTS.CAPABILITY_WORKFLOW_INITIALIZE(id));
   },
 
   // Generate prompt by ID
   async generatePrompt(id: number, promptType: string): Promise<APIResponse<{ prompt: string }>> {
-    return apiClient.post(apiConfig.ENDPOINTS.CAPABILITY_WORKFLOW_GENERATE_PROMPT(id), { prompt_type: promptType });
+    return apiClient.post(getApiConfig().ENDPOINTS.CAPABILITY_WORKFLOW_GENERATE_PROMPT(id), { prompt_type: promptType });
   },
 
   // Upload research file by ID
@@ -314,7 +315,7 @@ export const capabilityAPI = {
 
   // Validate research data by ID
   async validateResearchData(id: number, data: any): Promise<APIResponse<{ valid: boolean; errors: string[] }>> {
-    return apiClient.post(apiConfig.ENDPOINTS.CAPABILITY_WORKFLOW_VALIDATE(id), data);
+    return apiClient.post(getApiConfig().ENDPOINTS.CAPABILITY_WORKFLOW_VALIDATE(id), data);
   },
 
   // Process domain results by ID
@@ -348,7 +349,7 @@ export const capabilityAPI = {
 export const domainAPI = {
   // Get all domains for a capability by ID
   async getByCapabilityId(capabilityId: number): Promise<APIResponse<{domains: Domain[]}>> {
-    return apiClient.get(apiConfig.ENDPOINTS.DOMAINS_BY_CAPABILITY(capabilityId));
+    return apiClient.get(getApiConfig().ENDPOINTS.DOMAINS_BY_CAPABILITY(capabilityId));
   },
 
   // Get all domains for a capability by name (deprecated - use getByCapabilityId)
@@ -363,12 +364,12 @@ export const domainAPI = {
 
   // Update domain
   async update(domainId: number, data: { domain_name?: string }): Promise<APIResponse<Domain>> {
-    return apiClient.put(apiConfig.ENDPOINTS.DOMAIN_BY_ID(domainId), data);
+    return apiClient.put(getApiConfig().ENDPOINTS.DOMAIN_BY_ID(domainId), data);
   },
 
   // Delete domain
   async delete(domainId: number): Promise<APIResponse<{ message: string }>> {
-    return apiClient.delete(apiConfig.ENDPOINTS.DOMAIN_BY_ID(domainId));
+    return apiClient.delete(getApiConfig().ENDPOINTS.DOMAIN_BY_ID(domainId));
   },
 
   // Bulk create domains by capability ID
@@ -380,7 +381,7 @@ export const domainAPI = {
 export const attributeAPI = {
   // Get all attributes for a capability by ID
   async getByCapabilityId(capabilityId: number): Promise<APIResponse<{attributes: Attribute[]}>> {
-    return apiClient.get(apiConfig.ENDPOINTS.ATTRIBUTES_BY_CAPABILITY(capabilityId));
+    return apiClient.get(getApiConfig().ENDPOINTS.ATTRIBUTES_BY_CAPABILITY(capabilityId));
   },
 
   // Get all attributes for a capability by name (deprecated - use getByCapabilityId)
@@ -412,12 +413,12 @@ export const attributeAPI = {
     tm_forum_mapping?: string;
     importance?: string;
   }): Promise<APIResponse<Attribute>> {
-    return apiClient.put(apiConfig.ENDPOINTS.ATTRIBUTE_BY_ID(attributeId), data);
+    return apiClient.put(getApiConfig().ENDPOINTS.ATTRIBUTE_BY_ID(attributeId), data);
   },
 
   // Delete attribute
   async delete(attributeId: number): Promise<APIResponse<{ message: string }>> {
-    return apiClient.delete(apiConfig.ENDPOINTS.ATTRIBUTE_BY_ID(attributeId));
+    return apiClient.delete(getApiConfig().ENDPOINTS.ATTRIBUTE_BY_ID(attributeId));
   },
 
   // Bulk create attributes by capability ID
@@ -498,7 +499,7 @@ export const vendorScoreAPI = {
 // User preferences API
 export const userPreferencesAPI = {
   getCurrentUser: async (): Promise<APIResponse<any>> => {
-    return apiClient.get(apiConfig.ENDPOINTS.AUTH_ME);
+    return apiClient.get(getApiConfig().ENDPOINTS.AUTH_ME);
   },
   
   updatePreferences: async (preferences: {
@@ -506,7 +507,7 @@ export const userPreferencesAPI = {
     dark_mode_preference?: boolean;
     pinned_menu_items?: string[];
   }): Promise<APIResponse<any>> => {
-    return apiClient.put(apiConfig.ENDPOINTS.AUTH_PREFERENCES, preferences);
+    return apiClient.put(getApiConfig().ENDPOINTS.AUTH_PREFERENCES, preferences);
   },
 };
 
@@ -594,10 +595,6 @@ export const architectureAPI = {
 }; 
 
 // API utility functions
-export const getApiBaseUrl = (): string => {
-  return apiConfig.BASE_URL;
-};
-
 export const getApiUrl = (endpoint: string): string => {
   return `${getApiBaseUrl()}${endpoint}`;
 }; 

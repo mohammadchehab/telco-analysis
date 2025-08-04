@@ -76,7 +76,7 @@ export const API_CONFIG = {
   },
 };
 
-// Environment-based configuration
+// Environment-based configuration - now truly lazy
 export const getApiConfig = () => {
   // Check if we're in production (hosted on openbiocure.ai)
   const isProduction = window.location.hostname.includes('openbiocure.ai');
@@ -87,20 +87,20 @@ export const getApiConfig = () => {
   if (baseUrl) {
     console.log('Using VITE_API_BASE_URL from environment:', baseUrl);
   }
+  // CRITICAL: If we're on telco-platform.openbiocure.ai, ALWAYS use HTTPS
+  else if (window.location.hostname === 'telco-platform.openbiocure.ai') {
+    baseUrl = 'https://telco-platform.openbiocure.ai';
+    console.log('Forcing production URL for telco-platform.openbiocure.ai:', baseUrl);
+  }
   // Force HTTPS in production regardless of environment variable
   else if (isProduction) {
     baseUrl = `https://${window.location.hostname}`;
     console.log('Using production hostname:', baseUrl);
   } else {
-    // In development, use localhost
-    baseUrl = 'http://127.0.0.1:8000';
-    console.log('Using development localhost:', baseUrl);
-  }
-  
-  // CRITICAL: If we're on telco-platform.openbiocure.ai, ALWAYS use HTTPS
-  if (window.location.hostname === 'telco-platform.openbiocure.ai') {
-    baseUrl = 'https://telco-platform.openbiocure.ai';
-    console.log('Forcing production URL for telco-platform.openbiocure.ai:', baseUrl);
+    // In development, use the current hostname with appropriate protocol
+    const protocol = window.location.protocol;
+    baseUrl = `${protocol}//${window.location.hostname}:8000`;
+    console.log('Using development hostname:', baseUrl);
   }
   
   // Override any HTTP URLs with HTTPS in production
@@ -119,4 +119,5 @@ export const getApiConfig = () => {
   };
 };
 
-export default getApiConfig(); 
+// Export the function itself, not the result
+export default getApiConfig; 
