@@ -61,7 +61,7 @@ const AttributeManagement: React.FC = () => {
     attribute_name: '',
     definition: '',
     tm_forum_mapping: '',
-    importance: '50'
+    importance: 'medium'
   });
 
   useEffect(() => {
@@ -132,7 +132,7 @@ const AttributeManagement: React.FC = () => {
           attribute_name: '',
           definition: '',
           tm_forum_mapping: '',
-          importance: '50'
+          importance: 'medium'
         });
         loadData();
       } else {
@@ -465,15 +465,19 @@ const AttributeManagement: React.FC = () => {
                 sx={{ mb: 2 }}
               />
 
-              <TextField
-                fullWidth
-                label="Importance (Weight)"
-                value={formData.importance}
-                onChange={(e) => setFormData({ ...formData, importance: e.target.value })}
-                type="number"
-                inputProps={{ min: 1, max: 100 }}
-                sx={{ mb: 2 }}
-              />
+              <FormControl fullWidth sx={{ mb: 2 }}>
+                <InputLabel>Importance</InputLabel>
+                <Select
+                  value={formData.importance}
+                  onChange={(e) => setFormData({ ...formData, importance: e.target.value as string })}
+                  label="Importance"
+                >
+                  <MenuItem value="low">Low (1-25)</MenuItem>
+                  <MenuItem value="medium">Medium (26-50)</MenuItem>
+                  <MenuItem value="high">High (51-75)</MenuItem>
+                  <MenuItem value="critical">Critical (76-100)</MenuItem>
+                </Select>
+              </FormControl>
             </Box>
           </DialogContent>
           <DialogActions>

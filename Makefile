@@ -107,6 +107,9 @@ deploy-backend:
 		--exclude='.env' \
 		--exclude='.DS_Store' \
 		--exclude='node_modules' \
+		--exclude='*.db' \
+		--exclude='telco_analysis.db' \
+		--exclude='telco_analysis_*.db' \
 		$(LOCAL_BACKEND_DIR)/ $(BACKEND_USER)@$(BACKEND_HOST):$(BACKEND_DIR)/
 	@echo "$(GREEN)Backend deployment completed successfully!$(NC)"
 

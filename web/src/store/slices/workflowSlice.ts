@@ -36,10 +36,14 @@ const initialState: WorkflowState = {
 export const initializeWorkflow = createAsyncThunk(
   'workflow/initializeWorkflow',
   async (capabilityId: number) => {
-    console.log('Initializing workflow for capability ID:', capabilityId);
+    if (import.meta.env.DEV) {
+      console.log('Initializing workflow for capability ID:', capabilityId);
+    }
     const response = await capabilityAPI.initializeWorkflow(capabilityId);
     
-    console.log('Workflow initialization response:', response);
+          if (import.meta.env.DEV) {
+        console.log('Workflow initialization response:', response);
+      }
     
     if (!response.success) {
       throw new Error(response.error || 'Failed to initialize workflow');
@@ -165,8 +169,10 @@ const workflowSlice = createSlice({
         state.loading = false;
         state.workflowSteps = (action.payload as any).workflow_steps || [];
         state.currentStep = 0;
-        console.log('Workflow steps set:', (action.payload as any).workflow_steps);
-        console.log('Current step set to:', 0);
+        if (import.meta.env.DEV) {
+          console.log('Workflow steps set:', (action.payload as any).workflow_steps);
+          console.log('Current step set to:', 0);
+        }
       })
       .addCase(initializeWorkflow.rejected, (state, action) => {
         state.loading = false;
@@ -203,7 +209,9 @@ const workflowSlice = createSlice({
       .addCase(validateResearchData.fulfilled, (state, action) => {
         state.loading = false;
         // Extract validation_result from the response
-        console.log('Validation response:', action.payload);
+        if (import.meta.env.DEV) {
+          console.log('Validation response:', action.payload);
+        }
         
         // Try different possible response structures
         let validationData = null;
@@ -225,7 +233,9 @@ const workflowSlice = createSlice({
           };
         }
         
-        console.log('Extracted validation data:', validationData);
+        if (import.meta.env.DEV) {
+          console.log('Extracted validation data:', validationData);
+        }
         
         // Set the validation result
         if (validationData && typeof validationData.valid === 'boolean') {

@@ -109,29 +109,31 @@ const Workflow: React.FC = () => {
 
   // Auto-detect file type based on content
   const detectFileType = (data: any): 'domain_analysis' | 'comprehensive_research' => {
-    console.log('Detecting file type for data:', data);
-    console.log('Has attributes:', !!data.attributes);
-    console.log('Has market_analysis:', !!data.market_analysis);
-    console.log('Has gap_analysis:', !!data.gap_analysis);
-    console.log('Has enhanced_framework:', !!data.enhanced_framework);
-    console.log('Has proposed_framework:', !!data.proposed_framework);
+    if (import.meta.env.DEV) {
+      console.log('Detecting file type for data:', data);
+      console.log('Has attributes:', !!data.attributes);
+      console.log('Has market_analysis:', !!data.market_analysis);
+      console.log('Has gap_analysis:', !!data.gap_analysis);
+      console.log('Has enhanced_framework:', !!data.enhanced_framework);
+      console.log('Has proposed_framework:', !!data.proposed_framework);
+    }
     
     if (data.attributes && data.market_analysis) {
-      console.log('Detected as comprehensive_research');
+      if (import.meta.env.DEV) console.log('Detected as comprehensive_research');
       return 'comprehensive_research';
     } else if (data.gap_analysis || data.enhanced_framework || data.proposed_framework) {
-      console.log('Detected as domain_analysis');
+      if (import.meta.env.DEV) console.log('Detected as domain_analysis');
       return 'domain_analysis';
     } else {
       // Default fallback - try to guess based on structure
       if (data.capability && (data.gap_analysis || data.enhanced_framework || data.proposed_framework)) {
-        console.log('Fallback detected as domain_analysis');
+        if (import.meta.env.DEV) console.log('Fallback detected as domain_analysis');
         return 'domain_analysis';
       } else if (data.attributes && data.vendors) {
-        console.log('Fallback detected as comprehensive_research');
+        if (import.meta.env.DEV) console.log('Fallback detected as comprehensive_research');
         return 'comprehensive_research';
       }
-      console.log('Default fallback to domain_analysis');
+      if (import.meta.env.DEV) console.log('Default fallback to domain_analysis');
       return 'domain_analysis'; // Default
     }
   };
@@ -140,12 +142,17 @@ const Workflow: React.FC = () => {
   const isWorkflowComplete = () => {
     const hasDomainAnalysis = uploadedFiles.some(f => f.type === 'domain_analysis' && f.processed);
     const hasComprehensiveResearch = uploadedFiles.some(f => f.type === 'comprehensive_research' && f.processed);
-    console.log('Workflow completion check:', {
-      uploadedFiles: uploadedFiles.map(f => ({ name: f.name, type: f.type, processed: f.processed })),
-      hasDomainAnalysis,
-      hasComprehensiveResearch,
-      complete: hasDomainAnalysis || hasComprehensiveResearch
-    });
+    
+    // Only log when there are actual changes or in development
+    if (import.meta.env.DEV && uploadedFiles.length > 0) {
+      console.log('Workflow completion check:', {
+        uploadedFiles: uploadedFiles.map(f => ({ name: f.name, type: f.type, processed: f.processed })),
+        hasDomainAnalysis,
+        hasComprehensiveResearch,
+        complete: hasDomainAnalysis || hasComprehensiveResearch
+      });
+    }
+    
     // Allow completion if at least one type is processed
     return hasDomainAnalysis || hasComprehensiveResearch;
   };

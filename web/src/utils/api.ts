@@ -42,7 +42,12 @@ const handleAuthError = (response: Response) => {
     // Clear invalid token and redirect to login
     localStorage.removeItem('authToken');
     localStorage.removeItem('user');
-    window.location.href = '/login';
+    
+    // Only redirect if we're not already on the login page
+    if (!window.location.pathname.includes('/login')) {
+      window.location.href = '/login';
+    }
+    
     throw new Error('Authentication failed. Please log in again.');
   }
 };
@@ -50,17 +55,26 @@ const handleAuthError = (response: Response) => {
 export const apiClient = {
   async get<T>(endpoint: string): Promise<T> {
     const url = endpoint.startsWith('http') ? endpoint : `${getApiBaseUrl()}${endpoint}`;
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: getAuthHeaders(),
-    });
+    
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: getAuthHeaders(),
+      });
 
-    if (!response.ok) {
-      handleAuthError(response);
-      throw new Error(`HTTP error! status: ${response.status}`);
+      if (!response.ok) {
+        handleAuthError(response);
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return response.json();
+    } catch (error) {
+      // Don't log 401 or 404 errors as they're expected in certain scenarios
+      if (error instanceof Error && !error.message.includes('401') && !error.message.includes('404')) {
+        console.error('API GET request failed:', error);
+      }
+      throw error;
     }
-
-    return response.json();
   },
 
   async post<T>(endpoint: string, data?: any): Promise<T> {

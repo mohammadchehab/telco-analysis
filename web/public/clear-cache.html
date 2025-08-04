@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clear Cache - Telco Analytics</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .success {
+            color: green;
+            font-weight: bold;
+        }
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+        .info {
+            background-color: #e7f3ff;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Clear Cache & Service Workers</h1>
+        
+        <div class="info">
+            <p>If you're experiencing issues with the Telco Analytics application, you can use this page to clear cached data and service workers.</p>
+        </div>
+
+        <h3>Service Worker Cleanup</h3>
+        <button onclick="clearServiceWorkers()">Clear Service Workers</button>
+        <div id="sw-result"></div>
+
+        <h3>Local Storage Cleanup</h3>
+        <button onclick="clearLocalStorage()">Clear Local Storage</button>
+        <div id="ls-result"></div>
+
+        <h3>Session Storage Cleanup</h3>
+        <button onclick="clearSessionStorage()">Clear Session Storage</button>
+        <div id="ss-result"></div>
+
+        <h3>Browser Cache</h3>
+        <p>To clear browser cache:</p>
+        <ul>
+            <li><strong>Chrome/Edge:</strong> Press Ctrl+Shift+Delete (Windows) or Cmd+Shift+Delete (Mac)</li>
+            <li><strong>Firefox:</strong> Press Ctrl+Shift+Delete (Windows) or Cmd+Shift+Delete (Mac)</li>
+            <li><strong>Safari:</strong> Press Cmd+Option+E</li>
+        </ul>
+
+        <h3>Return to Application</h3>
+        <button onclick="goToApp()">Go to Telco Analytics</button>
+    </div>
+
+    <script>
+        function clearServiceWorkers() {
+            const resultDiv = document.getElementById('sw-result');
+            
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then((registrations) => {
+                    if (registrations.length === 0) {
+                        resultDiv.innerHTML = '<p class="success">No service workers found to clear.</p>';
+                        return;
+                    }
+                    
+                    let cleared = 0;
+                    registrations.forEach((registration) => {
+                        registration.unregister().then((success) => {
+                            if (success) cleared++;
+                            
+                            if (cleared === registrations.length) {
+                                resultDiv.innerHTML = `<p class="success">Successfully cleared ${cleared} service worker(s).</p>`;
+                            }
+                        });
+                    });
+                });
+            } else {
+                resultDiv.innerHTML = '<p class="info">Service workers not supported in this browser.</p>';
+            }
+        }
+
+        function clearLocalStorage() {
+            const resultDiv = document.getElementById('ls-result');
+            try {
+                localStorage.clear();
+                resultDiv.innerHTML = '<p class="success">Local storage cleared successfully.</p>';
+            } catch (error) {
+                resultDiv.innerHTML = '<p class="error">Failed to clear local storage: ' + error.message + '</p>';
+            }
+        }
+
+        function clearSessionStorage() {
+            const resultDiv = document.getElementById('ss-result');
+            try {
+                sessionStorage.clear();
+                resultDiv.innerHTML = '<p class="success">Session storage cleared successfully.</p>';
+            } catch (error) {
+                resultDiv.innerHTML = '<p class="error">Failed to clear session storage: ' + error.message + '</p>';
+            }
+        }
+
+        function goToApp() {
+            // Go to the main application
+            window.location.href = '/';
+        }
+
+        // Auto-clear service workers on page load
+        window.addEventListener('load', () => {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then((registrations) => {
+                    registrations.forEach((registration) => {
+                        registration.unregister();
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html> 
