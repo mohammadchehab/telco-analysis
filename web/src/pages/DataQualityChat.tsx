@@ -732,11 +732,14 @@ const DataQualityChat: React.FC = () => {
       </Box>
 
       {/* Upload Dialog */}
-      <Dialog 
-        open={uploadDialogOpen} 
+      <Dialog
+        open={uploadDialogOpen}
         onClose={() => setUploadDialogOpen(false)}
         maxWidth="sm"
         fullWidth
+        disableRestoreFocus
+        disableAutoFocus
+        disableEnforceFocus
       >
         <DialogTitle>Upload Documents for RAG</DialogTitle>
         <DialogContent>

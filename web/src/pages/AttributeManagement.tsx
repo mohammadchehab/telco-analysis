@@ -415,6 +415,7 @@ const AttributeManagement: React.FC = () => {
           fullWidth
           disableRestoreFocus
           disableAutoFocus
+          disableEnforceFocus
         >
           <DialogTitle>
             {editingAttribute ? 'Edit Attribute' : 'Create New Attribute'}
@@ -512,6 +513,7 @@ const AttributeManagement: React.FC = () => {
           fullWidth
           disableRestoreFocus
           disableAutoFocus
+          disableEnforceFocus
         >
           <DialogTitle color="error">
             Delete Attribute

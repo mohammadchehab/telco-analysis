@@ -85,17 +85,17 @@ const Workflow: React.FC = () => {
   const { capabilitySummaries } = useSelector((state: RootState) => state.capabilities);
   
   // Filter out completed capabilities - they shouldn't be available for workflow
-  const availableCapabilities = capabilitySummaries.filter(cap => cap.status !== 'completed');
+  const availableCapabilities = (capabilitySummaries || []).filter(cap => cap.status !== 'completed');
   
   // Get capability name from ID
-  const capabilityName = capabilityId ? capabilitySummaries.find(c => c.id === parseInt(capabilityId))?.name : undefined;
+  const capabilityName = capabilityId ? (capabilitySummaries || []).find(c => c.id === parseInt(capabilityId))?.name : undefined;
   
   // Check if we're on the main workflow page (no capability selected)
   const isMainWorkflowPage = !capabilityId;
   
   // Check if the selected capability is completed (shouldn't be allowed)
   const selectedCapabilityIsCompleted = capabilityId ? 
-    capabilitySummaries.find(c => c.id === parseInt(capabilityId))?.status === 'completed' : false;
+    (capabilitySummaries || []).find(c => c.id === parseInt(capabilityId))?.status === 'completed' : false;
 
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [markdownViewerOpen, setMarkdownViewerOpen] = useState(false);
@@ -164,10 +164,10 @@ const Workflow: React.FC = () => {
 
   useEffect(() => {
     // Fetch capabilities if not already loaded
-    if (capabilitySummaries.length === 0) {
+    if ((capabilitySummaries || []).length === 0) {
       dispatch(fetchCapabilities());
     }
-  }, [dispatch, capabilitySummaries.length]);
+  }, [dispatch, capabilitySummaries?.length]);
 
   useEffect(() => {
     if (capabilityName && capabilityId) {
@@ -185,7 +185,7 @@ const Workflow: React.FC = () => {
   // Auto-generate initial prompt when workflow is initialized
   useEffect(() => {
     if (selectedCapability && capabilityId && workflowSteps.length > 0) {
-      const selectedCapabilityObj = capabilitySummaries.find(c => c.name === selectedCapability);
+      const selectedCapabilityObj = (capabilitySummaries || []).find(c => c.name === selectedCapability);
       if (selectedCapabilityObj) {
         dispatch(generatePrompt({
           capabilityId: selectedCapabilityObj.id,
@@ -269,7 +269,7 @@ const Workflow: React.FC = () => {
 
   const handleUploadFile = async (uploadedFile: UploadedFile) => {
     try {
-      const selectedCapabilityObj = capabilitySummaries.find(c => c.name === selectedCapability);
+      const selectedCapabilityObj = (capabilitySummaries || []).find(c => c.name === selectedCapability);
       if (!selectedCapabilityObj) {
         throw new Error('Capability not found');
       }
@@ -317,7 +317,7 @@ const Workflow: React.FC = () => {
 
   const handleProcessFile = async (uploadedFile: UploadedFile) => {
     try {
-      const selectedCapabilityObj = capabilitySummaries.find(c => c.name === selectedCapability);
+      const selectedCapabilityObj = (capabilitySummaries || []).find(c => c.name === selectedCapability);
       if (!selectedCapabilityObj) {
         throw new Error('Capability not found');
       }
@@ -592,7 +592,7 @@ const Workflow: React.FC = () => {
               </Box>
             )}
             
-            {capabilitySummaries.length > 0 && availableCapabilities.length === 0 && (
+            {(capabilitySummaries || []).length > 0 && availableCapabilities.length === 0 && (
               <Alert severity="info" sx={{ mt: 2 }}>
                 <Typography variant="body2">
                   All capabilities are completed. No research workflow is needed.
@@ -696,7 +696,7 @@ const Workflow: React.FC = () => {
           <InputLabel id="change-capability-select-label">Change Capability</InputLabel>
           <Select
             labelId="change-capability-select-label"
-            value={capabilitySummaries.length > 0 ? selectedCapability : ''}
+            value={(capabilitySummaries || []).length > 0 ? selectedCapability : ''}
             label="Change Capability"
             onChange={handleCapabilityChange}
             size="small"
@@ -708,7 +708,7 @@ const Workflow: React.FC = () => {
               }
             }}
           >
-            {capabilitySummaries.map((capability) => (
+            {(capabilitySummaries || []).map((capability) => (
               <MenuItem key={capability.id} value={capability.name}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <Typography>{capability.name}</Typography>
@@ -766,7 +766,7 @@ const Workflow: React.FC = () => {
                         setPromptType(newPromptType);
                         // Auto-generate prompt when tab is selected
                         if (selectedCapability && capabilityId) {
-                          const selectedCapabilityObj = capabilitySummaries.find(c => c.name === selectedCapability);
+                          const selectedCapabilityObj = (capabilitySummaries || []).find(c => c.name === selectedCapability);
                           if (selectedCapabilityObj) {
                             dispatch(generatePrompt({
                               capabilityId: selectedCapabilityObj.id,

@@ -9,9 +9,6 @@ const NotificationSystem: React.FC = () => {
   const dispatch = useDispatch();
   const notifications = useSelector((state: RootState) => state.ui.notifications);
 
-  // Debug: Log notifications to console
-  console.log('Current notifications:', notifications);
-
   const handleClose = (id: string) => {
     dispatch(removeNotification(id));
   };
@@ -29,11 +26,8 @@ const NotificationSystem: React.FC = () => {
   }, [currentNotification, dispatch]);
 
   if (!currentNotification) {
-    console.log('No current notification to display');
     return null;
   }
-
-  console.log('Displaying notification:', currentNotification);
 
   return (
     <Snackbar

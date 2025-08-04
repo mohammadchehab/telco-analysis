@@ -457,7 +457,15 @@ const EvidenceReview: React.FC = () => {
       </Card>
 
       {/* URL Details Dialog */}
-      <Dialog open={isDetailsOpen} onClose={() => setIsDetailsOpen(false)} maxWidth="md" fullWidth>
+      <Dialog 
+        open={isDetailsOpen} 
+        onClose={() => setIsDetailsOpen(false)} 
+        maxWidth="md" 
+        fullWidth
+        disableRestoreFocus
+        disableAutoFocus
+        disableEnforceFocus
+      >
         <DialogTitle>URL Validation Details</DialogTitle>
         <DialogContent>
           {selectedUrl && (
@@ -539,7 +547,13 @@ const EvidenceReview: React.FC = () => {
       </Dialog>
 
       {/* Edit URL Dialog */}
-      <Dialog open={isEditOpen} onClose={() => setIsEditOpen(false)}>
+      <Dialog 
+        open={isEditOpen} 
+        onClose={() => setIsEditOpen(false)}
+        disableRestoreFocus
+        disableAutoFocus
+        disableEnforceFocus
+      >
         <DialogTitle>Update URL</DialogTitle>
         <DialogContent>
           <TextField

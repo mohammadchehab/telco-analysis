@@ -488,12 +488,16 @@ const BusinessProcessCanvas: React.FC = () => {
       </Drawer>
 
       {/* Add Mapping Dialog */}
-      <Dialog open={addMappingDialog} onClose={() => setAddMappingDialog(false)}>
+      <Dialog 
+        open={addMappingDialog} 
+        onClose={() => setAddMappingDialog(false)}
+        disableRestoreFocus
+        disableAutoFocus
+        disableEnforceFocus
+      >
         <DialogTitle>Add Capability Mapping</DialogTitle>
         <DialogContent>
-          <Typography variant="body2" color="text.secondary">
-            This feature will allow you to link TMF processes to your existing capabilities.
-          </Typography>
+          <Typography>Add capability mapping functionality here...</Typography>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setAddMappingDialog(false)}>Close</Button>
@@ -501,7 +505,13 @@ const BusinessProcessCanvas: React.FC = () => {
       </Dialog>
 
       {/* Add Vendor Dialog */}
-      <Dialog open={addVendorDialog} onClose={() => setAddVendorDialog(false)}>
+      <Dialog 
+        open={addVendorDialog} 
+        onClose={() => setAddVendorDialog(false)}
+        disableRestoreFocus
+        disableAutoFocus
+        disableEnforceFocus
+      >
         <DialogTitle>Add Vendor Score</DialogTitle>
         <DialogContent>
           <Typography variant="body2" color="text.secondary">

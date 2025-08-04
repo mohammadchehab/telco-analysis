@@ -85,22 +85,30 @@ export const getApiConfig = () => {
   
   // If environment variable is set, use it (this takes priority)
   if (baseUrl) {
-    console.log('Using VITE_API_BASE_URL from environment:', baseUrl);
+    if (import.meta.env.DEV) {
+      console.log('Using VITE_API_BASE_URL from environment:', baseUrl);
+    }
   }
   // CRITICAL: If we're on telco-platform.openbiocure.ai, ALWAYS use HTTPS
   else if (window.location.hostname === 'telco-platform.openbiocure.ai') {
     baseUrl = 'https://telco-platform.openbiocure.ai';
-    console.log('Forcing production URL for telco-platform.openbiocure.ai:', baseUrl);
+    if (import.meta.env.DEV) {
+      console.log('Forcing production URL for telco-platform.openbiocure.ai:', baseUrl);
+    }
   }
   // Force HTTPS in production regardless of environment variable
   else if (isProduction) {
     baseUrl = `https://${window.location.hostname}`;
-    console.log('Using production hostname:', baseUrl);
+    if (import.meta.env.DEV) {
+      console.log('Using production hostname:', baseUrl);
+    }
   } else {
     // In development, use the current hostname with appropriate protocol
     const protocol = window.location.protocol;
     baseUrl = `${protocol}//${window.location.hostname}:8000`;
-    console.log('Using development hostname:', baseUrl);
+    if (import.meta.env.DEV) {
+      console.log('Using development hostname:', baseUrl);
+    }
   }
   
   // Override any HTTP URLs with HTTPS in production

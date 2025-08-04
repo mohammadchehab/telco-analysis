@@ -178,7 +178,7 @@ const VendorAnalysis: React.FC = () => {
   };
 
   const getFilteredAndSortedData = () => {
-    if (!analysisData) return [];
+    if (!analysisData || !analysisData.analysis_items) return [];
 
     let filtered = analysisData.analysis_items;
 

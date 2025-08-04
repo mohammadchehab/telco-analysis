@@ -451,6 +451,9 @@ const ArchitectureCanvas: React.FC = () => {
         onClose={() => setDetailDialogOpen(false)}
         maxWidth="md"
         fullWidth
+        disableRestoreFocus
+        disableAutoFocus
+        disableEnforceFocus
       >
         {selectedCapability && (
           <>
