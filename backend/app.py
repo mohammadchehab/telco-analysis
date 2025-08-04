@@ -83,17 +83,18 @@ api_app.include_router(url_checker.router)
 api_app.include_router(business_process_canvas.router)
 print("✅ API routers included successfully")
 
+# Add health endpoint to API sub-application
+@api_app.get("/health")
+async def api_health_check():
+    return {"status": "healthy"}
+
 # Mount API sub-application at /api
 app.mount("/api", api_app)
 print("✅ API mounted at /api")
 
 @app.get("/")
 def read_root():
-    return {"message": "Telco Capability Analysis API"}
-
-@app.get("/health")
-async def health_check():
-    return {"status": "healthy"}
+    return {"message": "Telco Capability Analysis Platform"}
 
 if __name__ == "__main__":
     import uvicorn

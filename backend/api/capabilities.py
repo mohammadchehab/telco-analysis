@@ -15,9 +15,10 @@ from schemas.schemas import (
     RadarChartData, VendorComparisonData, ScoreDistributionData, ReportRequest
 )
 
-router = APIRouter(prefix="/api/capabilities", tags=["capabilities"])
+router = APIRouter(prefix="/capabilities", tags=["capabilities"])
 
 # Basic CRUD Operations
+@router.get("", response_model=APIResponse)
 @router.get("/", response_model=APIResponse)
 async def get_capabilities(db: Session = Depends(get_db)):
     """Get all capabilities with summary data"""

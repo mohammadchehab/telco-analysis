@@ -80,7 +80,7 @@ const Capabilities: React.FC = () => {
   }, [dispatch]);
 
   // Filter capabilities based on search and status
-  const filteredCapabilities = capabilitySummaries.filter(capability => {
+  const filteredCapabilities = (capabilitySummaries || []).filter(capability => {
     const matchesSearch = capability.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = !statusFilter || capability.status === statusFilter;
     return matchesSearch && matchesStatus;

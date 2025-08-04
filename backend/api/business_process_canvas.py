@@ -10,7 +10,7 @@ from models.models import TMFProcess, ProcessCapabilityMapping, ProcessVendorSco
 from schemas.schemas import APIResponse
 from services.process_mapping_service import ProcessMappingService
 
-router = APIRouter(prefix="/api/business-process-canvas", tags=["business-process-canvas"])
+router = APIRouter(prefix="/business-process-canvas", tags=["business-process-canvas"])
 
 @router.get("/processes", response_model=APIResponse)
 async def get_tmf_processes(db: Session = Depends(get_db)):

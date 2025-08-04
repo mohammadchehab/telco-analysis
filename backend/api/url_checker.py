@@ -12,7 +12,7 @@ from models.models import URLValidation, VendorScore
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/url-checker", tags=["url-checker"])
+router = APIRouter(prefix="/url-checker", tags=["url-checker"])
 
 # Initialize URL checker service with OpenRouter API key
 url_checker_service = URLCheckerService(

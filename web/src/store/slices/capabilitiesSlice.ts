@@ -49,7 +49,7 @@ const initialState: CapabilitiesState = {
 export const fetchCapabilities = createAsyncThunk(
   'capabilities/fetchCapabilities',
   async () => {
-    const response = await fetch(`${getApiConfig().BASE_URL}/api/capabilities`);
+    const response = await fetch(`${getApiConfig().BASE_URL}/api/capabilities/`);
     if (!response.ok) {
       throw new Error('Failed to fetch capabilities');
     }

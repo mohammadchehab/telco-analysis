@@ -9,7 +9,7 @@ from services.import_service import ImportService
 from schemas.schemas import APIResponse, ImportResponse, ImportHistoryItem
 from utils.version_manager import VersionManager
 
-router = APIRouter(prefix="/api/imports", tags=["imports"])
+router = APIRouter(prefix="/imports", tags=["imports"])
 
 @router.post("/capabilities/{capability_id}/domains", response_model=APIResponse)
 async def import_domains(

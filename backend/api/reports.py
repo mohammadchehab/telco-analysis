@@ -28,7 +28,7 @@ import base64
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/reports", tags=["reports"])
+router = APIRouter(prefix="/reports", tags=["reports"])
 
 @router.post("/generate", response_model=APIResponse)
 async def generate_report(request: ReportRequest, db: Session = Depends(get_db)):

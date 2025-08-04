@@ -14,7 +14,7 @@ from core.auth import get_current_user
 from models.models import Upload
 from schemas.schemas import APIResponse
 
-router = APIRouter(prefix="/api/uploads", tags=["uploads"])
+router = APIRouter(prefix="/uploads", tags=["uploads"])
 
 def extract_text_from_pdf(file_content: bytes) -> str:
     """Extract text content from PDF file"""

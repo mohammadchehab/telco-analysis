@@ -13,7 +13,7 @@ from core.auth import get_current_user
 from models.models import Capability, Domain, Attribute, VendorScore
 from schemas.schemas import APIResponse
 
-router = APIRouter(prefix="/api/data-quality", tags=["data-quality"])
+router = APIRouter(prefix="/data-quality", tags=["data-quality"])
 
 def get_database_schema(db: Session) -> dict:
     """Dynamically read the actual database schema"""

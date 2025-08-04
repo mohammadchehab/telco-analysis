@@ -9,7 +9,7 @@ from services.capability_service import CapabilityService
 from schemas.schemas import APIResponse
 from models.models import Capability, VendorScore, Attribute
 
-router = APIRouter(prefix="/api/architecture", tags=["architecture"])
+router = APIRouter(prefix="/architecture", tags=["architecture"])
 
 @router.get("/canvas", response_model=APIResponse)
 async def get_architecture_canvas(db: Session = Depends(get_db)):

@@ -8,7 +8,7 @@ from schemas.schemas import (
     DomainCreate, DomainUpdate, DomainResponse, APIResponse
 )
 
-router = APIRouter(prefix="/api/capabilities", tags=["domains"])
+router = APIRouter(prefix="/domains", tags=["domains"])
 
 # Domain CRUD Operations
 @router.get("/{capability_id}/domains", response_model=APIResponse)

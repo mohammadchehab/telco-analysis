@@ -11,7 +11,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/activity-logs", tags=["activity-logs"])
+router = APIRouter(prefix="/activity-logs", tags=["activity-logs"])
 
 @router.get("/", response_model=APIResponse)
 async def get_activity_logs(

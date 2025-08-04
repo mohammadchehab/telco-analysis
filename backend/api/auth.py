@@ -16,7 +16,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/auth", tags=["authentication"])
+router = APIRouter(prefix="/auth", tags=["authentication"])
 
 @router.post("/login", response_model=APIResponse)
 async def login(user_credentials: UserLogin, request: Request, db: Session = Depends(get_db)):
