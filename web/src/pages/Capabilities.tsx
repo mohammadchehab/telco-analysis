@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   Box,
   Typography,
@@ -16,6 +16,14 @@ import {
   CircularProgress,
   Paper,
   Chip,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  ToggleButton,
+  ToggleButtonGroup,
 } from '@mui/material';
 import {
   PlayArrow as StartIcon,
@@ -28,7 +36,8 @@ import {
   Edit as EditIcon,
   Delete as DeleteIcon,
   Save as SaveIcon,
-
+  ViewModule as GridViewIcon,
+  ViewList as ListViewIcon,
 } from '@mui/icons-material';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
@@ -57,6 +66,8 @@ const Capabilities: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<WorkflowState | ''>('');
   const [showFilters, setShowFilters] = useState(false);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const selectAllCheckboxRef = useRef<HTMLInputElement>(null);
   
   // CRUD State
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -85,6 +96,14 @@ const Capabilities: React.FC = () => {
     const matchesStatus = !statusFilter || capability.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
+
+  // Set indeterminate state for select all checkbox
+  useEffect(() => {
+    if (selectAllCheckboxRef.current) {
+      selectAllCheckboxRef.current.indeterminate = 
+        selectedCapabilities.length > 0 && selectedCapabilities.length < filteredCapabilities.length;
+    }
+  }, [selectedCapabilities.length, filteredCapabilities.length]);
 
   const handleStartResearch = async (capabilityId: number, capabilityName: string) => {
     try {
@@ -455,6 +474,25 @@ const Capabilities: React.FC = () => {
 
           <Box sx={{ flexGrow: 1 }} />
 
+          {/* View Toggle */}
+          <ToggleButtonGroup
+            value={viewMode}
+            exclusive
+            onChange={(_, newViewMode) => {
+              if (newViewMode !== null) {
+                setViewMode(newViewMode);
+              }
+            }}
+            size="small"
+          >
+            <ToggleButton value="grid" aria-label="grid view">
+              <GridViewIcon />
+            </ToggleButton>
+            <ToggleButton value="list" aria-label="list view">
+              <ListViewIcon />
+            </ToggleButton>
+          </ToggleButtonGroup>
+
           {/* The following buttons were moved to the header */}
           {/*
           <Button
@@ -497,158 +535,359 @@ const Capabilities: React.FC = () => {
         </Alert>
       )}
 
-      {/* Capabilities Grid */}
-      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-        {filteredCapabilities.map((capability) => (
-          <Card 
-            key={capability.id}
-            sx={{ 
-              width: 300,
-              cursor: 'pointer',
-              '&:hover': { boxShadow: 4 },
-              border: selectedCapabilities.includes(capability.name) ? 2 : 1,
-              borderColor: selectedCapabilities.includes(capability.name) ? 'primary.main' : 'divider'
-            }}
-            onClick={() => dispatch(toggleCapabilitySelection(capability.name))}
-          >
-            <CardContent>
-              <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
-                <Typography variant="h6" component="div" sx={{ fontWeight: 'bold' }}>
-                  {capability.name}
-                </Typography>
-                <Typography variant="h5">
-                  {getStatusIcon(capability.status)}
-                </Typography>
-              </Box>
-
-              <Chip
-                label={getStatusText(capability.status)}
-                color={getStatusColor(capability.status)}
-                size="small"
-                sx={{ mb: 2 }}
-              />
-
-              <Box sx={{ mb: 2 }}>
-                <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
-                  <Typography variant="body2" color="textSecondary">
-                    Domains: {capability.domains_count}
+      {/* Capabilities Display */}
+      {viewMode === 'grid' ? (
+        // Grid View (Cards)
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+          {filteredCapabilities.map((capability) => (
+            <Card 
+              key={capability.id}
+              sx={{ 
+                width: 300,
+                cursor: 'pointer',
+                '&:hover': { boxShadow: 4 },
+                border: selectedCapabilities.includes(capability.name) ? 2 : 1,
+                borderColor: selectedCapabilities.includes(capability.name) ? 'primary.main' : 'divider'
+              }}
+              onClick={() => dispatch(toggleCapabilitySelection(capability.name))}
+            >
+              <CardContent>
+                <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
+                  <Typography variant="h6" component="div" sx={{ fontWeight: 'bold' }}>
+                    {capability.name}
                   </Typography>
-                  <Button
-                    size="small"
-                    variant="text"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate(`/capabilities/${capability.id}/domains`);
-                    }}
-                    sx={{ minWidth: 'auto', p: 0.5 }}
-                  >
-                    Manage
-                  </Button>
+                  <Typography variant="h5">
+                    {getStatusIcon(capability.status)}
+                  </Typography>
                 </Box>
-                <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
-                  <Typography variant="body2" color="textSecondary">
-                    Attributes: {capability.attributes_count}
-                  </Typography>
-                  <Button
-                    size="small"
-                    variant="text"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate(`/capabilities/${capability.id}/attributes`);
-                    }}
-                    sx={{ minWidth: 'auto', p: 0.5 }}
-                  >
-                    Manage
-                  </Button>
-                </Box>
-                <Typography variant="body2" color="textSecondary">
-                  Updated: {new Date(capability.last_updated).toLocaleDateString()}
-                </Typography>
-                {capability.version_string && (
-                  <Typography variant="body2" color="textSecondary">
-                    Version: {capability.version_string}
-                  </Typography>
-                )}
-              </Box>
 
-              <Box display="flex" gap={1} justifyContent="flex-end">
-                <Tooltip title="Edit Capability">
-                  <IconButton
-                    size="small"
-                    color="primary"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleEditClick(capability);
-                    }}
-                  >
-                    <EditIcon />
-                  </IconButton>
-                </Tooltip>
-                
-                <Tooltip title="Delete Capability">
-                  <IconButton
-                    size="small"
-                    color="error"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setDeletingCapability({
-                        id: capability.id,
-                        name: capability.name,
-                        description: '',
-                        status: capability.status,
-                        created_at: capability.last_updated
-                      });
-                    }}
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                </Tooltip>
-                
-                <Tooltip title={capability.status === 'completed' ? 'Research already completed' : 'Start Research Workflow'}>
-                  <span style={{ display: 'inline-block' }}>
+                <Chip
+                  label={getStatusText(capability.status)}
+                  color={getStatusColor(capability.status)}
+                  size="small"
+                  sx={{ mb: 2 }}
+                />
+
+                <Box sx={{ mb: 2 }}>
+                  <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
+                    <Typography variant="body2" color="textSecondary">
+                      Domains: {capability.domains_count}
+                    </Typography>
+                    <Button
+                      size="small"
+                      variant="text"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/capabilities/${capability.id}/domains`);
+                      }}
+                      sx={{ minWidth: 'auto', p: 0.5 }}
+                    >
+                      Manage
+                    </Button>
+                  </Box>
+                  <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
+                    <Typography variant="body2" color="textSecondary">
+                      Attributes: {capability.attributes_count}
+                    </Typography>
+                    <Button
+                      size="small"
+                      variant="text"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/capabilities/${capability.id}/attributes`);
+                      }}
+                      sx={{ minWidth: 'auto', p: 0.5 }}
+                    >
+                      Manage
+                    </Button>
+                  </Box>
+                  <Typography variant="body2" color="textSecondary">
+                    Updated: {new Date(capability.last_updated).toLocaleDateString()}
+                  </Typography>
+                  {capability.version_string && (
+                    <Typography variant="body2" color="textSecondary">
+                      Version: {capability.version_string}
+                    </Typography>
+                  )}
+                </Box>
+
+                <Box display="flex" gap={1} justifyContent="flex-end">
+                  <Tooltip title="Edit Capability">
                     <IconButton
                       size="small"
                       color="primary"
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleStartResearch(capability.id, capability.name);
+                        handleEditClick(capability);
                       }}
-                      disabled={capability.status === 'completed'}
                     >
-                      <StartIcon />
+                      <EditIcon />
                     </IconButton>
-                  </span>
-                </Tooltip>
-                
-                <Tooltip title="View Reports">
-                  <IconButton
-                    size="small"
-                    color="secondary"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleViewReports(capability.name);
+                  </Tooltip>
+                  
+                  <Tooltip title="Delete Capability">
+                    <IconButton
+                      size="small"
+                      color="error"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDeletingCapability({
+                          id: capability.id,
+                          name: capability.name,
+                          description: '',
+                          status: capability.status,
+                          created_at: capability.last_updated
+                        });
+                      }}
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  </Tooltip>
+                  
+                  <Tooltip title={capability.status === 'completed' ? 'Research already completed' : 'Start Research Workflow'}>
+                    <span style={{ display: 'inline-block' }}>
+                      <IconButton
+                        size="small"
+                        color="primary"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleStartResearch(capability.id, capability.name);
+                        }}
+                        disabled={capability.status === 'completed'}
+                      >
+                        <StartIcon />
+                      </IconButton>
+                    </span>
+                  </Tooltip>
+                  
+                  <Tooltip title="View Reports">
+                    <IconButton
+                      size="small"
+                      color="secondary"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleViewReports(capability.name);
+                      }}
+                    >
+                      <ReportsIcon />
+                    </IconButton>
+                  </Tooltip>
+                  
+                  <Tooltip title="View Details">
+                    <IconButton
+                      size="small"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/capabilities/${capability.id}`);
+                      }}
+                    >
+                      <ViewIcon />
+                    </IconButton>
+                  </Tooltip>
+                </Box>
+              </CardContent>
+            </Card>
+          ))}
+        </Box>
+      ) : (
+        // List View (Table)
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>
+                  <input
+                    ref={selectAllCheckboxRef}
+                    type="checkbox"
+                    checked={selectedCapabilities.length === filteredCapabilities.length && filteredCapabilities.length > 0}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        filteredCapabilities.forEach(cap => {
+                          if (!selectedCapabilities.includes(cap.name)) {
+                            dispatch(toggleCapabilitySelection(cap.name));
+                          }
+                        });
+                      } else {
+                        selectedCapabilities.forEach(capName => {
+                          dispatch(toggleCapabilitySelection(capName));
+                        });
+                      }
                     }}
-                  >
-                    <ReportsIcon />
-                  </IconButton>
-                </Tooltip>
-                
-                <Tooltip title="View Details">
-                  <IconButton
-                    size="small"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate(`/capabilities/${capability.id}`);
-                    }}
-                  >
-                    <ViewIcon />
-                  </IconButton>
-                </Tooltip>
-              </Box>
-            </CardContent>
-          </Card>
-        ))}
-      </Box>
+                  />
+                </TableCell>
+                <TableCell><strong>Name</strong></TableCell>
+                <TableCell><strong>Status</strong></TableCell>
+                <TableCell><strong>Domains</strong></TableCell>
+                <TableCell><strong>Attributes</strong></TableCell>
+                <TableCell><strong>Last Updated</strong></TableCell>
+                <TableCell><strong>Version</strong></TableCell>
+                <TableCell><strong>Actions</strong></TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {filteredCapabilities.map((capability) => (
+                <TableRow 
+                  key={capability.id}
+                  sx={{ 
+                    cursor: 'pointer',
+                    backgroundColor: selectedCapabilities.includes(capability.name) ? 'action.selected' : 'inherit',
+                    '&:hover': { backgroundColor: 'action.hover' }
+                  }}
+                  onClick={() => dispatch(toggleCapabilitySelection(capability.name))}
+                >
+                  <TableCell>
+                    <input
+                      type="checkbox"
+                      checked={selectedCapabilities.includes(capability.name)}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        dispatch(toggleCapabilitySelection(capability.name));
+                      }}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <Typography variant="body1" sx={{ fontWeight: 'medium' }}>
+                        {capability.name}
+                      </Typography>
+                    </Box>
+                  </TableCell>
+                  <TableCell>
+                    <Box display="flex" alignItems="center" gap={1}>
+                      {getStatusIcon(capability.status)}
+                      <Chip
+                        label={getStatusText(capability.status)}
+                        color={getStatusColor(capability.status)}
+                        size="small"
+                      />
+                    </Box>
+                  </TableCell>
+                  <TableCell>
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <Typography variant="body2">
+                        {capability.domains_count}
+                      </Typography>
+                      <Button
+                        size="small"
+                        variant="text"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/capabilities/${capability.id}/domains`);
+                        }}
+                      >
+                        Manage
+                      </Button>
+                    </Box>
+                  </TableCell>
+                  <TableCell>
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <Typography variant="body2">
+                        {capability.attributes_count}
+                      </Typography>
+                      <Button
+                        size="small"
+                        variant="text"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/capabilities/${capability.id}/attributes`);
+                        }}
+                      >
+                        Manage
+                      </Button>
+                    </Box>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2">
+                      {new Date(capability.last_updated).toLocaleDateString()}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2">
+                      {capability.version_string || 'N/A'}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Box display="flex" gap={0.5}>
+                      <Tooltip title="Edit Capability">
+                        <IconButton
+                          size="small"
+                          color="primary"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditClick(capability);
+                          }}
+                        >
+                          <EditIcon />
+                        </IconButton>
+                      </Tooltip>
+                      
+                      <Tooltip title="Delete Capability">
+                        <IconButton
+                          size="small"
+                          color="error"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDeletingCapability({
+                              id: capability.id,
+                              name: capability.name,
+                              description: '',
+                              status: capability.status,
+                              created_at: capability.last_updated
+                            });
+                          }}
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </Tooltip>
+                      
+                      <Tooltip title={capability.status === 'completed' ? 'Research already completed' : 'Start Research Workflow'}>
+                        <span style={{ display: 'inline-block' }}>
+                          <IconButton
+                            size="small"
+                            color="primary"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleStartResearch(capability.id, capability.name);
+                            }}
+                            disabled={capability.status === 'completed'}
+                          >
+                            <StartIcon />
+                          </IconButton>
+                        </span>
+                      </Tooltip>
+                      
+                      <Tooltip title="View Reports">
+                        <IconButton
+                          size="small"
+                          color="secondary"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleViewReports(capability.name);
+                          }}
+                        >
+                          <ReportsIcon />
+                        </IconButton>
+                      </Tooltip>
+                      
+                      <Tooltip title="View Details">
+                        <IconButton
+                          size="small"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/capabilities/${capability.id}`);
+                          }}
+                        >
+                          <ViewIcon />
+                        </IconButton>
+                      </Tooltip>
+                    </Box>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
 
       {filteredCapabilities.length === 0 && (
         <Box textAlign="center" py={4}>
