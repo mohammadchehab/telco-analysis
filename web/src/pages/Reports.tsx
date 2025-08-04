@@ -215,10 +215,10 @@ const Reports: React.FC = () => {
       
       if (data.success) {
         setFilterOptions(data.data);
-        // Initialize filters with all options
-        setSelectedDomains(data.data.domains);
+        // Initialize filters with empty arrays to show all data by default
+        setSelectedDomains([]);
         setSelectedVendors(data.data.vendors);
-        setSelectedAttributes(data.data.attributes);
+        setSelectedAttributes([]);
       } else {
         setError('Failed to fetch filter options');
       }
