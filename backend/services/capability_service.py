@@ -112,6 +112,11 @@ class CapabilityService:
     @staticmethod
     def create_capability(db: Session, capability: CapabilityCreate) -> Capability:
         """Create new capability"""
+        # Check if capability with this name already exists
+        existing_capability = db.query(Capability).filter(Capability.name == capability.name).first()
+        if existing_capability:
+            raise ValueError(f"Capability with name '{capability.name}' already exists")
+        
         db_capability = Capability(
             name=capability.name,
             description=capability.description,

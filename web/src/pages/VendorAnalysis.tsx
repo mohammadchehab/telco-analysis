@@ -126,7 +126,7 @@ const VendorAnalysis: React.FC = () => {
       setLoading(true);
       const response: any = await apiClient.get('/api/capabilities/');
       if (response.success && response.data) {
-        setCapabilities(response.data.capabilities.filter((c: any) => c.status === 'completed'));
+        setCapabilities(response.data.capabilities.filter((c: any) => c.status === 'completed' || c.status === 'ready'));
       }
     } catch (err) {
       setError('Failed to fetch capabilities');
