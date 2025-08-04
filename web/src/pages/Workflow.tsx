@@ -114,16 +114,17 @@ const Workflow: React.FC = () => {
     console.log('Has market_analysis:', !!data.market_analysis);
     console.log('Has gap_analysis:', !!data.gap_analysis);
     console.log('Has enhanced_framework:', !!data.enhanced_framework);
+    console.log('Has proposed_framework:', !!data.proposed_framework);
     
     if (data.attributes && data.market_analysis) {
       console.log('Detected as comprehensive_research');
       return 'comprehensive_research';
-    } else if (data.gap_analysis || data.enhanced_framework) {
+    } else if (data.gap_analysis || data.enhanced_framework || data.proposed_framework) {
       console.log('Detected as domain_analysis');
       return 'domain_analysis';
     } else {
       // Default fallback - try to guess based on structure
-      if (data.capability && (data.gap_analysis || data.enhanced_framework)) {
+      if (data.capability && (data.gap_analysis || data.enhanced_framework || data.proposed_framework)) {
         console.log('Fallback detected as domain_analysis');
         return 'domain_analysis';
       } else if (data.attributes && data.vendors) {

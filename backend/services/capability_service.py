@@ -341,7 +341,7 @@ class CapabilityService:
         processed_domains = 0
         skipped_domains = 0
         
-        # Handle both enhanced_framework and gap_analysis formats
+        # Handle enhanced_framework, gap_analysis, and proposed_framework formats
         domains_data = []
         
         # Check for enhanced_framework format (old format)
@@ -370,6 +370,9 @@ class CapabilityService:
                             })
                 
                 domains_data.append(domain_data)
+        # Check for proposed_framework format (like sample.json)
+        elif "proposed_framework" in data and "domains" in data["proposed_framework"]:
+            domains_data = data["proposed_framework"]["domains"]
         
         # Process domains
         for domain_data in domains_data:

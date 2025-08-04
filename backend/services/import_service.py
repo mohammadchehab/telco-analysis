@@ -229,8 +229,10 @@ class ImportService:
             if research_data.get('capability_status'):
                 capability.status = research_data['capability_status']
         
-        # Extract domains from gap analysis
+        # Extract domains from gap analysis or proposed framework
         domains_data = []
+        
+        # Check for gap analysis format first
         if 'gap_analysis' in research_data and 'missing_domains' in research_data['gap_analysis']:
             for domain_info in research_data['gap_analysis']['missing_domains']:
                 domain_data = {
@@ -252,6 +254,28 @@ class ImportService:
                                 'importance': attr_info.get('importance', '50'),
                                 'reasoning': attr_info.get('reasoning', '')
                             })
+                
+                domains_data.append(domain_data)
+        
+        # Check for proposed framework format (like sample.json)
+        elif 'proposed_framework' in research_data and 'domains' in research_data['proposed_framework']:
+            for domain_info in research_data['proposed_framework']['domains']:
+                domain_data = {
+                    'domain_name': domain_info['domain_name'],
+                    'description': domain_info.get('description', ''),
+                    'importance': domain_info.get('importance', 'medium'),
+                    'attributes': []
+                }
+                
+                # Extract attributes for this domain
+                if 'attributes' in domain_info:
+                    for attr_info in domain_info['attributes']:
+                        domain_data['attributes'].append({
+                            'attribute_name': attr_info['attribute_name'],
+                            'definition': attr_info.get('definition', ''),
+                            'tm_forum_mapping': attr_info.get('tm_forum_mapping', ''),
+                            'importance': attr_info.get('importance', '50')
+                        })
                 
                 domains_data.append(domain_data)
         

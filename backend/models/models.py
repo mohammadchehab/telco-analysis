@@ -277,3 +277,5 @@ class BusinessProcessCanvas(Base):
     
     # Relationships
     user = relationship("User") 
+
+ 

@@ -34,6 +34,8 @@ async def import_domains(
         try:
             content = await file.read()
             data = json.loads(content.decode('utf-8'))
+            print(f"DEBUG: File content length: {len(content)}")
+            print(f"DEBUG: Parsed data keys: {list(data.keys())}")
         except json.JSONDecodeError:
             return APIResponse(success=False, error="Invalid JSON format")
         except Exception as e:
@@ -41,13 +43,15 @@ async def import_domains(
         
         # Detect file format
         file_format = ImportService.detect_file_format(data)
+        print(f"DEBUG: Detected file format: {file_format}")
+        print(f"DEBUG: File data keys: {list(data.keys())}")
         
         if file_format == "unknown":
             return APIResponse(success=False, error="Unsupported file format. Expected either simple domains format or research file format.")
         
         # Process import based on format
-        if file_format == "research_file":
-            # Process research file (no validation needed for research format)
+        if file_format in ["research_file", "proposed_framework"]:
+            # Process research file or proposed framework (no validation needed for research format)
             stats = ImportService.process_research_import(
                 db, capability_id, data, file.filename
             )
@@ -117,6 +121,9 @@ async def import_domains(
             )
         
     except Exception as e:
+        print(f"DEBUG: Exception caught: {str(e)}")
+        import traceback
+        print(f"DEBUG: Traceback: {traceback.format_exc()}")
         return APIResponse(success=False, error=f"Import failed: {str(e)}")
 
 @router.get("/capabilities/{capability_id}/history", response_model=APIResponse)
