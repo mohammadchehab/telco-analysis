@@ -50,10 +50,6 @@ restore_build() {
 # Cleanup function
 cleanup() {
     echo "🛑 Shutting down services..."
-    if [ ! -z "$FRONTEND_PID" ]; then
-        echo "🛑 Stopping frontend (PID: $FRONTEND_PID)..."
-        kill $FRONTEND_PID 2>/dev/null || true
-    fi
     if [ ! -z "$BACKEND_PID" ]; then
         echo "🛑 Stopping backend (PID: $BACKEND_PID)..."
         kill $BACKEND_PID 2>/dev/null || true
@@ -61,7 +57,6 @@ cleanup() {
     echo "🧹 Final cleanup..."
     pkill -f "npm.*dev" 2>/dev/null || true
     pkill -f "python.*app.py" 2>/dev/null || true
-    pkill -f "npm.*start:prod" 2>/dev/null || true
     echo "✅ All services stopped"
     exit 0
 }
@@ -134,28 +129,19 @@ if ! kill -0 $BACKEND_PID 2>/dev/null; then
     cleanup
 fi
 
+# Build frontend for development only
+if [ "$MODE" = "dev" ]; then
+    echo "🔨 Building frontend for development..."
+    cd web
+    npm run build
+    cd ..
+    echo "✅ Frontend built successfully"
+fi
+
 # Start frontend based on mode
 if [ "$MODE" = "prod" ]; then
-    echo "🌐 Starting frontend in production mode (nohup)..."
-    
-    # Preserve correct build files before any operations
-    preserve_build
-    
-    cd web
-    
-    # Check if we already have the correct build files
-    if [ -f "dist/assets/index-DsIUDoLN.js" ]; then
-        echo "✅ Using existing production build (index-DsIUDoLN.js)"
-    else
-        echo "🔨 Building frontend for production..."
-        VITE_API_BASE_URL=https://telco-platform.openbiocure.ai npm run build
-        # Restore correct build files if they were overwritten
-        restore_build
-    fi
-    
-    nohup npm run start:prod > frontend.log 2>&1 &
-    FRONTEND_PID=$!
-    cd ..
+    echo "🌐 Production mode: Frontend will be served by FastAPI backend"
+    echo "✅ No separate frontend server needed - static files mounted in FastAPI"
 else
     echo "🌐 Starting frontend development server..."
     cd web
@@ -164,24 +150,16 @@ else
     cd ..
 fi
 
-# Wait a moment for frontend to start
+# Wait a moment for backend to fully start
 sleep 3
-
-# Check if frontend started successfully
-if ! kill -0 $FRONTEND_PID 2>/dev/null; then
-    echo "❌ Frontend failed to start"
-    cleanup
-fi
 
 echo "✅ All services started successfully!"
 if [ "$MODE" = "prod" ]; then
-    echo "🌐 Frontend: http://localhost:3000 (Production - Running with nohup)"
-    echo "🔧 Backend: http://localhost:8000 (Production - Running with nohup)"
+    echo "🌐 Frontend & Backend: http://localhost:8000 (Production - Single FastAPI server)"
     echo "📚 API Docs: http://localhost:8000/docs"
     echo ""
     echo "📋 Log files:"
     echo "  📄 Backend logs: backend/backend.log"
-    echo "  📄 Frontend logs: web/frontend.log"
     echo ""
     echo "💡 Services will continue running after you disconnect from SSH"
 else

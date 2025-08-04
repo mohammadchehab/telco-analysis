@@ -18,7 +18,7 @@ export const API_CONFIG = {
     AUTH_UPDATE_USER_STATUS: (id: number) => `/api/auth/users/${id}/status`,
     
     // Capabilities
-    CAPABILITIES: '/api/capabilities',
+    CAPABILITIES: '/api/capabilities/',
     CAPABILITY_BY_ID: (id: number) => `/api/capabilities/${id}`,
     CAPABILITY_WORKFLOW: (id: number) => `/api/capabilities/${id}/workflow`,
     CAPABILITY_WORKFLOW_INITIALIZE: (id: number) => `/api/capabilities/${id}/workflow/initialize`,
