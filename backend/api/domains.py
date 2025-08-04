@@ -30,7 +30,7 @@ async def get_domains_by_name(capability_name: str, db: Session = Depends(get_db
         domains = DomainService.get_domains_by_capability_name(db, capability_name)
         return APIResponse(
             success=True,
-            data=domains
+            data={"domains": domains}
         )
     except Exception as e:
         return APIResponse(success=False, error=str(e))

@@ -124,15 +124,29 @@ class DomainService:
         # Check if domain already exists for this capability
         existing_domain = db.query(Domain).filter(
             Domain.capability_id == capability.id,
-            Domain.domain_name == domain.domain_name
+            Domain.domain_name == domain.domain_name,
+            Domain.is_active == True
         ).first()
         
         if existing_domain:
             raise ValueError("Domain with this name already exists for this capability")
         
+        # Generate content hash
+        domain_data = {
+            'domain_name': domain.domain_name,
+            'description': domain.description or '',
+            'importance': domain.importance or 'medium'
+        }
+        content_hash = VersionManager.generate_domain_hash(domain_data)
+        
         db_domain = Domain(
             capability_id=capability.id,
-            domain_name=domain.domain_name
+            domain_name=domain.domain_name,
+            description=domain.description,
+            importance=domain.importance,
+            content_hash=content_hash,
+            version='1.0',
+            is_active=True
         )
         db.add(db_domain)
         db.commit()
