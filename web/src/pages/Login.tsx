@@ -43,10 +43,18 @@ const Login: React.FC = () => {
       const response = await authAPI.login(loginForm);
 
       if (response.success && response.data) {
+        console.log('Login successful:', response.data);
+        
         // Store token and user data
         localStorage.setItem('authToken', response.data.access_token);
         localStorage.setItem('user', JSON.stringify(response.data.user));
         localStorage.setItem('isAuthenticated', 'true');
+        
+        console.log('LocalStorage set:', {
+          authToken: response.data.access_token,
+          user: response.data.user,
+          isAuthenticated: 'true'
+        });
         
         // Dispatch custom auth event to notify App component
         window.dispatchEvent(new CustomEvent('authChange'));
@@ -56,7 +64,10 @@ const Login: React.FC = () => {
           message: `Welcome back, ${response.data.user.username}!`,
         }));
         
-        navigate('/');
+        // Force a small delay to ensure state updates
+        setTimeout(() => {
+          navigate('/', { replace: true });
+        }, 100);
       } else {
         setError(response.error || 'Login failed');
       }

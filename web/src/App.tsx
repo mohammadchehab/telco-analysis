@@ -143,6 +143,7 @@ function AppContent() {
   const { darkMode } = useSelector((state: RootState) => state.ui);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [authKey, setAuthKey] = useState(0); // Force re-render when auth changes
 
   useEffect(() => {
     // Check if user is authenticated
@@ -150,6 +151,7 @@ function AppContent() {
       const authStatus = localStorage.getItem('isAuthenticated');
       const authToken = localStorage.getItem('authToken');
       const authenticated = authStatus === 'true' && !!authToken;
+      console.log('Auth check:', { authStatus, authToken, authenticated });
       setIsAuthenticated(authenticated);
       
       // If authenticated, fetch user preferences
@@ -158,12 +160,14 @@ function AppContent() {
       }
     };
 
+    // Initial check
     checkAuth();
     setLoading(false);
 
     // Listen for storage changes (when login/logout happens)
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'isAuthenticated' || e.key === 'authToken') {
+        console.log('Storage change detected:', e.key, e.newValue);
         checkAuth();
       }
     };
@@ -172,7 +176,9 @@ function AppContent() {
 
     // Also listen for custom auth events
     const handleAuthChange = () => {
+      console.log('Custom auth change event received');
       checkAuth();
+      setAuthKey(prev => prev + 1); // Force re-render
     };
 
     window.addEventListener('authChange', handleAuthChange);
@@ -193,7 +199,7 @@ function AppContent() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Router>
+      <Router key={authKey}>
         {isAuthenticated ? (
           <Layout>
             <Routes>
