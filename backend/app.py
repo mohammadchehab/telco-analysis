@@ -76,7 +76,7 @@ app.add_middleware(
 api_app.include_router(capabilities.router)
 api_app.include_router(domains.router, prefix="/capabilities")
 api_app.include_router(auth.router)
-api_app.include_router(attributes.router)
+api_app.include_router(attributes.router, prefix="/capabilities")
 api_app.include_router(imports.router)
 api_app.include_router(data_quality.router)
 api_app.include_router(reports.router)

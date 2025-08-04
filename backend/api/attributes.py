@@ -8,7 +8,7 @@ from schemas.schemas import (
     AttributeCreate, AttributeUpdate, AttributeResponse, APIResponse
 )
 
-router = APIRouter(prefix="/attributes", tags=["attributes"])
+router = APIRouter(tags=["attributes"])
 
 # Attribute CRUD Operations
 @router.get("/{capability_id}/attributes", response_model=APIResponse)
