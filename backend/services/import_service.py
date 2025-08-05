@@ -13,14 +13,7 @@ class ImportService:
         if not isinstance(data, dict):
             return "unknown"
         
-        # Check for research file format (with gap_analysis)
-        if ('capability' in data and 
-            'gap_analysis' in data and 
-            'market_research' in data and 
-            'recommendations' in data):
-            return "research_file"
-        
-        # Check for current framework format (like sample.json)
+        # Check for current framework format first (like sample.json) - this takes priority
         if ('capability' in data and 
             'current_framework' in data and 
             'domains' in data['current_framework'] and 
@@ -33,6 +26,13 @@ class ImportService:
             'domains' in data['proposed_framework'] and 
             isinstance(data['proposed_framework']['domains'], list)):
             return "proposed_framework"
+        
+        # Check for research file format (with gap_analysis) - this comes last
+        if ('capability' in data and 
+            'gap_analysis' in data and 
+            'market_research' in data and 
+            'recommendations' in data):
+            return "research_file"
         
         # Check for simple domains format
         if 'domains' in data and isinstance(data['domains'], list):
