@@ -8,6 +8,7 @@ from datetime import datetime
 from core.database import get_db
 from core.auth import get_current_user
 from services.capability_service import CapabilityService
+from models.models import VendorScore, VendorScoreObservation, ObservationType, Attribute
 from schemas.schemas import (
     CapabilityCreate, CapabilityUpdate, CapabilityResponse, CapabilitySummary, 
     APIResponse, WorkflowStats, WorkflowStep, PromptRequest, ValidationRequest, 
@@ -276,6 +277,229 @@ async def get_vendor_scores(capability_name: str, db: Session = Depends(get_db))
         scores = CapabilityService.get_vendor_scores(db, capability_name)
         return APIResponse(success=True, data={"scores": [score.model_dump() for score in scores]})
     except Exception as e:
+        return APIResponse(success=False, error=str(e))
+
+# Vendor Score Management - Manual Editing
+@router.get("/vendor-scores/lookup", response_model=APIResponse)
+async def get_vendor_score_id(
+    capability_id: int,
+    attribute_name: str,
+    vendor: str,
+    db: Session = Depends(get_db)
+):
+    """Get vendor score ID by capability, attribute, and vendor"""
+    try:
+        print(f"Looking up vendor score: capability_id={capability_id}, attribute_name={attribute_name}, vendor={vendor}")
+        
+        # Find the attribute first
+        attribute = db.query(Attribute).filter(
+            Attribute.capability_id == capability_id,
+            Attribute.attribute_name == attribute_name
+        ).first()
+        
+        if not attribute:
+            print(f"Attribute not found: capability_id={capability_id}, attribute_name={attribute_name}")
+            return APIResponse(success=False, error="Attribute not found")
+        
+        print(f"Found attribute: id={attribute.id}, name={attribute.attribute_name}")
+        
+        # Find the vendor score
+        score = db.query(VendorScore).filter(
+            VendorScore.capability_id == capability_id,
+            VendorScore.attribute_id == attribute.id,
+            VendorScore.vendor == vendor
+        ).first()
+        
+        if not score:
+            print(f"Vendor score not found: capability_id={capability_id}, attribute_id={attribute.id}, vendor={vendor}")
+            return APIResponse(success=False, error="Vendor score not found")
+        
+        print(f"Found vendor score: id={score.id}")
+        
+        return APIResponse(
+            success=True,
+            data={"score_id": score.id}
+        )
+    except Exception as e:
+        print(f"Exception in get_vendor_score_id: {str(e)}")
+        return APIResponse(success=False, error=str(e))
+
+@router.get("/vendor-scores/{score_id}", response_model=APIResponse)
+async def get_vendor_score_by_id(score_id: int, db: Session = Depends(get_db)):
+    """Get a specific vendor score by ID"""
+    try:
+        # Join VendorScore with Attribute to get attribute_name and domain_name
+        score = db.query(VendorScore, Attribute).join(
+            Attribute, VendorScore.attribute_id == Attribute.id
+        ).filter(VendorScore.id == score_id).first()
+        
+        if not score:
+            return APIResponse(success=False, error="Vendor score not found")
+        
+        vendor_score, attribute = score
+        
+        # Include observations
+        observations = db.query(VendorScoreObservation).filter(
+            VendorScoreObservation.vendor_score_id == score_id
+        ).all()
+        
+        score_data = {
+            "id": vendor_score.id,
+            "capability_id": vendor_score.capability_id,
+            "attribute_id": vendor_score.attribute_id,
+            "attribute_name": attribute.attribute_name,
+            "domain_name": attribute.domain_name,
+            "vendor": vendor_score.vendor,
+            "weight": attribute.importance,  # Use weight from Attribute table instead of VendorScore
+            "score": vendor_score.score,
+            "score_numeric": vendor_score.score_numeric,
+            "evidence_url": vendor_score.evidence_url,
+            "score_decision": vendor_score.score_decision,
+            "research_type": vendor_score.research_type,
+            "research_date": vendor_score.research_date,
+            "created_at": vendor_score.created_at,
+            "observations": [
+                {
+                    "id": obs.id,
+                    "observation": obs.observation,
+                    "observation_type": obs.observation_type.value,
+                    "created_at": obs.created_at
+                } for obs in observations
+            ]
+        }
+        
+        return APIResponse(success=True, data=score_data)
+    except Exception as e:
+        return APIResponse(success=False, error=str(e))
+
+@router.put("/vendor-scores/{score_id}", response_model=APIResponse)
+async def update_vendor_score(
+    score_id: int, 
+    score_data: Dict[str, Any], 
+    current_user: Dict[str, Any] = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Update a vendor score"""
+    try:
+        # Check if user has permission to edit
+        if current_user.get("role") not in ["admin", "editor"]:
+            return APIResponse(success=False, error="Insufficient permissions")
+        
+        score = db.query(VendorScore).filter(VendorScore.id == score_id).first()
+        if not score:
+            return APIResponse(success=False, error="Vendor score not found")
+        
+        # Update score fields (weight comes from Attribute table, not VendorScore)
+        if "score" in score_data:
+            score.score = score_data["score"]
+        if "score_numeric" in score_data:
+            score.score_numeric = score_data["score_numeric"]
+        if "evidence_url" in score_data:
+            score.evidence_url = score_data["evidence_url"]
+        if "score_decision" in score_data:
+            score.score_decision = score_data["score_decision"]
+        if "research_date" in score_data:
+            score.research_date = datetime.fromisoformat(score_data["research_date"])
+        
+        # Update observations if provided
+        if "observations" in score_data:
+            # Delete existing observations
+            db.query(VendorScoreObservation).filter(
+                VendorScoreObservation.vendor_score_id == score_id
+            ).delete()
+            
+            # Add new observations
+            for obs_data in score_data["observations"]:
+                new_obs = VendorScoreObservation(
+                    vendor_score_id=score_id,
+                    observation=obs_data["observation"],
+                    observation_type=ObservationType(obs_data["observation_type"])
+                )
+                db.add(new_obs)
+        
+        db.commit()
+        
+        return APIResponse(
+            success=True, 
+            data={"message": "Vendor score updated successfully"},
+            message="Vendor score updated successfully"
+        )
+    except Exception as e:
+        db.rollback()
+        return APIResponse(success=False, error=str(e))
+
+@router.put("/vendor-scores/{score_id}/observations", response_model=APIResponse)
+async def update_vendor_score_observations(
+    score_id: int, 
+    observations_data: Dict[str, Any], 
+    current_user: Dict[str, Any] = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Update observations for a vendor score"""
+    try:
+        # Check if user has permission to edit
+        if current_user.get("role") not in ["admin", "editor"]:
+            return APIResponse(success=False, error="Insufficient permissions")
+        
+        score = db.query(VendorScore).filter(VendorScore.id == score_id).first()
+        if not score:
+            return APIResponse(success=False, error="Vendor score not found")
+        
+        # Delete existing observations
+        db.query(VendorScoreObservation).filter(
+            VendorScoreObservation.vendor_score_id == score_id
+        ).delete()
+        
+        # Add new observations
+        for obs_data in observations_data["observations"]:
+            new_obs = VendorScoreObservation(
+                vendor_score_id=score_id,
+                observation=obs_data["observation"],
+                observation_type=ObservationType(obs_data["observation_type"])
+            )
+            db.add(new_obs)
+        
+        db.commit()
+        
+        return APIResponse(
+            success=True, 
+            data={"message": "Observations updated successfully"},
+            message="Observations updated successfully"
+        )
+    except Exception as e:
+        db.rollback()
+        return APIResponse(success=False, error=str(e))
+
+@router.put("/vendor-scores/{score_id}/evidence", response_model=APIResponse)
+async def update_vendor_score_evidence(
+    score_id: int, 
+    evidence_data: Dict[str, Any], 
+    current_user: Dict[str, Any] = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Update evidence URLs for a vendor score"""
+    try:
+        # Check if user has permission to edit
+        if current_user.get("role") not in ["admin", "editor"]:
+            return APIResponse(success=False, error="Insufficient permissions")
+        
+        score = db.query(VendorScore).filter(VendorScore.id == score_id).first()
+        if not score:
+            return APIResponse(success=False, error="Vendor score not found")
+        
+        # Update evidence URLs
+        if "evidence_urls" in evidence_data:
+            score.evidence_url = json.dumps(evidence_data["evidence_urls"])
+        
+        db.commit()
+        
+        return APIResponse(
+            success=True, 
+            data={"message": "Evidence updated successfully"},
+            message="Evidence updated successfully"
+        )
+    except Exception as e:
+        db.rollback()
         return APIResponse(success=False, error=str(e))
 
 # Workflow Management

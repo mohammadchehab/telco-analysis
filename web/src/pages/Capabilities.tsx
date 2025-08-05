@@ -131,8 +131,8 @@ const Capabilities: React.FC = () => {
     }
   };
 
-  const handleViewReports = (_capabilityName: string) => {
-    navigate(`/reports`);
+  const handleViewReports = (capabilityId: number, capabilityName: string) => {
+    navigate(`/reports`, { state: { selectedCapability: capabilityId } });
   };
 
   const handleStatusChange = async (capabilityId: number, newStatus: WorkflowState) => {
@@ -722,17 +722,20 @@ const Capabilities: React.FC = () => {
                     </span>
                   </Tooltip>
                   
-                  <Tooltip title="View Reports">
-                    <IconButton
-                      size="small"
-                      color="secondary"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleViewReports(capability.name);
-                      }}
-                    >
-                      <ReportsIcon />
-                    </IconButton>
+                  <Tooltip title={capability.status === 'completed' ? "View Reports" : "Reports only available for completed capabilities"}>
+                    <span>
+                      <IconButton
+                        size="small"
+                        color="secondary"
+                        disabled={capability.status !== 'completed'}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleViewReports(capability.id, capability.name);
+                        }}
+                      >
+                        <ReportsIcon />
+                      </IconButton>
+                    </span>
                   </Tooltip>
                   
                   <Tooltip title="View Details">
@@ -918,17 +921,20 @@ const Capabilities: React.FC = () => {
                         </span>
                       </Tooltip>
                       
-                      <Tooltip title="View Reports">
-                        <IconButton
-                          size="small"
-                          color="secondary"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleViewReports(capability.name);
-                          }}
-                        >
-                          <ReportsIcon />
-                        </IconButton>
+                      <Tooltip title={capability.status === 'completed' ? "View Reports" : "Reports only available for completed capabilities"}>
+                        <span>
+                          <IconButton
+                            size="small"
+                            color="secondary"
+                            disabled={capability.status !== 'completed'}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleViewReports(capability.id, capability.name);
+                            }}
+                          >
+                            <ReportsIcon />
+                          </IconButton>
+                        </span>
                       </Tooltip>
                       
                       <Tooltip title="View Details">

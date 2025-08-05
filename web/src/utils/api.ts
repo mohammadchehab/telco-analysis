@@ -463,6 +463,16 @@ export const vendorScoreAPI = {
     return apiClient.get(`/api/capabilities/${capabilityId}/attributes/${encodeURIComponent(attributeName)}/vendor-scores`);
   },
 
+  // Get single vendor score by ID
+  async getById(scoreId: number): Promise<APIResponse<VendorScore>> {
+    return apiClient.get(`/api/capabilities/vendor-scores/${scoreId}`);
+  },
+
+  // Get vendor score ID by capability, attribute, and vendor
+  async getScoreId(capabilityId: number, attributeName: string, vendor: string): Promise<APIResponse<{score_id: number}>> {
+    return apiClient.get(`/api/capabilities/vendor-scores/lookup?capability_id=${capabilityId}&attribute_name=${encodeURIComponent(attributeName)}&vendor=${encodeURIComponent(vendor)}`);
+  },
+
   // Create vendor score
   async create(capabilityId: number, data: {
     attribute_name: string;
@@ -480,15 +490,33 @@ export const vendorScoreAPI = {
   },
 
   // Update vendor score
-  async update(capabilityId: number, scoreId: number, data: {
+  async update(scoreId: number, data: {
     weight?: number;
     score?: string;
     score_numeric?: number;
-    observation?: string;
     evidence_url?: string;
     score_decision?: string;
+    research_type?: string;
+    research_date?: string;
+    observations?: Array<{
+      observation: string;
+      observation_type: string;
+    }>;
   }): Promise<APIResponse<VendorScore>> {
-    return apiClient.put(`/api/capabilities/${capabilityId}/vendor-scores/${scoreId}`, data);
+    return apiClient.put(`/api/capabilities/vendor-scores/${scoreId}`, data);
+  },
+
+  // Update observations only
+  async updateObservations(scoreId: number, observations: Array<{
+    observation: string;
+    observation_type: string;
+  }>): Promise<APIResponse<{ message: string }>> {
+    return apiClient.put(`/api/capabilities/vendor-scores/${scoreId}/observations`, { observations });
+  },
+
+  // Update evidence URLs only
+  async updateEvidence(scoreId: number, evidenceUrls: string[]): Promise<APIResponse<{ message: string }>> {
+    return apiClient.put(`/api/capabilities/vendor-scores/${scoreId}/evidence`, { evidence_urls: evidenceUrls });
   },
 
   // Delete vendor score

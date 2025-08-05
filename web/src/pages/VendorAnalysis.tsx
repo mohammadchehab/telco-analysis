@@ -39,9 +39,12 @@ import {
   Info as InfoIcon,
   Star as StarIcon,
   CheckCircle as CheckCircleIcon,
-  Error as ErrorIcon
+  Error as ErrorIcon,
+
 } from '@mui/icons-material';
 import { apiClient, vendorAnalysisAPI } from '../utils/api';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigationState } from '../hooks/useLocalStorage';
 
 interface VendorObservation {
   observation: string;
@@ -79,7 +82,12 @@ interface Capability {
 }
 
 const VendorAnalysis: React.FC = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { saveCurrentState, getPreviousPage, clearNavigationState } = useNavigationState();
   const [capabilities, setCapabilities] = useState<Capability[]>([]);
+  const [hasRestoredState, setHasRestoredState] = useState(false);
+  const [isRestoringState, setIsRestoringState] = useState(false);
   const [selectedCapability, setSelectedCapability] = useState<number | null>(null);
   const [selectedVendors, setSelectedVendors] = useState<string[]>(['comarch', 'servicenow', 'salesforce']);
   const [analysisData, setAnalysisData] = useState<VendorAnalysisData | null>(null);
@@ -120,6 +128,76 @@ const VendorAnalysis: React.FC = () => {
       fetchVendorAnalysis();
     }
   }, [selectedCapability, selectedVendors]);
+
+  // Restore state when returning from edit page
+  useEffect(() => {
+    if (hasRestoredState) {
+      return;
+    }
+    
+    // Only restore state if capabilities are loaded
+    if (capabilities.length === 0) {
+      console.log('VendorAnalysis - capabilities not loaded yet, skipping state restoration');
+      return;
+    }
+    
+    // First check if we have state from navigation
+    if (location.state) {
+      const params = location.state;
+      
+      // Restore all the saved state
+      if (params.selectedCapability) setSelectedCapability(params.selectedCapability);
+      if (params.selectedVendors) setSelectedVendors(params.selectedVendors);
+      if (params.showFilters !== undefined) setShowFilters(params.showFilters);
+      if (params.sortBy) setSortBy(params.sortBy);
+      if (params.sortOrder) setSortOrder(params.sortOrder);
+      if (params.filterDomain) setFilterDomain(params.filterDomain);
+      if (params.filterAttribute) setFilterAttribute(params.filterAttribute);
+      if (params.filterScore) setFilterScore(params.filterScore);
+      if (params.expandedAttributes) setExpandedAttributes(new Set(params.expandedAttributes));
+      
+      setHasRestoredState(true);
+      
+      // Clear the location state to prevent re-restoration
+      navigate(location.pathname, { replace: true, state: null });
+    } else {
+      // Fallback to localStorage state
+      const previousPage = getPreviousPage();
+      
+      if (previousPage && previousPage.previousPage === '/vendor-analysis') {
+        const params = previousPage.previousParams;
+        
+        // Set flag to prevent automatic data fetching
+        setIsRestoringState(true);
+        
+        // Restore all the saved state
+        if (params.selectedCapability) setSelectedCapability(params.selectedCapability);
+        if (params.selectedVendors) setSelectedVendors(params.selectedVendors);
+        if (params.showFilters !== undefined) setShowFilters(params.showFilters);
+        if (params.sortBy) setSortBy(params.sortBy);
+        if (params.sortOrder) setSortOrder(params.sortOrder);
+        if (params.filterDomain) setFilterDomain(params.filterDomain);
+        if (params.filterAttribute) setFilterAttribute(params.filterAttribute);
+        if (params.filterScore) setFilterScore(params.filterScore);
+        if (params.expandedAttributes) setExpandedAttributes(new Set(params.expandedAttributes));
+        
+        // Restore scroll position
+        if (previousPage.scrollPosition) {
+          setTimeout(() => {
+            window.scrollTo(0, previousPage.scrollPosition);
+          }, 100);
+        }
+        
+        setHasRestoredState(true);
+        
+        // Reset the restoring flag after a short delay
+        setTimeout(() => setIsRestoringState(false), 100);
+        
+        // Clear the navigation state after a longer delay to ensure everything is restored
+        setTimeout(() => clearNavigationState(), 1000);
+      }
+    }
+  }, [location.state, getPreviousPage, clearNavigationState, navigate, location.pathname, hasRestoredState, capabilities]);
 
   const fetchCapabilities = async () => {
     try {
@@ -765,6 +843,8 @@ const VendorAnalysis: React.FC = () => {
                                 </Box>
                               </Box>
 
+
+
                               {/* Score Progress */}
                               <Box sx={{ mb: 2 }}>
                                 <LinearProgress
@@ -792,9 +872,9 @@ const VendorAnalysis: React.FC = () => {
                                     {vendorData.observations.map((obs, idx) => (
                                       <Box key={idx} component="li" sx={{ mb: 1 }}>
                                         <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
-                                          {obs.type === 'STRENGTH' ? (
+                                          {obs.type === 'strength' ? (
                                             <TrendingUpIcon color="success" fontSize="small" />
-                                          ) : obs.type === 'WEAKNESS' ? (
+                                          ) : obs.type === 'weakness' ? (
                                             <TrendingDownIcon color="error" fontSize="small" />
                                           ) : (
                                             <InfoIcon color="warning" fontSize="small" />
@@ -803,8 +883,8 @@ const VendorAnalysis: React.FC = () => {
                                             <Chip 
                                               label={obs.type.toLowerCase()} 
                                               size="small" 
-                                              color={obs.type === 'STRENGTH' ? 'success' : 
-                                                     obs.type === 'WEAKNESS' ? 'error' : 'warning'} 
+                                              color={obs.type === 'strength' ? 'success' : 
+                                                     obs.type === 'weakness' ? 'error' : 'warning'} 
                                               variant="outlined"
                                               sx={{ mb: 0.5 }}
                                             />

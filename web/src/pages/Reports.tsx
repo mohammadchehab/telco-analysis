@@ -45,7 +45,8 @@ import {
   FilterList as FilterIcon,
   ExpandMore as ExpandMoreIcon,
   Clear as ClearIcon,
-  Visibility as VisibilityIcon
+  Visibility as VisibilityIcon,
+  Edit as EditIcon
 } from '@mui/icons-material';
 import { Radar, Bar, Pie, Line } from 'react-chartjs-2';
 import {
@@ -61,7 +62,9 @@ import {
   BarElement,
   ArcElement
 } from 'chart.js';
-import { apiClient } from '../utils/api';
+import { apiClient, vendorScoreAPI } from '../utils/api';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigationState } from '../hooks/useLocalStorage';
 
 // Register Chart.js components
 ChartJS.register(
@@ -149,7 +152,12 @@ interface FilterOptions {
 }
 
 const Reports: React.FC = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { saveCurrentState, getPreviousPage, clearNavigationState } = useNavigationState();
   const [capabilities, setCapabilities] = useState<Capability[]>([]);
+  const [hasRestoredState, setHasRestoredState] = useState(false);
+  const [isRestoringState, setIsRestoringState] = useState(false);
   const [selectedCapability, setSelectedCapability] = useState<number | ''>('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -187,6 +195,104 @@ const Reports: React.FC = () => {
     }
   }, [selectedCapability, selectedDomains, selectedVendors, selectedAttributes, filterOptions]);
 
+  // Restore state when returning from edit page
+  useEffect(() => {
+    if (hasRestoredState) {
+      console.log('Reports - state already restored, skipping');
+      return;
+    }
+    
+    // Only restore state if capabilities are loaded
+    if (capabilities.length === 0) {
+      console.log('Reports - capabilities not loaded yet, skipping state restoration');
+      return;
+    }
+    
+    console.log('Reports - state restoration triggered');
+    console.log('Reports - location.state:', location.state);
+    
+    // First check if we have state from navigation
+    if (location.state) {
+      const params = location.state;
+      console.log('Reports - restoring from location.state:', params);
+      console.log('Reports - location.state keys:', Object.keys(params));
+      
+      // Restore all the saved state
+      if (params.selectedCapability) {
+        console.log('Reports - setting selectedCapability:', params.selectedCapability);
+        setSelectedCapability(params.selectedCapability);
+      }
+      if (params.selectedDomains) {
+        console.log('Reports - setting selectedDomains:', params.selectedDomains);
+        setSelectedDomains(params.selectedDomains);
+      }
+      if (params.selectedVendors) {
+        console.log('Reports - setting selectedVendors:', params.selectedVendors);
+        setSelectedVendors(params.selectedVendors);
+      }
+      if (params.selectedAttributes) {
+        console.log('Reports - setting selectedAttributes:', params.selectedAttributes);
+        setSelectedAttributes(params.selectedAttributes);
+      }
+      if (params.showFilters !== undefined) {
+        console.log('Reports - setting showFilters:', params.showFilters);
+        setShowFilters(params.showFilters);
+      }
+      if (params.selectedAttributeDetail) {
+        console.log('Reports - setting selectedAttributeDetail:', params.selectedAttributeDetail);
+        setSelectedAttributeDetail(params.selectedAttributeDetail);
+      }
+      
+      setHasRestoredState(true);
+      
+      // Clear the location state after a delay to prevent re-restoration
+      setTimeout(() => {
+        navigate(location.pathname, { replace: true, state: null });
+      }, 100);
+    } else {
+      // Fallback to localStorage state
+      const previousPage = getPreviousPage();
+      console.log('Reports - no location.state, checking previousPage:', previousPage);
+      
+      if (previousPage && previousPage.previousPage === '/reports') {
+        const params = previousPage.previousParams;
+        console.log('Reports - restoring from previousPage:', params);
+        console.log('Reports - previousPage keys:', Object.keys(params));
+        
+        // Set flag to prevent automatic filter reset
+        setIsRestoringState(true);
+        
+        // Restore all the saved state
+        if (params.selectedCapability) setSelectedCapability(params.selectedCapability);
+        if (params.selectedDomains) setSelectedDomains(params.selectedDomains);
+        if (params.selectedVendors) setSelectedVendors(params.selectedVendors);
+        if (params.selectedAttributes) setSelectedAttributes(params.selectedAttributes);
+        if (params.showFilters !== undefined) setShowFilters(params.showFilters);
+        if (params.selectedAttributeDetail) setSelectedAttributeDetail(params.selectedAttributeDetail);
+        
+        // Restore scroll position and dialog state
+        if (previousPage.scrollPosition) {
+          setTimeout(() => {
+            window.scrollTo(0, previousPage.scrollPosition);
+          }, 100);
+        }
+        
+        // Restore dialog state if it was open
+        if (previousPage.openDialog && previousPage.openDialog.type === 'attributeDetail') {
+          setSelectedAttributeDetail(previousPage.openDialog.data);
+        }
+        
+        setHasRestoredState(true);
+        
+        // Reset the restoring flag after a short delay
+        setTimeout(() => setIsRestoringState(false), 100);
+        
+        // Clear the navigation state after a longer delay to ensure everything is restored
+        setTimeout(() => clearNavigationState(), 1000);
+      }
+    }
+  }, [location.state, getPreviousPage, clearNavigationState, navigate, location.pathname, hasRestoredState, capabilities]);
+
   const fetchCapabilities = async () => {
     try {
       setLoading(true);
@@ -215,10 +321,14 @@ const Reports: React.FC = () => {
       
       if (data.success) {
         setFilterOptions(data.data);
-        // Initialize filters with empty arrays to show all data by default
-        setSelectedDomains([]);
-        setSelectedVendors(data.data.vendors);
-        setSelectedAttributes([]);
+        
+        // Only initialize filters if we're not restoring state
+        if (!isRestoringState) {
+          // Initialize filters with empty arrays to show all data by default
+          setSelectedDomains([]);
+          setSelectedVendors(data.data.vendors);
+          setSelectedAttributes([]);
+        }
       } else {
         setError('Failed to fetch filter options');
       }
@@ -815,6 +925,63 @@ const Reports: React.FC = () => {
                         color={getScoreColor(data.score_numeric)}
                         sx={{ mr: 2 }}
                       />
+                                              <Tooltip title="Edit Vendor Score">
+                          <IconButton
+                            size="small"
+                            onClick={async (e) => {
+                              e.stopPropagation();
+                              try {
+                                // Save current page state before navigating
+                                const stateToSave = {
+                                  selectedCapability,
+                                  selectedDomains,
+                                  selectedVendors,
+                                  selectedAttributes,
+                                  showFilters,
+                                  selectedAttributeDetail
+                                };
+                                console.log('Reports - saving state before edit:', stateToSave);
+                                console.log('Reports - stateToSave keys:', Object.keys(stateToSave));
+                                
+                                // Save dialog state if attribute detail dialog is open
+                                const openDialog = selectedAttributeDetail ? {
+                                  type: 'attributeDetail',
+                                  data: selectedAttributeDetail
+                                } : undefined;
+                                
+                                saveCurrentState('/reports', stateToSave, openDialog);
+                                
+                                console.log('Looking up score ID for:', {
+                                  capabilityId: selectedCapability,
+                                  attributeName: selectedAttributeDetail.attribute_name,
+                                  vendor: vendor
+                                });
+                                
+                                // Get the score ID from the backend
+                                const response = await vendorScoreAPI.getScoreId(
+                                  selectedCapability as number,
+                                  selectedAttributeDetail.attribute_name,
+                                  vendor
+                                );
+                                
+                                console.log('Score ID response:', response);
+                                
+                                if (response.success && response.data) {
+                                  navigate(`/vendor-scores/${response.data.score_id}/edit`);
+                                } else {
+                                  console.error('Score lookup failed:', response.error);
+                                  alert(`Could not find vendor score: ${response.error || 'Unknown error'}`);
+                                }
+                              } catch (error) {
+                                console.error('Error getting score ID:', error);
+                                alert(`Error accessing edit page: ${error instanceof Error ? error.message : 'Unknown error'}`);
+                              }
+                            }}
+                            sx={{ mr: 1 }}
+                          >
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
                     </Box>
                   </AccordionSummary>
                   <AccordionDetails>

@@ -56,7 +56,7 @@ interface KanbanBoardProps {
   capabilities: Capability[];
   onCapabilityClick: (capability: Capability) => void;
   onStartResearch: (capabilityId: number, capabilityName: string) => void;
-  onViewReports: (capabilityName: string) => void;
+  onViewReports: (capabilityId: number, capabilityName: string) => void;
   onEditClick: (capability: Capability) => void;
   onDeleteClick: (capability: Capability) => void;
   onViewDetails: (capabilityId: number) => void;
@@ -133,7 +133,7 @@ interface SortableCapabilityCardProps {
   capability: Capability;
   onCapabilityClick: (capability: Capability) => void;
   onStartResearch: (capabilityId: number, capabilityName: string) => void;
-  onViewReports: (capabilityName: string) => void;
+  onViewReports: (capabilityId: number, capabilityName: string) => void;
   onEditClick: (capability: Capability) => void;
   onDeleteClick: (capability: Capability) => void;
   onViewDetails: (capabilityId: number) => void;
@@ -304,18 +304,21 @@ const SortableCapabilityCard: React.FC<SortableCapabilityCardProps> = ({
             </span>
           </Tooltip>
           
-          <Tooltip title="View Reports">
-            <IconButton
-              size="small"
-              color="secondary"
-              onClick={(e) => {
-                e.stopPropagation();
-                onViewReports(capability.name);
-              }}
-              sx={{ p: 0.5 }}
-            >
-              <ReportsIcon sx={{ fontSize: '1rem' }} />
-            </IconButton>
+          <Tooltip title={capability.status === 'completed' ? "View Reports" : "Reports only available for completed capabilities"}>
+            <span>
+              <IconButton
+                size="small"
+                color="secondary"
+                disabled={capability.status !== 'completed'}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onViewReports(capability.id, capability.name);
+                }}
+                sx={{ p: 0.5 }}
+              >
+                <ReportsIcon sx={{ fontSize: '1rem' }} />
+              </IconButton>
+            </span>
           </Tooltip>
           
           <Tooltip title="View Details">
