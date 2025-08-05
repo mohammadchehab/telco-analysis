@@ -238,36 +238,11 @@ class ImportService:
             # if research_data.get('capability_status'):
             #     capability.status = research_data['capability_status']
         
-        # Extract domains from gap analysis or proposed framework
+        # Extract domains from current framework, proposed framework, or gap analysis
         domains_data = []
         
-        # Check for gap analysis format first
-        if 'gap_analysis' in research_data and 'missing_domains' in research_data['gap_analysis']:
-            for domain_info in research_data['gap_analysis']['missing_domains']:
-                domain_data = {
-                    'domain_name': domain_info['domain_name'],
-                    'description': domain_info.get('description', ''),
-                    'importance': domain_info.get('importance', 'medium'),
-                    'reasoning': domain_info.get('reasoning', ''),
-                    'attributes': []
-                }
-                
-                # Extract attributes for this domain
-                if 'missing_attributes' in research_data['gap_analysis']:
-                    for attr_info in research_data['gap_analysis']['missing_attributes']:
-                        if attr_info.get('domain') == domain_info['domain_name']:
-                            domain_data['attributes'].append({
-                                'attribute_name': attr_info['attribute_name'],
-                                'definition': attr_info.get('description', ''),
-                                'tm_forum_mapping': '',
-                                'importance': attr_info.get('importance', '50'),
-                                'reasoning': attr_info.get('reasoning', '')
-                            })
-                
-                domains_data.append(domain_data)
-        
-        # Check for current framework format (like sample.json)
-        elif 'current_framework' in research_data and 'domains' in research_data['current_framework']:
+        # Check for current framework format first (like sample.json) - this takes priority
+        if 'current_framework' in research_data and 'domains' in research_data['current_framework']:
             for domain_info in research_data['current_framework']['domains']:
                 domain_data = {
                     'domain_name': domain_info['domain_name'],
@@ -307,6 +282,31 @@ class ImportService:
                             'tm_forum_mapping': attr_info.get('tm_forum_mapping', ''),
                             'importance': attr_info.get('importance', '50')
                         })
+                
+                domains_data.append(domain_data)
+        
+        # Check for gap analysis format last (only if no current/proposed framework found)
+        elif 'gap_analysis' in research_data and 'missing_domains' in research_data['gap_analysis']:
+            for domain_info in research_data['gap_analysis']['missing_domains']:
+                domain_data = {
+                    'domain_name': domain_info['domain_name'],
+                    'description': domain_info.get('description', ''),
+                    'importance': domain_info.get('importance', 'medium'),
+                    'reasoning': domain_info.get('reasoning', ''),
+                    'attributes': []
+                }
+                
+                # Extract attributes for this domain
+                if 'missing_attributes' in research_data['gap_analysis']:
+                    for attr_info in research_data['gap_analysis']['missing_attributes']:
+                        if attr_info.get('domain') == domain_info['domain_name']:
+                            domain_data['attributes'].append({
+                                'attribute_name': attr_info['attribute_name'],
+                                'definition': attr_info.get('description', ''),
+                                'tm_forum_mapping': '',
+                                'importance': attr_info.get('importance', '50'),
+                                'reasoning': attr_info.get('reasoning', '')
+                            })
                 
                 domains_data.append(domain_data)
         
