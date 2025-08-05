@@ -131,7 +131,7 @@ const Capabilities: React.FC = () => {
     }
   };
 
-  const handleViewReports = (capabilityId: number, capabilityName: string) => {
+  const handleViewReports = (capabilityId: number, _capabilityName: string) => {
     navigate(`/reports`, { state: { selectedCapability: capabilityId } });
   };
 

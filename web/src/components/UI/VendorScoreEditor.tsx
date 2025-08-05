@@ -19,17 +19,12 @@ import {
   Alert,
   CircularProgress,
   Divider,
-  Grid,
   Rating,
   Stack,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
   List,
   ListItem,
   ListItemText,
-  ListItemSecondaryAction,
-  Tooltip
+  ListItemSecondaryAction
 } from '@mui/material';
 import {
   Edit as EditIcon,
@@ -37,9 +32,7 @@ import {
   Delete as DeleteIcon,
   Save as SaveIcon,
   Cancel as CancelIcon,
-  ExpandMore as ExpandMoreIcon,
   Link as LinkIcon,
-  Visibility as VisibilityIcon,
   TrendingUp as TrendingUpIcon,
   TrendingDown as TrendingDownIcon,
   Info as InfoIcon,
@@ -48,9 +41,8 @@ import {
   Error as ErrorIcon
 } from '@mui/icons-material';
 import { vendorScoreAPI } from '../../utils/api';
-import { useSelector, useDispatch } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { addNotification } from '../../store/slices/uiSlice';
-import type { RootState } from '../../store';
 
 interface VendorScoreObservation {
   id?: number;
@@ -109,7 +101,7 @@ const VendorScoreEditor: React.FC<VendorScoreEditorProps> = ({
   initialData
 }) => {
   const dispatch = useDispatch();
-  const { darkMode } = useSelector((state: RootState) => state.ui);
+  // const { darkMode } = useSelector((state: RootState) => state.ui);
   
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -120,7 +112,7 @@ const VendorScoreEditor: React.FC<VendorScoreEditorProps> = ({
   const [score, setScore] = useState<number>(5);
   const [weight, setWeight] = useState<number>(50);
   const [scoreDecision, setScoreDecision] = useState<string>('');
-  const [researchType, setResearchType] = useState<string>('capability_research');
+  // const [researchType, setResearchType] = useState<string>('capability_research');
   const [researchDate, setResearchDate] = useState<string>('');
   const [evidenceUrls, setEvidenceUrls] = useState<string[]>([]);
   const [observations, setObservations] = useState<VendorScoreObservation[]>([]);
@@ -170,7 +162,7 @@ const VendorScoreEditor: React.FC<VendorScoreEditorProps> = ({
     setScore(data.score_numeric);
     setWeight(data.weight);
     setScoreDecision(data.score_decision || '');
-    setResearchType(data.research_type || 'capability_research');
+    // setResearchType(data.research_type || 'capability_research');
     setResearchDate(data.research_date ? new Date(data.research_date).toISOString().split('T')[0] : '');
     
     // Parse evidence URLs - handle both JSON arrays and plain strings

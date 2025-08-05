@@ -12,9 +12,8 @@ import {
 import { ArrowBack as ArrowBackIcon } from '@mui/icons-material';
 import VendorScoreEditor from '../components/UI/VendorScoreEditor';
 import { vendorScoreAPI } from '../utils/api';
-import { useSelector, useDispatch } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { addNotification } from '../store/slices/uiSlice';
-import type { RootState } from '../store';
 import { useNavigationState } from '../hooks/useLocalStorage';
 
 interface VendorScore {
@@ -42,7 +41,7 @@ const VendorScoreEdit: React.FC = () => {
   const { scoreId } = useParams<{ scoreId: string }>();
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { darkMode } = useSelector((state: RootState) => state.ui);
+  // const { darkMode } = useSelector((state: RootState) => state.ui);
   const { getPreviousPage, clearNavigationState } = useNavigationState();
   
   const [loading, setLoading] = useState(true);
@@ -74,7 +73,7 @@ const VendorScoreEdit: React.FC = () => {
     }
   };
 
-  const handleSave = (updatedScore: VendorScore) => {
+  const handleSave = (_updatedScore: VendorScore) => {
     dispatch(addNotification({
       type: 'success',
       message: 'Vendor score updated successfully',
@@ -88,7 +87,14 @@ const VendorScoreEdit: React.FC = () => {
     if (previousPage) {
       console.log('handleSave - navigating to:', previousPage.previousPage, 'with state:', previousPage.previousParams);
       console.log('handleSave - state keys:', Object.keys(previousPage.previousParams));
-      navigate(previousPage.previousPage, { state: previousPage.previousParams });
+      
+      // Include dialog state if it exists
+      const navigationState = {
+        ...previousPage.previousParams,
+        ...(previousPage.openDialog && { openDialog: previousPage.openDialog })
+      };
+      
+      navigate(previousPage.previousPage, { state: navigationState });
       // Clear navigation state after navigation completes
       setTimeout(() => clearNavigationState(), 500);
     } else {
@@ -105,7 +111,14 @@ const VendorScoreEdit: React.FC = () => {
     
     if (previousPage) {
       console.log('handleCancel - navigating to:', previousPage.previousPage, 'with state:', previousPage.previousParams);
-      navigate(previousPage.previousPage, { state: previousPage.previousParams });
+      
+      // Include dialog state if it exists
+      const navigationState = {
+        ...previousPage.previousParams,
+        ...(previousPage.openDialog && { openDialog: previousPage.openDialog })
+      };
+      
+      navigate(previousPage.previousPage, { state: navigationState });
       // Clear navigation state after navigation completes
       setTimeout(() => clearNavigationState(), 500);
     } else {

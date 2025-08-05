@@ -84,10 +84,10 @@ interface Capability {
 const VendorAnalysis: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { saveCurrentState, getPreviousPage, clearNavigationState } = useNavigationState();
+  const { getPreviousPage, clearNavigationState } = useNavigationState();
   const [capabilities, setCapabilities] = useState<Capability[]>([]);
   const [hasRestoredState, setHasRestoredState] = useState(false);
-  const [isRestoringState, setIsRestoringState] = useState(false);
+  // const [isRestoringState, setIsRestoringState] = useState(false);
   const [selectedCapability, setSelectedCapability] = useState<number | null>(null);
   const [selectedVendors, setSelectedVendors] = useState<string[]>(['comarch', 'servicenow', 'salesforce']);
   const [analysisData, setAnalysisData] = useState<VendorAnalysisData | null>(null);
@@ -168,7 +168,7 @@ const VendorAnalysis: React.FC = () => {
         const params = previousPage.previousParams;
         
         // Set flag to prevent automatic data fetching
-        setIsRestoringState(true);
+        // setIsRestoringState(true);
         
         // Restore all the saved state
         if (params.selectedCapability) setSelectedCapability(params.selectedCapability);
@@ -191,7 +191,7 @@ const VendorAnalysis: React.FC = () => {
         setHasRestoredState(true);
         
         // Reset the restoring flag after a short delay
-        setTimeout(() => setIsRestoringState(false), 100);
+        // setTimeout(() => setIsRestoringState(false), 100);
         
         // Clear the navigation state after a longer delay to ensure everything is restored
         setTimeout(() => clearNavigationState(), 1000);

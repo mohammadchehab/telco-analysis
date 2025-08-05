@@ -238,7 +238,12 @@ const Reports: React.FC = () => {
         console.log('Reports - setting showFilters:', params.showFilters);
         setShowFilters(params.showFilters);
       }
-      if (params.selectedAttributeDetail) {
+      
+      // Check if we have dialog state in location.state
+      if (params.openDialog && params.openDialog.type === 'attributeDetail') {
+        console.log('Reports - restoring dialog state from location.state:', params.openDialog.data);
+        setSelectedAttributeDetail(params.openDialog.data);
+      } else if (params.selectedAttributeDetail) {
         console.log('Reports - setting selectedAttributeDetail:', params.selectedAttributeDetail);
         setSelectedAttributeDetail(params.selectedAttributeDetail);
       }
@@ -268,18 +273,21 @@ const Reports: React.FC = () => {
         if (params.selectedVendors) setSelectedVendors(params.selectedVendors);
         if (params.selectedAttributes) setSelectedAttributes(params.selectedAttributes);
         if (params.showFilters !== undefined) setShowFilters(params.showFilters);
-        if (params.selectedAttributeDetail) setSelectedAttributeDetail(params.selectedAttributeDetail);
         
-        // Restore scroll position and dialog state
+        // Restore scroll position
         if (previousPage.scrollPosition) {
           setTimeout(() => {
             window.scrollTo(0, previousPage.scrollPosition);
           }, 100);
         }
         
-        // Restore dialog state if it was open
+        // Restore dialog state if it was open - this takes priority over regular state
         if (previousPage.openDialog && previousPage.openDialog.type === 'attributeDetail') {
+          console.log('Reports - restoring dialog state:', previousPage.openDialog.data);
           setSelectedAttributeDetail(previousPage.openDialog.data);
+        } else if (params.selectedAttributeDetail) {
+          // Fallback to regular state if no dialog state
+          setSelectedAttributeDetail(params.selectedAttributeDetail);
         }
         
         setHasRestoredState(true);
