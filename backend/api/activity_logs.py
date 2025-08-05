@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import datetime
+from sqlalchemy import func
 
 from core.database import get_db
 from models.models import ActivityLog
@@ -120,13 +121,13 @@ async def get_activity_stats(
         # Activities by action type
         action_stats = db.query(
             ActivityLog.action,
-            db.func.count(ActivityLog.id).label('count')
+            func.count(ActivityLog.id).label('count')
         ).group_by(ActivityLog.action).all()
         
         # Activities by entity type
         entity_stats = db.query(
             ActivityLog.entity_type,
-            db.func.count(ActivityLog.id).label('count')
+            func.count(ActivityLog.id).label('count')
         ).group_by(ActivityLog.entity_type).all()
         
         # Recent activity (last 24 hours)

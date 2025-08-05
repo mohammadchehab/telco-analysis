@@ -4,6 +4,7 @@ from typing import Dict, Any, Optional
 import hashlib
 import json
 from datetime import datetime, timedelta
+from sqlalchemy import func
 
 from core.database import get_db
 from models.models import User, ActivityLog
@@ -209,6 +210,7 @@ async def refresh_token(
         
         # For refresh, we'll try to decode the token even if expired
         try:
+            import os
             import jwt
             secret_key = os.getenv("JWT_SECRET_KEY", "your-secret-key-change-in-production")
             algorithm = "HS256"
@@ -759,7 +761,7 @@ async def get_user_stats(
         # Users by role
         role_stats = db.query(
             User.role,
-            db.func.count(User.id).label('count')
+            func.count(User.id).label('count')
         ).group_by(User.role).all()
         
         # Recent registrations (last 30 days)

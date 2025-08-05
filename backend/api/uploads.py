@@ -8,6 +8,7 @@ from datetime import datetime
 import PyPDF2
 import docx
 import io
+from sqlalchemy import func
 
 from core.database import get_db
 from core.auth import get_current_user
@@ -336,19 +337,15 @@ async def get_upload_stats(
     """Get upload statistics"""
     try:
         total_uploads = db.query(Upload).filter(Upload.is_active == True).count()
-        total_size = db.query(Upload).filter(Upload.is_active == True).with_entities(
-            db.func.sum(Upload.file_size)
-        ).scalar() or 0
+        total_size = db.query(func.sum(Upload.file_size)).scalar() or 0
         
         # Get file type distribution
-        file_types = db.query(Upload.file_type, db.func.count(Upload.id)).filter(
+        file_types = db.query(Upload.file_type, func.count(Upload.id)).filter(
             Upload.is_active == True
         ).group_by(Upload.file_type).all()
         
         # Get total content length
-        total_content_length = db.query(Upload).filter(Upload.is_active == True).with_entities(
-            db.func.sum(db.func.length(Upload.content))
-        ).scalar() or 0
+        total_content_length = db.query(func.sum(func.length(Upload.content))).scalar() or 0
         
         return APIResponse(
             success=True,
