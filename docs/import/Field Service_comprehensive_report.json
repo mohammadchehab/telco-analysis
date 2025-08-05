@@ -1,0 +1,433 @@
+{
+  "capability": "Field Service",
+  "analysis_date": "2025-08-05",
+  "capability_status": "completed",
+  "current_framework": {
+    "domains_count": 11,
+    "attributes_count": 52,
+    "domains": [
+      {
+        "domain_name": "Work Order Management",
+        "description": "This domain covers the systematic process of creating, assigning, tracking and completing service tasks (work orders). It ensures maintenance or repair requests are formalised, including details on the nature of work, scheduling, resources and documentation. It includes preventive maintenance and lifecycle management of tasks from initiation through customer invoicing, supporting structured service delivery and accurate record keeping ￼ ￼.",
+        "importance": "medium",
+        "attributes": [
+          {
+            "attribute_name": "Work Order Lifecycle Management",
+            "definition": "Ability to create, assign, monitor, update and close work orders, capturing the entire lifecycle of service requests and tasks. It supports status tracking, documentation, attachments and ensures structured service delivery ￼.",
+            "tm_forum_mapping": "TMFC061 Work Order Management component; TMF697 Work Order Management API",
+            "importance": "high"
+          },
+          {
+            "attribute_name": "Preventive Maintenance Management",
+            "definition": "Scheduling and management of routine or preventive maintenance tasks for assets and equipment to minimise downtime by proactively identifying and repairing issues ￼.",
+            "tm_forum_mapping": "TMFC061 Work Order Management; TMF701 Process Flow Management",
+            "importance": "high"
+          },
+          {
+            "attribute_name": "Task Decomposition & Hierarchy",
+            "definition": "Support for breaking work orders into sub-tasks and dependencies, defining sequences and milestones for complex jobs.",
+            "tm_forum_mapping": "TMF701 Process Flow Management API",
+            "importance": "medium"
+          },
+          {
+            "attribute_name": "Priority & SLA Management",
+            "definition": "Assigning priorities, due dates and service level agreements (SLAs) to work orders to control response times and escalation paths.",
+            "tm_forum_mapping": "Service Order Management (TMFC007) and Agreement Management components",
+            "importance": "high"
+          },
+          {
+            "attribute_name": "Work Order Collaboration & Approval",
+            "definition": "Enabling multi-party collaboration, approvals, comments and digital signatures on work orders, including attachments and change history.",
+            "tm_forum_mapping": "Process Flow Management (TMF701), Document Management",
+            "importance": "medium"
+          }
+        ]
+      },
+      {
+        "domain_name": "Scheduling & Dispatch",
+        "description": "Responsible for scheduling and dispatching field technicians to service appointments based on skills, availability and proximity. It includes manual and automated scheduling, appointment booking, time-slot reservation and route optimisation to minimise travel and ensure tasks are executed at the right time ￼ ￼.",
+        "importance": "medium",
+        "attributes": [
+          {
+            "attribute_name": "Technician Scheduling & Optimisation",
+            "definition": "Automated or manual assignment of technicians to jobs considering skills, availability, location and customer preferences; uses advanced algorithms and AI to balance workloads and meet SLAs ￼ ￼.",
+            "tm_forum_mapping": "TMFC046 Workforce Management; TMF646 Appointment Management",
+            "importance": "high"
+          },
+          {
+            "attribute_name": "Dispatch & Real-Time Assignment",
+            "definition": "Real-time dispatch of work orders to field technicians with the ability to reassign or reschedule tasks based on changing conditions, emergencies or technician availability.",
+            "tm_forum_mapping": "TMF688 Event Management API; TMF701 Process Flow Management",
+            "importance": "high"
+          },
+          {
+            "attribute_name": "Route & Travel Optimisation",
+            "definition": "Use of AI and route optimisation algorithms to minimise travel time by predicting traffic patterns and job durations, reducing truck rolls and carbon emissions ￼.",
+            "tm_forum_mapping": "TMFC046 Workforce Management; Strategic Resource Planning (TMFC044)",
+            "importance": "medium"
+          },
+          {
+            "attribute_name": "Appointment & Time Slot Booking",
+            "definition": "Customer appointment scheduling, search for available time slots, booking and rescheduling of appointments including recurring visits, with notifications and reminders ￼.",
+            "tm_forum_mapping": "TMF646 Appointment Management API; Party Interaction Management (TMFC023)",
+            "importance": "high"
+          },
+          {
+            "attribute_name": "Calendar & Capacity Planning",
+            "definition": "Maintaining calendars for technicians and resources, forecasting capacity to plan future workloads and ensure enough coverage for peak periods.",
+            "tm_forum_mapping": "TMFC046 Workforce Management",
+            "importance": "medium"
+          }
+        ]
+      },
+      {
+        "domain_name": "Workforce & Resource Management",
+        "description": "Manages internal and external field service personnel. It describes teams, organisations, skills and availability of sales or technical experts, and provides the ability to reserve time slots and appointments for assigned tasks ￼. This domain includes crowd or partner management, skills tracking, capacity planning and workforce analytics.",
+        "importance": "medium",
+        "attributes": [
+          {
+            "attribute_name": "Personnel & Team Management",
+            "definition": "Maintaining hierarchies of teams and organisations, managing roles, assignments and contact information for internal technicians and external contractors.",
+            "tm_forum_mapping": "TMFC046 Workforce Management; TMF632 Party Management; TMF669 Party Role Management",
+            "importance": "high"
+          },
+          {
+            "attribute_name": "Skills & Certification Management",
+            "definition": "Tracking technician skills, certifications, training records and experience to ensure appropriate job assignment and regulatory compliance ￼.",
+            "tm_forum_mapping": "TMFC046 Workforce Management; TMF672 User Role & Permission Management",
+            "importance": "high"
+          },
+          {
+            "attribute_name": "Availability & Capacity Management",
+            "definition": "Recording availability, shifts, vacations, absences and utilisation of technicians to support scheduling and capacity planning.",
+            "tm_forum_mapping": "TMFC046 Workforce Management",
+            "importance": "high"
+          },
+          {
+            "attribute_name": "Contractor & Crowd Service Management",
+            "definition": "Management of third-party partners and crowd-sourced technicians, including vetting, assignment, performance tracking and partner portals ￼.",
+            "tm_forum_mapping": "TMFC046 Workforce Management; TMFC020 Digital Identity Management",
+            "importance": "medium"
+          },
+          {
+            "attribute_name": "Workforce Analytics & Forecasting",
+            "definition": "Using data and AI to forecast workload, staffing needs and skills gaps, and to optimise resource utilisation.",
+            "tm_forum_mapping": "Intelligence Management components (TMFC037 Service Performance Management, TMFC038 Resource Performance Management)",
+            "importance": "medium"
+          }
+        ]
+      },
+      {
+        "domain_name": "Inventory & Asset Management",
+        "description": "Handles the tracking and management of inventory, spare parts, tools and field assets. Ensures technicians have the right parts and equipment, optimises resource utilisation, minimises downtime and maintains compliance ￼ ￼.",
+        "importance": "medium",
+        "attributes": [
+          {
+            "attribute_name": "Inventory Tracking & Stock Management",
+            "definition": "Real-time visibility of inventory levels, locations and movement for spare parts, tools and materials; supports stock replenishment, transfers and consumption tracking ￼.",
+            "tm_forum_mapping": "Resource Inventory Management (TMFC016); Supply Chain Management",
+            "importance": "high"
+          },
+          {
+            "attribute_name": "Asset Lifecycle Management",
+            "definition": "Managing the entire lifecycle of customer or network assets (creation, installation, maintenance, repair, retirement), tracking ownership, warranty and service history ￼.",
+            "tm_forum_mapping": "Asset Management (TMFC009); Resource Usage Management (TMFC016)",
+            "importance": "high"
+          },
+          {
+            "attribute_name": "Parts & Tools Allocation",
+            "definition": "Allocating and reserving parts and tools for each work order, ensuring technicians have required items and avoiding delays due to stock-outs.",
+            "tm_forum_mapping": "Resource Inventory Management (TMFC016); Work Order Management (TMFC061)",
+            "importance": "medium"
+          },
+          {
+            "attribute_name": "Warehouse & Logistics Management",
+            "definition": "Management of warehouses, vans and logistics for moving parts between locations, including shipping, receiving and returns.",
+            "tm_forum_mapping": "Logistics & Supply Chain Management",
+            "importance": "medium"
+          },
+          {
+            "attribute_name": "Inventory Analytics & Forecasting",
+            "definition": "Using analytics to predict parts consumption, optimise stock levels, reduce carrying costs and prevent over/under stocking.",
+            "tm_forum_mapping": "Resource Performance Management (TMFC038); Inventory Forecasting",
+            "importance": "medium"
+          }
+        ]
+      },
+      {
+        "domain_name": "Mobile Execution & Field App",
+        "description": "Focuses on the mobile experience for field technicians, enabling them to receive assignments, access information, capture data, communicate with supervisors and customers, and execute workflows using an offline-first mobile app ￼ ￼.",
+        "importance": "medium",
+        "attributes": [
+          {
+            "attribute_name": "Mobile Work Order Execution",
+            "definition": "Ability for technicians to view work orders, update status, capture time and materials, take photos, collect signatures and submit completion details via mobile app ￼.",
+            "tm_forum_mapping": "TMFC061 Work Order Management; TMF679 Catalog Management (for forms)",
+            "importance": "high"
+          },
+          {
+            "attribute_name": "Guided Workflows & Forms",
+            "definition": "Interactive step-by-step workflows and forms that guide technicians through tasks, ensuring consistent service delivery and compliance.",
+            "tm_forum_mapping": "Process Flow Management (TMF701); Service Test Management (TMFC055)",
+            "importance": "medium"
+          },
+          {
+            "attribute_name": "Offline Access & Sync",
+            "definition": "Ability to access data and perform tasks offline when connectivity is unavailable, with automatic data sync when connection is restored ￼.",
+            "tm_forum_mapping": "TMFC046 Workforce Management; Data Management",
+            "importance": "high"
+          },
+          {
+            "attribute_name": "Real-Time Communication & Collaboration",
+            "definition": "Messaging, video calling or collaboration tools that allow technicians to communicate with supervisors, dispatchers, customers and remote experts in real time.",
+            "tm_forum_mapping": "Collaboration & Social Tools; TMF688 Event Management API",
+            "importance": "medium"
+          },
+          {
+            "attribute_name": "Mobile Device & Security Management",
+            "definition": "Management of mobile devices, user authentication, MDM policies and security measures to protect data and devices in the field.",
+            "tm_forum_mapping": "TMF672 User Role & Permission Management; Device Management",
+            "importance": "medium"
+          }
+        ]
+      },
+      {
+        "domain_name": "Customer & Contract Management",
+        "description": "Handles customer data, relationships and contract or agreement management. Ensures service delivery aligns with customer expectations, collects feedback and enables self-service via portals or mobile apps ￼.",
+        "importance": "medium",
+        "attributes": [
+          {
+            "attribute_name": "Customer Profile & Service History",
+            "definition": "Maintaining customer profiles, installed base, service history, preferences and notes to provide personalised service and context to technicians ￼.",
+            "tm_forum_mapping": "TMF632 Party Management; TMFC023 Party Interaction Management",
+            "importance": "high"
+          },
+          {
+            "attribute_name": "Customer Portals & Self-Service",
+            "definition": "Allowing customers to request services, book appointments, track job status, provide feedback and view invoices through web or mobile portals.",
+            "tm_forum_mapping": "Digital Channels & Customer Engagement (TMFC021); TMF621 Trouble Ticket API",
+            "importance": "medium"
+          },
+          {
+            "attribute_name": "Contract & SLA Management",
+            "definition": "Storing and managing customer contracts, service-level agreements, renewal dates and entitlements; ensuring compliance with agreed terms ￼.",
+            "tm_forum_mapping": "Agreement Management (TMFC028); Product Ordering (TMF622)",
+            "importance": "high"
+          },
+          {
+            "attribute_name": "Customer Communication & Feedback",
+            "definition": "Notifications, reminders, satisfaction surveys, follow-ups and feedback collection via email, SMS, chat or in-app messaging.",
+            "tm_forum_mapping": "TMFC023 Party Interaction Management; Customer Experience Management (TMFC057)",
+            "importance": "medium"
+          },
+          {
+            "attribute_name": "Customer Consent & Privacy Management",
+            "definition": "Capturing and managing customer consents, preferences and compliance with data privacy regulations (GDPR, CCPA).",
+            "tm_forum_mapping": "Privacy Management; TMFC020 Digital Identity Management",
+            "importance": "medium"
+          }
+        ]
+      },
+      {
+        "domain_name": "Billing & Financials",
+        "description": "Manages billing, invoicing, payments and revenue recognition related to field service operations. Integrates with accounting systems and supports quotes, estimates and price lists ￼ ￼.",
+        "importance": "medium",
+        "attributes": [
+          {
+            "attribute_name": "Estimating & Quoting",
+            "definition": "Generation of estimates and quotes for services, parts and labour prior to work execution; supports approvals and modifications.",
+            "tm_forum_mapping": "Product Ordering Management (TMFC009); Quote Management",
+            "importance": "medium"
+          },
+          {
+            "attribute_name": "Invoicing & Payments",
+            "definition": "Creation of invoices based on completed work orders, capturing labour, parts and taxes; support for digital payment processing ￼.",
+            "tm_forum_mapping": "Billing Management; Accounting Management",
+            "importance": "high"
+          },
+          {
+            "attribute_name": "Price & Discount Management",
+            "definition": "Management of price lists, discounts, promotional pricing and contract-specific rates; ensures correct charges are applied.",
+            "tm_forum_mapping": "Product Catalog Management (TMFC009); Pricing Management",
+            "importance": "medium"
+          },
+          {
+            "attribute_name": "Financial Integration",
+            "definition": "Integration with accounting and ERP systems (e.g., SAP, Oracle) for revenue recognition, financial reporting and reconciliation ￼.",
+            "tm_forum_mapping": "Financial Management; Enterprise Integration",
+            "importance": "medium"
+          },
+          {
+            "attribute_name": "Tax & Compliance Processing",
+            "definition": "Handling taxes, surcharges and compliance with regional tax rules, generating receipts and maintaining audit trails.",
+            "tm_forum_mapping": "Financial & Tax Management; Regulatory Management",
+            "importance": "medium"
+          }
+        ]
+      },
+      {
+        "domain_name": "Analytics & Reporting",
+        "description": "Provides insights into field service operations through data analytics, dashboards and KPIs. Supports decision-making, performance improvement and predictive maintenance ￼ ￼.",
+        "importance": "medium",
+        "attributes": [
+          {
+            "attribute_name": "KPI & Performance Dashboards",
+            "definition": "Monitoring key metrics such as first-time-fix rate, on-time arrival, work order completion time, technician productivity and customer satisfaction; presenting them on interactive dashboards ￼.",
+            "tm_forum_mapping": "Service Performance Management (TMFC037); Resource Performance Management (TMFC038)",
+            "importance": "high"
+          },
+          {
+            "attribute_name": "Predictive Analytics & Forecasting",
+            "definition": "Using AI/ML to forecast demand, maintenance needs, parts consumption and workforce requirements; supporting predictive maintenance and resource planning ￼.",
+            "tm_forum_mapping": "Anomaly Management (TMFC041); Experience Insight Management (TMFC060)",
+            "importance": "high"
+          },
+          {
+            "attribute_name": "Operational Reports",
+            "definition": "Generating standard reports (work order reports, customer satisfaction, inventory levels, revenue) and exporting them to other systems for analysis and compliance ￼.",
+            "tm_forum_mapping": "Accounting Management; Service Test Management (TMFC055)",
+            "importance": "medium"
+          },
+          {
+            "attribute_name": "Benchmarking & Compliance Reports",
+            "definition": "Comparing performance against industry benchmarks or regulatory requirements and producing audit trails for compliance ￼.",
+            "tm_forum_mapping": "Experience Insight Management (TMFC060); Risk & Compliance Management",
+            "importance": "medium"
+          }
+        ]
+      },
+      {
+        "domain_name": "Integration & API Management",
+        "description": "Enables the field service system to integrate with other enterprise systems (CRM, ERP, inventory, IoT, analytics) and manage data exchange securely through open APIs. It supports event-driven architecture and process flow management ￼ ￼.",
+        "importance": "medium",
+        "attributes": [
+          {
+            "attribute_name": "API Integration & Orchestration",
+            "definition": "Support for RESTful APIs and event-driven architecture to integrate with CRM, ERP, asset management and IoT systems; includes appointment management (TMF646), process flow management (TMF701) and event management (TMF688) ￼ ￼.",
+            "tm_forum_mapping": "TMF646 Appointment Management API; TMF701 Process Flow Management API; TMF688 Event Management API",
+            "importance": "high"
+          },
+          {
+            "attribute_name": "Data Synchronisation & ETL",
+            "definition": "Capabilities to synchronise data across multiple systems, ensuring consistency and enabling batch or real-time ETL processes.",
+            "tm_forum_mapping": "Enterprise Integration & API Management components",
+            "importance": "medium"
+          },
+          {
+            "attribute_name": "Security & Identity Management",
+            "definition": "Integration with user role and permission management to control access to data; ensures secure API calls and compliance with data privacy requirements ￼.",
+            "tm_forum_mapping": "TMF669 Party Role Management; TMF672 User Role & Permission Management",
+            "importance": "high"
+          },
+          {
+            "attribute_name": "External Partner Integration",
+            "definition": "Support for partner portals, contractor systems, crowd services and procurement integration ￼.",
+            "tm_forum_mapping": "Supplier & Partner Management; Crowd Service",
+            "importance": "medium"
+          },
+          {
+            "attribute_name": "IoT & Connected Asset Integration",
+            "definition": "Integration with sensors, IoT devices and edge platforms to monitor asset status and trigger work orders automatically; includes event ingestion and analytics ￼.",
+            "tm_forum_mapping": "Resource Usage Management (TMFC016); Event Management API (TMF688)",
+            "importance": "medium"
+          }
+        ]
+      },
+      {
+        "domain_name": "Knowledge & Support Tools",
+        "description": "Provides access to knowledge base, documentation, training and remote support to help field technicians resolve issues efficiently. It leverages AI, AR/VR and collaborative tools to enhance problem resolution ￼.",
+        "importance": "medium",
+        "attributes": [
+          {
+            "attribute_name": "Knowledge Base & Documentation",
+            "definition": "Centralised repository of manuals, troubleshooting guides, best practices and step-by-step instructions accessible by field technicians via mobile app.",
+            "tm_forum_mapping": "Knowledge Management (TMFC060)",
+            "importance": "medium"
+          },
+          {
+            "attribute_name": "AI & AR/VR Assistance",
+            "definition": "Use of artificial intelligence and augmented or virtual reality to guide technicians through complex procedures or provide remote expert assistance ￼.",
+            "tm_forum_mapping": "Recommendation Management (TMFC050); Service Test Management (TMFC055)",
+            "importance": "low"
+          },
+          {
+            "attribute_name": "Training & Certification Management",
+            "definition": "E-learning modules, training resources and certification tracking for technicians to maintain skills and compliance.",
+            "tm_forum_mapping": "Digital Learning Management; Workforce Management",
+            "importance": "medium"
+          },
+          {
+            "attribute_name": "Community & Collaboration",
+            "definition": "Forums or communities for technicians to share knowledge, ask questions and collaborate on problem solving.",
+            "tm_forum_mapping": "Collaboration & Social Tools",
+            "importance": "low"
+          }
+        ]
+      },
+      {
+        "domain_name": "Safety & Compliance",
+        "description": "Ensures field operations follow health, safety and regulatory requirements. Includes risk assessment, checklists, training, incident reporting and compliance documentation to protect technicians and organisations.",
+        "importance": "medium",
+        "attributes": [
+          {
+            "attribute_name": "Health & Safety Checklists",
+            "definition": "Templates and forms for safety procedures, hazard identification and mitigation, ensuring technicians follow proper protocols on site.",
+            "tm_forum_mapping": "Service Test Management (TMFC055); Quality Management",
+            "importance": "high"
+          },
+          {
+            "attribute_name": "Compliance Management",
+            "definition": "Monitoring and ensuring adherence to industry regulations, environmental standards and quality policies; maintaining audit trails for inspections and certifications.",
+            "tm_forum_mapping": "Risk & Compliance Management; Regulatory Management",
+            "importance": "high"
+          },
+          {
+            "attribute_name": "Incident & Accident Reporting",
+            "definition": "Reporting and tracking safety incidents, near misses and corrective actions; providing analytics to prevent recurrence.",
+            "tm_forum_mapping": "Anomaly Management (TMFC041); Event Management (TMF688)",
+            "importance": "medium"
+          },
+          {
+            "attribute_name": "Safety Training & Certification",
+            "definition": "Ensuring technicians are trained and certified in safety requirements and that certifications are kept current.",
+            "tm_forum_mapping": "Workforce Management (TMFC046); Digital Learning Management",
+            "importance": "medium"
+          }
+        ]
+      }
+    ]
+  },
+  "gap_analysis": {
+    "missing_domains": [],
+    "missing_attributes": []
+  },
+  "market_research": {
+    "major_vendors": [
+      "comarch",
+      "servicenow",
+      "salesforce"
+    ],
+    "industry_standards": [
+      "TM Forum",
+      "ITIL",
+      "eTOM"
+    ],
+    "competitive_analysis": "Analysis of 3 major vendors with average scores ranging from 3.02 to 3.81"
+  },
+  "recommendations": {
+    "priority_domains": [
+      "Work Order Management",
+      "Scheduling & Dispatch",
+      "Workforce & Resource Management"
+    ],
+    "priority_attributes": [
+      "Work Order Lifecycle Management",
+      "Preventive Maintenance Management",
+      "Task Decomposition & Hierarchy",
+      "Priority & SLA Management",
+      "Work Order Collaboration & Approval"
+    ],
+    "framework_completeness": "complete",
+    "next_steps": "Continue research on Field Service with focus on 11 domains and 52 attributes"
+  }
+}

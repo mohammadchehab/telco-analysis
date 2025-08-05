@@ -1,0 +1,81 @@
+{
+    "capability": "Account & Contact Management",
+    "research_date": "2025-08-05",
+    "current_framework": {
+      "domains_count": 5,
+      "attributes_count": 40,
+      "domains": [
+        "Customer Profile Management",
+        "Account Management",
+        "Contact Management",
+        "Customer 360 View",
+        "Data Quality & Governance"
+      ]
+    },
+    "market_analysis": {
+      "primary_vendors": ["Comarch", "ServiceNow", "Salesforce"],
+      "missing_capabilities": []
+    },
+    "attributes": [
+      {
+        "attribute": "Customer Identity Management",
+        "domain": "Customer Profile Management",
+        "weight": 90,
+        "tm_capability": "Customer Management (SID)",
+        "comarch": {
+          "score": "3 - Good",
+          "observations": [
+            {
+              "observation": "Provides basic identity management integrated with CRM modules.",
+              "type": "STRENGTH"
+            },
+            {
+              "observation": "Lacks advanced identity federation and social login features.",
+              "type": "LIMITATION"
+            }
+          ],
+          "evidence": [
+            "https://www.comarch.com/crm/features/customer-data-management",
+            "https://www.comarch.com/telecommunications/crm/"
+          ],
+          "score_decision": "Comarch offers solid basic capabilities for managing customer identities, including profile creation and linkage to accounts, but lacks extensibility into modern identity federation options."
+        },
+        "servicenow": {
+          "score": "4 - Very Good",
+          "observations": [
+            {
+              "observation": "Includes user identity lifecycle with automation and integration hooks.",
+              "type": "FEATURE"
+            },
+            {
+              "observation": "Extensible with enterprise directory services like LDAP and Azure AD.",
+              "type": "ADVANTAGE"
+            }
+          ],
+          "evidence": [
+            "https://www.servicenow.com/products/customer-service-management.html",
+            "https://docs.servicenow.com/bundle/utah-platform-administration/page/administer/users-and-groups/concept/c_UserAccounts.html"
+          ],
+          "score_decision": "ServiceNow provides comprehensive support for identity lifecycle management and integrates well with enterprise IAM platforms, earning it a higher score."
+        },
+        "salesforce": {
+          "score": "5 - Excellent",
+          "observations": [
+            {
+              "observation": "Offers advanced identity management including SSO, MFA, and identity provider federation.",
+              "type": "STRENGTH"
+            },
+            {
+              "observation": "Supports customer identity resolution across cloud services.",
+              "type": "ADVANTAGE"
+            }
+          ],
+          "evidence": [
+            "https://www.salesforce.com/products/identity/overview/",
+            "https://help.salesforce.com/s/articleView?id=sf.identity_overview.htm&type=5"
+          ],
+          "score_decision": "Salesforce excels in identity management capabilities with a mature and secure offering that spans consumer and enterprise scenarios."
+        }
+      }
+    ]
+  }

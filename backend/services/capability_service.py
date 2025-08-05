@@ -4,12 +4,18 @@ from sqlalchemy.orm import Session
 from sqlalchemy import text
 import hashlib
 import json
-from models.models import Capability, Domain, Attribute, VendorScore, VendorScoreObservation, ResearchResult, User, ActivityLog, CapabilityTracker
+from models.models import Capability, Domain, Attribute, VendorScore, VendorScoreObservation, ResearchResult, User, ActivityLog, CapabilityTracker, Vendor
 from schemas.schemas import CapabilityCreate, CapabilityUpdate, CapabilitySummary, WorkflowStats, CapabilityTrackerResponse, VendorScoreResponse, RadarChartData, VendorComparisonData, ScoreDistributionData, WorkflowStep
 from templates.prompts import get_prompt_template
 from utils.version_manager import VersionManager
 
 class CapabilityService:
+    
+    @staticmethod
+    def get_active_vendors(db: Session) -> List[str]:
+        """Get list of active vendor names"""
+        vendors = db.query(Vendor).filter(Vendor.is_active == True).all()
+        return [vendor.name for vendor in vendors]
     
     @staticmethod
     def load_capability_data(capability_name: str, db: Session) -> dict:
@@ -329,7 +335,9 @@ class CapabilityService:
         """Generate research prompt based on type using templates"""
         # Load capability data to determine if it's new or existing
         capability_data = CapabilityService.load_capability_data(capability_name, db)
-        return get_prompt_template(prompt_type, capability_name, capability_data)
+        # Get active vendors for dynamic prompt generation
+        vendors = CapabilityService.get_active_vendors(db)
+        return get_prompt_template(prompt_type, capability_name, capability_data, vendors)
     
     @staticmethod
     def process_domain_results(db: Session, capability_name: str, data: Dict[str, Any], user_id: int = None) -> Dict[str, Any]:
@@ -761,7 +769,7 @@ class CapabilityService:
     
     @staticmethod
     def generate_radar_chart_data(db: Session, capability_id: int) -> RadarChartData:
-        """Generate radar chart data for a capability grouped by domains"""
+        """Generate radar chart data for a capability"""
         capability = db.query(Capability).filter(Capability.id == capability_id).first()
         if not capability:
             raise ValueError("Capability not found")
@@ -775,7 +783,7 @@ class CapabilityService:
         domain_names = [domain.domain_name for domain in domains]
         
         # Get vendor scores grouped by domain
-        vendors = ["comarch", "servicenow", "salesforce"]
+        vendors = CapabilityService.get_active_vendors(db)
         scores = []
         
         for vendor in vendors:
@@ -829,7 +837,7 @@ class CapabilityService:
                 weights.append(50)  # Default weight
         
         # Get vendor scores
-        vendors = ["comarch", "servicenow", "salesforce"]
+        vendors = CapabilityService.get_active_vendors(db)
         scores = {}
         
         for vendor in vendors:
@@ -868,7 +876,7 @@ class CapabilityService:
         
         # Define score ranges
         score_ranges = ["1-2", "2-3", "3-4", "4-5"]
-        vendors = ["comarch", "servicenow", "salesforce"]
+        vendors = CapabilityService.get_active_vendors(db)
         vendor_counts = {vendor: [0, 0, 0, 0] for vendor in vendors}
         
         # Count scores in each range

@@ -2,7 +2,7 @@ import json
 from datetime import datetime
 from typing import List, Dict, Any, Optional
 from sqlalchemy.orm import Session
-from models.models import Capability, Domain, Attribute
+from models.models import Capability, Domain, Attribute, Vendor
 from utils.version_manager import VersionManager
 
 class ImportService:
@@ -50,19 +50,42 @@ class ImportService:
         if 'domains' not in data or not isinstance(data['domains'], list):
             return False
         
-        # Validate each domain
-        for domain in data['domains']:
-            if not isinstance(domain, dict) or 'domain_name' not in domain:
-                return False
-            
-            # Check if domain has attributes
-            if 'attributes' in domain and isinstance(domain['attributes'], list):
-                for attr in domain['attributes']:
-                    if not isinstance(attr, dict) or 'attribute_name' not in attr:
-                        return False
-        
         return True
-    
+
+    @staticmethod
+    def _import_vendors_from_market_research(db: Session, market_research: dict) -> List[str]:
+        """Import vendors from market research data"""
+        imported_vendors = []
+        
+        if not market_research or 'major_vendors' not in market_research:
+            return imported_vendors
+        
+        for vendor_name in market_research['major_vendors']:
+            if not vendor_name:
+                continue
+                
+            # Check if vendor already exists
+            existing_vendor = db.query(Vendor).filter(
+                Vendor.name == vendor_name,
+                Vendor.is_active == True
+            ).first()
+            
+            if not existing_vendor:
+                # Create new vendor
+                new_vendor = Vendor(
+                    name=vendor_name,
+                    display_name=vendor_name,
+                    description=f"Vendor imported from market research: {vendor_name}",
+                    is_active=True
+                )
+                db.add(new_vendor)
+                imported_vendors.append(vendor_name)
+            else:
+                imported_vendors.append(vendor_name)
+        
+        # Note: Don't commit here - let the calling method handle the transaction
+        return imported_vendors
+
     @staticmethod
     def process_domain_import(db: Session, capability_id: int, domains_data: list, source_file: str = None) -> dict:
         """Process domain import with hash-based deduplication and version management"""
@@ -176,42 +199,41 @@ class ImportService:
             ).first()
             
             if existing_attr:
-                # Same content already exists - skip
+                # Same content already exists - skip attribute
                 stats['skipped'] += 1
-                continue
-            
-            # Check if attribute with same name in same domain exists but different hash
-            existing_by_name = db.query(Attribute).filter(
-                Attribute.capability_id == capability_id,
-                Attribute.domain_name == domain_name,
-                Attribute.attribute_name == attr_data['attribute_name'],
-                Attribute.is_active == True
-            ).first()
-            
-            if existing_by_name:
-                # Same name but different content - update with new version
-                existing_by_name.is_active = False  # Soft delete old version
-                stats['updated'] += 1
             else:
-                # Completely new attribute
-                stats['new'] += 1
-            
-            # Create new attribute record
-            capability = db.query(Capability).filter(Capability.id == capability_id).first()
-            new_attr = Attribute(
-                capability_id=capability_id,
-                domain_name=domain_name,
-                attribute_name=attr_data['attribute_name'],
-                definition=attr_data.get('definition', ''),
-                tm_forum_mapping=attr_data.get('tm_forum_mapping', ''),
-                importance=attr_data.get('importance', '50'),
-                content_hash=content_hash,
-                version=VersionManager.get_version_string(capability),
-                import_batch=import_batch,
-                import_date=datetime.now(),
-                is_active=True
-            )
-            db.add(new_attr)
+                # Check if attribute with same name exists but different hash
+                existing_by_name = db.query(Attribute).filter(
+                    Attribute.capability_id == capability_id,
+                    Attribute.domain_name == domain_name,
+                    Attribute.attribute_name == attr_data['attribute_name'],
+                    Attribute.is_active == True
+                ).first()
+                
+                if existing_by_name:
+                    # Same name but different content - update with new version
+                    existing_by_name.is_active = False  # Soft delete old version
+                    stats['updated'] += 1
+                else:
+                    # Completely new attribute
+                    stats['new'] += 1
+                
+                # Create new attribute record
+                capability = db.query(Capability).filter(Capability.id == capability_id).first()
+                new_attr = Attribute(
+                    capability_id=capability_id,
+                    domain_name=domain_name,
+                    attribute_name=attr_data['attribute_name'],
+                    definition=attr_data.get('definition', ''),
+                    tm_forum_mapping=attr_data.get('tm_forum_mapping', ''),
+                    importance=attr_data.get('importance', '50'),
+                    content_hash=content_hash,
+                    version=VersionManager.get_version_string(capability),
+                    import_batch=import_batch,
+                    import_date=datetime.now(),
+                    is_active=True
+                )
+                db.add(new_attr)
         
         return stats
     
@@ -243,6 +265,7 @@ class ImportService:
         
         # Check for current framework format first (like sample.json) - this takes priority
         if 'current_framework' in research_data and 'domains' in research_data['current_framework']:
+            print(f"DEBUG: Processing current_framework with {len(research_data['current_framework']['domains'])} domains")
             for domain_info in research_data['current_framework']['domains']:
                 domain_data = {
                     'domain_name': domain_info['domain_name'],
@@ -254,14 +277,17 @@ class ImportService:
                 # Extract attributes for this domain
                 if 'attributes' in domain_info:
                     for attr_info in domain_info['attributes']:
+                        # Handle both 'description' and 'definition' fields for current_framework
+                        definition = attr_info.get('definition', '') or attr_info.get('description', '')
                         domain_data['attributes'].append({
                             'attribute_name': attr_info['attribute_name'],
-                            'definition': attr_info.get('description', ''),  # Note: sample.json uses 'description' not 'definition'
+                            'definition': definition,
                             'tm_forum_mapping': attr_info.get('tm_forum_mapping', ''),
                             'importance': attr_info.get('importance', '50')
                         })
                 
                 domains_data.append(domain_data)
+                print(f"DEBUG: Added domain {domain_data['domain_name']} with {len(domain_data['attributes'])} attributes")
         
         # Check for proposed framework format
         elif 'proposed_framework' in research_data and 'domains' in research_data['proposed_framework']:
@@ -310,8 +336,25 @@ class ImportService:
                 
                 domains_data.append(domain_data)
         
+        # Import vendors from market research if available
+        imported_vendors = []
+        if 'market_research' in research_data:
+            try:
+                imported_vendors = ImportService._import_vendors_from_market_research(db, research_data['market_research'])
+                print(f"DEBUG: Imported {len(imported_vendors)} vendors: {imported_vendors}")
+            except Exception as e:
+                print(f"DEBUG: Error importing vendors: {e}")
+                imported_vendors = []
+        
         # Process domains using existing logic
-        domain_stats = ImportService.process_domain_import(db, capability_id, domains_data, source_file)
+        print(f"DEBUG: Processing {len(domains_data)} domains")
+        try:
+            domain_stats = ImportService.process_domain_import(db, capability_id, domains_data, source_file)
+        except Exception as e:
+            print(f"DEBUG: Error processing domains: {e}")
+            # Rollback any changes and re-raise
+            db.rollback()
+            raise
         
         # Add research-specific metadata
         research_stats = {
@@ -321,6 +364,7 @@ class ImportService:
             'analysis_date': research_data.get('analysis_date', ''),
             'capability_status': research_data.get('capability_status', ''),
             'market_vendors': research_data.get('market_research', {}).get('major_vendors', []),
+            'imported_vendors': imported_vendors,
             'industry_standards': research_data.get('market_research', {}).get('industry_standards', []),
             'priority_domains': research_data.get('recommendations', {}).get('priority_domains', []),
             'priority_attributes': research_data.get('recommendations', {}).get('priority_attributes', []),

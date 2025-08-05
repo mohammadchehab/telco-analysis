@@ -323,7 +323,7 @@ Please provide your research in the following JSON format:
 """
 
 def format_domains_summary(capability_data: dict) -> str:
-    """Format domains summary for existing capability analysis"""
+    """Format domains and attributes into a readable summary"""
     domains = capability_data.get("domains", [])
     attributes = capability_data.get("attributes", [])
     
@@ -337,32 +337,11 @@ def format_domains_summary(capability_data: dict) -> str:
     
     return "\n".join(domains_summary)
 
-def get_json_template(capability_name: str, capability_data: dict = None) -> str:
-    """Generate the JSON template for comprehensive research"""
-    return '''{{
-  "capability": "''' + capability_name + '''",
-  "research_date": "YYYY-MM-DD",
-  "current_framework": {{
-    "domains_count": 0,
-    "attributes_count": 0,
-    "domains": []
-  }},
-  "market_analysis": {{
-    "primary_vendors": [],
-    "missing_capabilities": [
-      {{
-        "capability_name": "string",
-        "description": "string"
-      }}
-    ]
-  }},
-  "attributes": [
-    {{
-      "attribute": "string",
-      "domain": "string",
-      "weight": 50,
-      "tm_capability": "string",
-      "comarch": {{
+def get_dynamic_vendor_sections(vendors: list) -> str:
+    """Generate vendor sections dynamically for AI prompts"""
+    vendor_sections = []
+    for vendor in vendors:
+        vendor_sections.append(f'''      "{vendor}": {{
         "score": "X - Level",
         "observations": [
           {{
@@ -376,15 +355,49 @@ def get_json_template(capability_name: str, capability_data: dict = None) -> str
         ],
         "evidence": ["url1", "url2", "url3", "url4"],
         "score_decision": "string"
-      }},
-      "servicenow": {{ ... }},
-      "salesforce": {{ ... }}
+      }}''')
+    return ",\n".join(vendor_sections)
+
+def get_json_template(capability_name: str, capability_data: dict = None, vendors: list = None) -> str:
+    """Generate the JSON template for comprehensive research"""
+    if not vendors:
+        vendors = ["comarch", "servicenow", "salesforce"]  # Default vendors
+    
+    vendor_sections = get_dynamic_vendor_sections(vendors)
+    
+    return f'''{{
+  "capability": "{capability_name}",
+  "research_date": "YYYY-MM-DD",
+  "current_framework": {{
+    "domains_count": 0,
+    "attributes_count": 0,
+    "domains": []
+  }},
+  "market_analysis": {{
+    "primary_vendors": {vendors},
+    "missing_capabilities": [
+      {{
+        "capability_name": "string",
+        "description": "string"
+      }}
+    ]
+  }},
+  "attributes": [
+    {{
+      "attribute": "string",
+      "domain": "string",
+      "weight": 50,
+      "tm_capability": "string",
+{vendor_sections}
     }}
   ]
 }}'''
 
-def get_prompt_template(prompt_type: str, capability_name: str, capability_data: dict = None) -> str:
+def get_prompt_template(prompt_type: str, capability_name: str, capability_data: dict = None, vendors: list = None) -> str:
     """Get the appropriate prompt template based on type and capability data"""
+    
+    if not vendors:
+        vendors = ["comarch", "servicenow", "salesforce"]  # Default vendors
     
     if prompt_type == "domain_analysis":
         if not capability_data or not capability_data.get("exists", False):
@@ -405,22 +418,28 @@ def get_prompt_template(prompt_type: str, capability_name: str, capability_data:
         if capability_data and capability_data.get("exists", False):
             # Existing capability with domains
             domains_text = format_domains_summary(capability_data)
-            return COMPREHENSIVE_RESEARCH_TEMPLATE.format(
+            template = COMPREHENSIVE_RESEARCH_TEMPLATE.format(
                 capability_name=capability_name,
                 domain_count=capability_data.get("domain_count", 0),
                 attribute_count=capability_data.get("attribute_count", 0),
                 domains_text=domains_text,
                 domains=capability_data.get("domains", [])
             )
+            # Replace hardcoded vendors with dynamic ones
+            template = template.replace('**Comarch**, **ServiceNow**, **Salesforce**', ', '.join([f'**{v.capitalize()}**' for v in vendors]))
+            return template
         else:
             # New capability without domains
-            return COMPREHENSIVE_RESEARCH_TEMPLATE.format(
+            template = COMPREHENSIVE_RESEARCH_TEMPLATE.format(
                 capability_name=capability_name,
                 domain_count=0,
                 attribute_count=0,
                 domains_text="No existing domains found. Research should focus on identifying key domains and attributes for this capability.",
                 domains=[]
             )
+            # Replace hardcoded vendors with dynamic ones
+            template = template.replace('**Comarch**, **ServiceNow**, **Salesforce**', ', '.join([f'**{v.capitalize()}**' for v in vendors]))
+            return template
     
     else:
         raise ValueError(f"Unknown prompt type: {prompt_type}") 

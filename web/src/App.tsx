@@ -20,11 +20,11 @@ import Database from './pages/Database';
 import DataQualityChat from './pages/DataQualityChat';
 
 import VendorAnalysis from './pages/VendorAnalysis';
+import Vendors from './pages/Vendors';
 import VendorScoreEdit from './pages/VendorScoreEdit';
 import UserManagement from './pages/UserManagement';
 import ArchitectureCanvas from './pages/ArchitectureCanvas';
 import BusinessProcessCanvas from './pages/BusinessProcessCanvas';
-import EvidenceReview from './pages/EvidenceReview';
 import NotificationSystem from './components/UI/NotificationSystem';
 import LoadingOverlay from './components/UI/LoadingOverlay';
 
@@ -218,8 +218,8 @@ function AppContent() {
               <Route path="/data-quality-chat" element={<DataQualityChat />} />
 
               <Route path="/vendor-analysis" element={<VendorAnalysis />} />
+              <Route path="/vendors" element={<Vendors />} />
               <Route path="/vendor-scores/:scoreId/edit" element={<VendorScoreEdit />} />
-              <Route path="/evidence-review" element={<EvidenceReview />} />
               <Route path="/user-management" element={<UserManagement />} />
               <Route path="/login" element={<Navigate to="/" replace />} />
             </Routes>

@@ -1,0 +1,168 @@
+{
+  "capability": "Billing Processes (Revenue Management)",
+  "analysis_date": "2025-08-05",
+  "capability_status": "completed",
+  "current_framework": {
+    "domains_count": 4,
+    "attributes_count": 16,
+    "domains": [
+      {
+        "domain_name": "Billing & Invoicing",
+        "description": "Covers invoice generation, formatting, tax calculation, discount application and bill presentment. It ensures that rated usage is turned into accurate invoices delivered to customers through multiple channels.",
+        "importance": "medium",
+        "attributes": [
+          {
+            "attribute_name": "Invoice Generation & Formatting",
+            "definition": "Generate invoices using rated data and format them according to customer and regulatory requirements, including support for multiple languages and currencies.",
+            "tm_forum_mapping": "",
+            "importance": "high"
+          },
+          {
+            "attribute_name": "Bill Delivery & Presentment",
+            "definition": "Deliver bills through digital or physical channels and provide online bill presentment with real‑time usage and cost information.",
+            "tm_forum_mapping": "",
+            "importance": "medium"
+          },
+          {
+            "attribute_name": "Tax & Compliance Management",
+            "definition": "Calculate and apply taxes, regulatory fees and surcharges across multiple jurisdictions and currencies.",
+            "tm_forum_mapping": "",
+            "importance": "medium"
+          },
+          {
+            "attribute_name": "Bill Run & Scheduling",
+            "definition": "Schedule and execute bill runs, manage batch and real‑time billing cycles and handle bill run exceptions.",
+            "tm_forum_mapping": "",
+            "importance": "medium"
+          }
+        ]
+      },
+      {
+        "domain_name": "Payment & Collection Management",
+        "description": "Handles payment processing, credit control, dunning and collections, and dispute resolution. It ensures revenue is collected by managing credit limits, processing payments and managing overdue accounts.",
+        "importance": "medium",
+        "attributes": [
+          {
+            "attribute_name": "Payment Processing & Receivables",
+            "definition": "Process payments through various channels, manage accounts receivable, and support multi‑currency settlement.",
+            "tm_forum_mapping": "",
+            "importance": "high"
+          },
+          {
+            "attribute_name": "Credit Control & Limit Management",
+            "definition": "Manage customer credit limits, spending thresholds and real‑time usage caps; enforce credit policies before rating and billing.",
+            "tm_forum_mapping": "",
+            "importance": "medium"
+          },
+          {
+            "attribute_name": "Collections & Dunning",
+            "definition": "Automate dunning cycles, send reminders to customers with overdue balances and manage the collections process.",
+            "tm_forum_mapping": "",
+            "importance": "medium"
+          },
+          {
+            "attribute_name": "Dispute & Adjustment Handling",
+            "definition": "Handle billing disputes, process adjustments and refunds, and maintain audit trails for corrections.",
+            "tm_forum_mapping": "",
+            "importance": "medium"
+          }
+        ]
+      },
+      {
+        "domain_name": "Partner & Settlement Management",
+        "description": "Supports interconnect and roaming billing, revenue sharing with partners, wholesale/B2B billing and multi‑party settlement. It includes multi‑currency and multi‑taxation features to settle revenues across parties.",
+        "importance": "medium",
+        "attributes": [
+          {
+            "attribute_name": "Partner Settlement & Revenue Sharing",
+            "definition": "Calculate and settle revenue shares with partners, including B2B2X and wholesale arrangements.",
+            "tm_forum_mapping": "",
+            "importance": "medium"
+          },
+          {
+            "attribute_name": "Interconnect & Roaming Billing",
+            "definition": "Manage charging and billing for interconnect and roaming services, including rating of inbound and outbound traffic.",
+            "tm_forum_mapping": "",
+            "importance": "low"
+          },
+          {
+            "attribute_name": "Wholesale & B2B Billing",
+            "definition": "Support billing for wholesale services, enterprise customers and complex B2B2X relationships.",
+            "tm_forum_mapping": "",
+            "importance": "medium"
+          },
+          {
+            "attribute_name": "Multi‑Currency & Multi‑Taxation Support",
+            "definition": "Provide flexible settlement across multiple currencies and tax regimes for international and partner billing.",
+            "tm_forum_mapping": "",
+            "importance": "medium"
+          }
+        ]
+      },
+      {
+        "domain_name": "Revenue Assurance & Fraud Management",
+        "description": "Focuses on reconciling rating and billing records, detecting revenue leakage and fraud, performing re‑rating and corrections, and providing analytical reporting to ensure billing integrity.",
+        "importance": "medium",
+        "attributes": [
+          {
+            "attribute_name": "Rating & Billing Reconciliation",
+            "definition": "Reconcile usage records, rated charges and invoices to identify discrepancies and ensure billing integrity.",
+            "tm_forum_mapping": "",
+            "importance": "medium"
+          },
+          {
+            "attribute_name": "Revenue Leakage Detection",
+            "definition": "Detect and prevent revenue leakage by analyzing discrepancies between network usage and billed revenue.",
+            "tm_forum_mapping": "",
+            "importance": "medium"
+          },
+          {
+            "attribute_name": "Fraud Detection & Prevention",
+            "definition": "Monitor usage patterns and transactions to detect fraudulent activities and unauthorized usage.",
+            "tm_forum_mapping": "",
+            "importance": "low"
+          },
+          {
+            "attribute_name": "Analytics & Reporting",
+            "definition": "Provide analytical tools and reporting to monitor revenue performance, usage trends and compliance metrics.",
+            "tm_forum_mapping": "",
+            "importance": "medium"
+          }
+        ]
+      }
+    ]
+  },
+  "gap_analysis": {
+    "missing_domains": [],
+    "missing_attributes": []
+  },
+  "market_research": {
+    "major_vendors": [
+      "comarch",
+      "servicenow",
+      "salesforce"
+    ],
+    "industry_standards": [
+      "TM Forum",
+      "ITIL",
+      "eTOM"
+    ],
+    "competitive_analysis": "Analysis of 3 major vendors with average scores ranging from 1.69 to 4.19"
+  },
+  "recommendations": {
+    "priority_domains": [
+      "Billing & Invoicing",
+      "Payment & Collection Management",
+      "Partner & Settlement Management"
+    ],
+    "priority_attributes": [
+      "Invoice Generation & Formatting",
+      "Bill Delivery & Presentment",
+      "Tax & Compliance Management",
+      "Bill Run & Scheduling",
+      "Payment Processing & Receivables"
+    ],
+    "framework_completeness": "needs_minor_updates",
+    "next_steps": "Continue research on Billing Processes (Revenue Management) with focus on 4 domains and 16 attributes"
+  }
+}

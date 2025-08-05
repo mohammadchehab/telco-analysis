@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from core.database import engine
 from models import models
-from api import capabilities, domains, auth, attributes, imports, data_quality, reports, activity_logs, architecture, comprehensive_chat, uploads, url_checker, business_process_canvas
+from api import capabilities, domains, auth, attributes, imports, data_quality, reports, activity_logs, architecture, comprehensive_chat, uploads, url_checker, business_process_canvas, vendors
 import os
 from dotenv import load_dotenv
 
@@ -86,6 +86,7 @@ api_app.include_router(comprehensive_chat.router)
 api_app.include_router(uploads.router)
 api_app.include_router(url_checker.router)
 api_app.include_router(business_process_canvas.router)
+api_app.include_router(vendors.router)
 print("✅ API routers included successfully")
 
 # Add health endpoint to API sub-application

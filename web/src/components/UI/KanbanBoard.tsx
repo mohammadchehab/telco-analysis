@@ -13,7 +13,7 @@ import {
 import {
   PlayArrow as StartIcon,
   Assessment as ReportsIcon,
-  Visibility as ViewIcon,
+  Download as ExportIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
 } from '@mui/icons-material';
@@ -59,10 +59,10 @@ interface KanbanBoardProps {
   onViewReports: (capabilityId: number, capabilityName: string) => void;
   onEditClick: (capability: Capability) => void;
   onDeleteClick: (capability: Capability) => void;
-  onViewDetails: (capabilityId: number) => void;
   onStatusChange: (capabilityId: number, newStatus: WorkflowState) => void;
   onManageDomains: (capabilityId: number) => void;
   onManageAttributes: (capabilityId: number) => void;
+  onExportComprehensiveReport: (capability: Capability) => void;
 }
 
 interface KanbanColumn {
@@ -136,9 +136,9 @@ interface SortableCapabilityCardProps {
   onViewReports: (capabilityId: number, capabilityName: string) => void;
   onEditClick: (capability: Capability) => void;
   onDeleteClick: (capability: Capability) => void;
-  onViewDetails: (capabilityId: number) => void;
   onManageDomains: (capabilityId: number) => void;
   onManageAttributes: (capabilityId: number) => void;
+  onExportComprehensiveReport: (capability: Capability) => void;
 }
 
 const SortableCapabilityCard: React.FC<SortableCapabilityCardProps> = ({
@@ -148,9 +148,9 @@ const SortableCapabilityCard: React.FC<SortableCapabilityCardProps> = ({
   onViewReports,
   onEditClick,
   onDeleteClick,
-  onViewDetails,
   onManageDomains,
   onManageAttributes,
+  onExportComprehensiveReport,
 }) => {
   const {
     attributes,
@@ -321,16 +321,17 @@ const SortableCapabilityCard: React.FC<SortableCapabilityCardProps> = ({
             </span>
           </Tooltip>
           
-          <Tooltip title="View Details">
+          <Tooltip title="Export Comprehensive Report">
             <IconButton
               size="small"
+              color="primary"
               onClick={(e) => {
                 e.stopPropagation();
-                onViewDetails(capability.id);
+                onExportComprehensiveReport(capability);
               }}
               sx={{ p: 0.5 }}
             >
-              <ViewIcon sx={{ fontSize: '1rem' }} />
+              <ExportIcon sx={{ fontSize: '1rem' }} />
             </IconButton>
           </Tooltip>
         </Box>
@@ -394,10 +395,10 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
   onViewReports,
   onEditClick,
   onDeleteClick,
-  onViewDetails,
   onStatusChange,
   onManageDomains,
   onManageAttributes,
+  onExportComprehensiveReport,
 }) => {
   const [activeId, setActiveId] = useState<number | null>(null);
   const sensors = useSensors(
@@ -473,9 +474,9 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
                       onViewReports={onViewReports}
                       onEditClick={onEditClick}
                       onDeleteClick={onDeleteClick}
-                      onViewDetails={onViewDetails}
                       onManageDomains={onManageDomains}
                       onManageAttributes={onManageAttributes}
+                      onExportComprehensiveReport={onExportComprehensiveReport}
                     />
                   ))}
                 </Box>

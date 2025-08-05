@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from datetime import datetime
 import base64
 import io
@@ -90,7 +90,7 @@ async def get_architecture_canvas(db: Session = Depends(get_db)):
                 continue
 
             # Analyze vendor performance
-            vendor_performance = analyze_vendor_performance(vendor_scores)
+            vendor_performance = analyze_vendor_performance(vendor_scores, db)
             
             # Map capability to architecture layer
             layer_id = map_capability_to_layer(capability.name)["id"]
@@ -307,12 +307,14 @@ def generate_architecture_canvas_pdf(canvas_data: Dict[str, Any]) -> str:
     except Exception as e:
         raise Exception(f"Error generating PDF: {str(e)}")
 
-def analyze_vendor_performance(vendor_scores: List[VendorScore]) -> Dict[str, Any]:
+def analyze_vendor_performance(vendor_scores: List[VendorScore], db: Session) -> Dict[str, Any]:
     """Analyze vendor performance for a capability"""
-    vendors = ["comarch", "servicenow", "salesforce"]
-    scores = {"comarch": 0, "servicenow": 0, "salesforce": 0}
+    from services.capability_service import CapabilityService
+    
+    vendors = CapabilityService.get_active_vendors(db)
+    scores = {vendor: 0 for vendor in vendors}
     evidence = []
-    score_counts = {"comarch": 0, "servicenow": 0, "salesforce": 0}
+    score_counts = {vendor: 0 for vendor in vendors}
 
     # Calculate total scores for each vendor
     for score in vendor_scores:
@@ -336,8 +338,8 @@ def analyze_vendor_performance(vendor_scores: List[VendorScore]) -> Dict[str, An
         avg_scores[vendor] = scores[vendor] / count if count > 0 else 0
 
     # Find best vendor
-    best_vendor = max(avg_scores, key=avg_scores.get)
-    best_score = avg_scores[best_vendor]
+    best_vendor = max(avg_scores, key=avg_scores.get) if avg_scores else None
+    best_score = avg_scores[best_vendor] if best_vendor else 0
 
     # Determine status
     status = "no-data"
@@ -352,7 +354,7 @@ def analyze_vendor_performance(vendor_scores: List[VendorScore]) -> Dict[str, An
             status = "poor"
 
     return {
-        "bestVendor": best_vendor.capitalize(),
+        "bestVendor": best_vendor.capitalize() if best_vendor else "None",
         "bestScore": round(best_score, 1),
         "scores": avg_scores,
         "status": status,
@@ -515,7 +517,7 @@ async def get_capability_details(capability_id: int, db: Session = Depends(get_d
         vendor_scores = db.query(VendorScore).filter(VendorScore.capability_id == capability_id).all()
         
         # Analyze vendor performance
-        vendor_performance = analyze_vendor_performance(vendor_scores)
+        vendor_performance = analyze_vendor_performance(vendor_scores, db)
         
         # Get layer mapping
         layer = map_capability_to_layer(capability.name)

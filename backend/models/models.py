@@ -14,6 +14,21 @@ class ObservationType(enum.Enum):
     DISADVANTAGE = "disadvantage"
     NOTE = "note"
 
+class Vendor(Base):
+    __tablename__ = "vendors"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(100), unique=True, index=True, nullable=False)
+    display_name = Column(String(200))
+    description = Column(Text)
+    website_url = Column(String(500))
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    
+    # Relationships
+    vendor_scores = relationship("VendorScore", back_populates="vendor_obj")
+
 class Capability(Base):
     __tablename__ = "capabilities"
     
@@ -88,7 +103,8 @@ class VendorScore(Base):
     id = Column(Integer, primary_key=True, index=True)
     capability_id = Column(Integer, ForeignKey("capabilities.id"), nullable=False)
     attribute_id = Column(Integer, ForeignKey("attributes.id"), nullable=False)
-    vendor = Column(String, nullable=False)
+    vendor_id = Column(Integer, ForeignKey("vendors.id"), nullable=True)  # New foreign key
+    vendor = Column(String, nullable=False)  # Keep for backward compatibility
     weight = Column(Integer, default=50)
     score = Column(String, nullable=False)
     score_numeric = Column(Float, nullable=False)
@@ -101,6 +117,7 @@ class VendorScore(Base):
     # Relationships
     capability = relationship("Capability", back_populates="vendor_scores")
     attribute = relationship("Attribute", back_populates="vendor_scores")
+    vendor_obj = relationship("Vendor", back_populates="vendor_scores")  # New relationship
     observations = relationship("VendorScoreObservation", back_populates="vendor_score", cascade="all, delete-orphan")
     url_validations = relationship("URLValidation", back_populates="vendor_score", cascade="all, delete-orphan")
 

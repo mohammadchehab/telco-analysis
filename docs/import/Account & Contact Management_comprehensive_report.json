@@ -1,0 +1,229 @@
+{
+  "capability": "Account & Contact Management",
+  "analysis_date": "2025-08-05",
+  "capability_status": "ready",
+  "current_framework": {
+    "domains_count": 5,
+    "attributes_count": 40,
+    "domains": [
+      {
+        "domain_name": "Customer Profile Management",
+        "description": "Comprehensive management of customer identity, demographics, preferences, and relationship data across all customer segments (B2C, B2B, B2B2x)",
+        "importance": "medium",
+        "attributes": [
+          {
+            "attribute_name": "Customer Identity Management",
+            "definition": "Core customer identification, authentication, and authorization including unique customer IDs, digital identity, and multi-factor authentication",
+            "tm_forum_mapping": "TMF632 Party Management API",
+            "importance": "high"
+          },
+          {
+            "attribute_name": "Demographic Information",
+            "definition": "Customer personal and business information including name, address, contact details, date of birth, business registration, and tax information",
+            "tm_forum_mapping": "TMF629 Customer Management API",
+            "importance": "high"
+          },
+          {
+            "attribute_name": "Customer Segmentation",
+            "definition": "Classification of customers by type (consumer, business, enterprise), value tier, lifecycle stage, and behavioral patterns",
+            "tm_forum_mapping": "TMF717 Customer360 Management API",
+            "importance": "high"
+          },
+          {
+            "attribute_name": "Preference Management",
+            "definition": "Customer preferences for communication channels, language, marketing opt-ins, service delivery preferences, and privacy settings",
+            "tm_forum_mapping": "TMF644 Privacy Management API",
+            "importance": "medium"
+          },
+          {
+            "attribute_name": "Relationship Hierarchy",
+            "definition": "Management of customer relationships including family plans, business hierarchies, parent-child relationships, and account associations",
+            "tm_forum_mapping": "TMF669 Party Role Management API",
+            "importance": "medium"
+          }
+        ]
+      },
+      {
+        "domain_name": "Account Management",
+        "description": "Management of customer accounts, billing relationships, service subscriptions, and account lifecycle from creation to closure",
+        "importance": "medium",
+        "attributes": [
+          {
+            "attribute_name": "Account Creation & Onboarding",
+            "definition": "End-to-end account setup process including identity verification, credit checks, service qualification, and initial provisioning",
+            "tm_forum_mapping": "TMF666 Account Management API",
+            "importance": "high"
+          },
+          {
+            "attribute_name": "Account Status Management",
+            "definition": "Account lifecycle states including active, suspended, pending, closed, and status transition workflows with business rules",
+            "tm_forum_mapping": "TMF666 Account Management API",
+            "importance": "high"
+          },
+          {
+            "attribute_name": "Billing Relationship",
+            "definition": "Billing account associations, payment methods, billing cycles, invoice delivery preferences, and financial account management",
+            "tm_forum_mapping": "TMF678 Customer Bill Management API",
+            "importance": "high"
+          },
+          {
+            "attribute_name": "Service Subscription Management",
+            "definition": "Active service subscriptions, plan changes, add-ons, promotional offers, and subscription lifecycle management",
+            "tm_forum_mapping": "TMF637 Product Inventory Management API",
+            "importance": "high"
+          },
+          {
+            "attribute_name": "Account Closure & Retention",
+            "definition": "Account termination processes, retention campaigns, win-back strategies, and data archival procedures",
+            "tm_forum_mapping": "TMF666 Account Management API",
+            "importance": "medium"
+          }
+        ]
+      },
+      {
+        "domain_name": "Contact Management",
+        "description": "Management of customer contact information, communication preferences, interaction history, and contact point lifecycle",
+        "importance": "medium",
+        "attributes": [
+          {
+            "attribute_name": "Contact Information Management",
+            "definition": "Multiple contact points including phone numbers, email addresses, physical addresses, social media handles, and communication channels",
+            "tm_forum_mapping": "TMF632 Party Management API",
+            "importance": "high"
+          },
+          {
+            "attribute_name": "Contact Point Verification",
+            "definition": "Verification and validation of contact information, opt-in/opt-out management, and contact point status tracking",
+            "tm_forum_mapping": "TMF644 Privacy Management API",
+            "importance": "high"
+          },
+          {
+            "attribute_name": "Communication Preferences",
+            "definition": "Preferred communication channels, frequency preferences, time zone considerations, and language preferences",
+            "tm_forum_mapping": "TMF681 Communication Management API",
+            "importance": "medium"
+          },
+          {
+            "attribute_name": "Interaction History",
+            "definition": "Complete history of customer interactions across all channels including calls, chats, emails, and in-person visits",
+            "tm_forum_mapping": "TMF683 Party Interaction Management API",
+            "importance": "medium"
+          },
+          {
+            "attribute_name": "Contact Point Lifecycle",
+            "definition": "Management of contact point creation, updates, verification, and deactivation with audit trails",
+            "tm_forum_mapping": "TMF632 Party Management API",
+            "importance": "medium"
+          }
+        ]
+      },
+      {
+        "domain_name": "Customer 360 View",
+        "description": "Comprehensive, real-time view of customer across all touchpoints, services, and interactions providing complete customer context",
+        "importance": "medium",
+        "attributes": [
+          {
+            "attribute_name": "Unified Customer Profile",
+            "definition": "Single source of truth for customer information aggregating data from all systems and touchpoints",
+            "tm_forum_mapping": "TMF717 Customer360 Management API",
+            "importance": "high"
+          },
+          {
+            "attribute_name": "Real-time Data Integration",
+            "definition": "Real-time synchronization of customer data across CRM, billing, service, and operational systems",
+            "tm_forum_mapping": "TMF717 Customer360 Management API",
+            "importance": "high"
+          },
+          {
+            "attribute_name": "Cross-Service Visibility",
+            "definition": "Complete view of all customer services, subscriptions, usage patterns, and service dependencies",
+            "tm_forum_mapping": "TMF637 Product Inventory Management API",
+            "importance": "high"
+          },
+          {
+            "attribute_name": "Interaction Context",
+            "definition": "Contextual information for customer interactions including recent activities, preferences, and service status",
+            "tm_forum_mapping": "TMF683 Party Interaction Management API",
+            "importance": "medium"
+          },
+          {
+            "attribute_name": "Predictive Insights",
+            "definition": "AI-driven insights for customer behavior, churn prediction, next-best actions, and personalized recommendations",
+            "tm_forum_mapping": "TMF680 Recommendation Management API",
+            "importance": "medium"
+          }
+        ]
+      },
+      {
+        "domain_name": "Data Quality & Governance",
+        "description": "Ensuring data accuracy, consistency, compliance, and governance across all customer and account data",
+        "importance": "medium",
+        "attributes": [
+          {
+            "attribute_name": "Data Validation & Cleansing",
+            "definition": "Automated validation, deduplication, and cleansing of customer data to ensure accuracy and consistency",
+            "tm_forum_mapping": "TMF629 Customer Management API",
+            "importance": "high"
+          },
+          {
+            "attribute_name": "Data Privacy & Compliance",
+            "definition": "GDPR, CCPA, and other privacy regulation compliance including consent management and data retention policies",
+            "tm_forum_mapping": "TMF644 Privacy Management API",
+            "importance": "high"
+          },
+          {
+            "attribute_name": "Data Lineage & Provenance",
+            "definition": "Tracking data sources, transformations, and usage across systems for compliance and audit purposes",
+            "tm_forum_mapping": "TMF725 Metadata Catalog Management API",
+            "importance": "medium"
+          },
+          {
+            "attribute_name": "Master Data Management",
+            "definition": "Centralized management of customer master data with governance policies and data stewardship",
+            "tm_forum_mapping": "TMF717 Customer360 Management API",
+            "importance": "medium"
+          },
+          {
+            "attribute_name": "Data Quality Monitoring",
+            "definition": "Continuous monitoring of data quality metrics, alerts for data issues, and automated quality improvement",
+            "tm_forum_mapping": "TMF629 Customer Management API",
+            "importance": "medium"
+          }
+        ]
+      }
+    ]
+  },
+  "gap_analysis": {
+    "missing_domains": [],
+    "missing_attributes": []
+  },
+  "market_research": {
+    "major_vendors": [
+      "comarch",
+      "servicenow",
+      "salesforce"
+    ],
+    "industry_standards": [
+      "TM Forum",
+      "ITIL",
+      "eTOM"
+    ],
+    "competitive_analysis": "Analysis of 3 major vendors with average scores ranging from 0 to 0"
+  },
+  "recommendations": {
+    "priority_domains": [
+      "Customer Profile Management",
+      "Account Management",
+      "Contact Management"
+    ],
+    "priority_attributes": [
+      "Customer Identity Management",
+      "Demographic Information",
+      "Customer Segmentation",
+      "Preference Management",
+      "Relationship Hierarchy"
+    ],
+    "framework_completeness": "complete",
+    "next_steps": "Continue research on Account & Contact Management with focus on 5 domains and 40 attributes"
+  }
+}

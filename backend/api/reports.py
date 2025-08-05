@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, Query
 from sqlalchemy.orm import Session
 from typing import List, Dict, Any, Optional
 import json
@@ -122,19 +122,156 @@ async def get_comprehensive_report(capability_id: int, db: Session = Depends(get
         if not capability:
             return APIResponse(success=False, error="Capability not found")
         
-        # Generate all types of data
-        radar_data = CapabilityService.generate_radar_chart_data(db, capability_id)
-        vendor_data = CapabilityService.generate_vendor_comparison_data(db, capability_id)
-        distribution_data = CapabilityService.generate_score_distribution_data(db, capability_id)
+        # Get all domains and attributes
+        domains = db.query(Domain).filter(Domain.capability_id == capability_id).all()
+        attributes = db.query(Attribute).filter(Attribute.capability_id == capability_id).all()
+        vendor_scores = db.query(VendorScore).filter(VendorScore.capability_id == capability_id).all()
+        
+        # Format domains with their attributes
+        formatted_domains = []
+        for domain in domains:
+            domain_attributes = [attr for attr in attributes if attr.domain_name == domain.domain_name]
+            formatted_domain = {
+                "domain_name": domain.domain_name,
+                "description": domain.description,
+                "importance": domain.importance or "medium",
+                "attributes": [
+                    {
+                        "attribute_name": attr.attribute_name,
+                        "definition": attr.definition,
+                        "tm_forum_mapping": attr.tm_forum_mapping,
+                        "importance": attr.importance or "medium"
+                    }
+                    for attr in domain_attributes
+                ]
+            }
+            formatted_domains.append(formatted_domain)
+        
+        # Analyze vendor performance for market research
+        vendors = CapabilityService.get_active_vendors(db)
+        vendor_performance = {}
+        for vendor in vendors:
+            vendor_scores_list = [score for score in vendor_scores if score.vendor == vendor]
+            if vendor_scores_list:
+                avg_score = sum(score.score_numeric for score in vendor_scores_list) / len(vendor_scores_list)
+                vendor_performance[vendor] = round(avg_score, 2)
+        
+        # Determine framework completeness
+        total_attributes = len(attributes)
+        if total_attributes >= 20:
+            framework_completeness = "complete"
+        elif total_attributes >= 10:
+            framework_completeness = "needs_minor_updates"
+        else:
+            framework_completeness = "needs_major_updates"
+        
+        # Generate comprehensive report data
+        comprehensive_data = {
+            "capability": capability.name,
+            "analysis_date": datetime.now().strftime("%Y-%m-%d"),
+            "capability_status": capability.status,
+            "current_framework": {
+                "domains_count": len(domains),
+                "attributes_count": len(attributes),
+                "domains": formatted_domains
+            },
+            "gap_analysis": {
+                "missing_domains": [],  # Could be enhanced with AI analysis
+                "missing_attributes": []  # Could be enhanced with AI analysis
+            },
+            "market_research": {
+                "major_vendors": vendors,
+                "industry_standards": ["TM Forum", "ITIL", "eTOM"],
+                "competitive_analysis": f"Analysis of {len(vendors)} major vendors with average scores ranging from {min(vendor_performance.values()) if vendor_performance else 0} to {max(vendor_performance.values()) if vendor_performance else 0}"
+            },
+            "recommendations": {
+                "priority_domains": [domain.domain_name for domain in domains[:3]],  # Top 3 domains
+                "priority_attributes": [attr.attribute_name for attr in attributes[:5]],  # Top 5 attributes
+                "framework_completeness": framework_completeness,
+                "next_steps": f"Continue research on {capability.name} with focus on {len(domains)} domains and {len(attributes)} attributes"
+            }
+        }
+        
+        return APIResponse(success=True, data=comprehensive_data)
+    except Exception as e:
+        return APIResponse(success=False, error=str(e))
+
+@router.get("/{capability_id}/comprehensive-export", response_model=APIResponse)
+async def export_comprehensive_report(capability_id: int, db: Session = Depends(get_db)):
+    """Export comprehensive report in the format specified in prompts.py"""
+    try:
+        capability = CapabilityService.get_capability(db, capability_id)
+        if not capability:
+            return APIResponse(success=False, error="Capability not found")
+        
+        # Get domains and attributes
+        domains = db.query(Domain).filter(Domain.capability_id == capability_id).all()
+        attributes = db.query(Attribute).filter(Attribute.capability_id == capability_id).all()
         vendor_scores = CapabilityService.get_vendor_scores(db, capability.name)
         
+        # Format domains with attributes
+        formatted_domains = []
+        for domain in domains:
+            domain_attributes = [attr for attr in attributes if attr.domain_name == domain.domain_name]
+            formatted_domain = {
+                "domain_name": domain.domain_name,
+                "description": domain.description or f"Domain for {domain.domain_name}",
+                "importance": "medium",  # Default importance
+                "attributes": [
+                    {
+                        "attribute_name": attr.attribute_name,
+                        "definition": attr.definition or f"Attribute for {attr.attribute_name}",
+                        "tm_forum_mapping": attr.tm_forum_mapping or "",
+                        "importance": attr.importance or "medium"
+                    }
+                    for attr in domain_attributes
+                ]
+            }
+            formatted_domains.append(formatted_domain)
+        
+        # Analyze vendor performance for market research
+        vendors = ["comarch", "servicenow", "salesforce"]
+        vendor_performance = {}
+        for vendor in vendors:
+            vendor_scores_list = [score for score in vendor_scores if score.vendor == vendor]
+            if vendor_scores_list:
+                avg_score = sum(score.score_numeric for score in vendor_scores_list) / len(vendor_scores_list)
+                vendor_performance[vendor] = round(avg_score, 2)
+        
+        # Determine framework completeness
+        total_attributes = len(attributes)
+        if total_attributes >= 20:
+            framework_completeness = "complete"
+        elif total_attributes >= 10:
+            framework_completeness = "needs_minor_updates"
+        else:
+            framework_completeness = "needs_major_updates"
+        
+        # Generate comprehensive report data
         comprehensive_data = {
-            "capability_name": capability.name,
-            "generated_at": datetime.now().isoformat(),
-            "radar_chart": radar_data.model_dump(),
-            "vendor_comparison": vendor_data.model_dump(),
-            "score_distribution": distribution_data.model_dump(),
-            "vendor_scores": [score.dict() for score in vendor_scores]
+            "capability": capability.name,
+            "analysis_date": datetime.now().strftime("%Y-%m-%d"),
+            "capability_status": capability.status,
+            "current_framework": {
+                "domains_count": len(domains),
+                "attributes_count": len(attributes),
+                "domains": formatted_domains
+            },
+            "gap_analysis": {
+                "missing_domains": [],  # Could be enhanced with AI analysis
+                "missing_attributes": []  # Could be enhanced with AI analysis
+            },
+            "market_research": {
+                "major_vendors": vendors,
+                "industry_standards": ["TM Forum", "ITIL", "eTOM"],
+                "competitive_analysis": f"Analysis of {len(vendors)} major vendors with average scores ranging from {min(vendor_performance.values()) if vendor_performance else 0} to {max(vendor_performance.values()) if vendor_performance else 0}"
+            },
+            "recommendations": {
+                "priority_domains": [domain.domain_name for domain in domains[:3]],  # Top 3 domains
+                "priority_attributes": [attr.attribute_name for attr in attributes[:5]],  # Top 5 attributes
+                "framework_completeness": framework_completeness,
+                "next_steps": f"Continue research on {capability.name} with focus on {len(domains)} domains and {len(attributes)} attributes"
+            }
         }
         
         return APIResponse(success=True, data=comprehensive_data)
@@ -153,7 +290,7 @@ async def get_capability_summary(capability_id: int, db: Session = Depends(get_d
         vendor_scores = db.query(VendorScore).filter(VendorScore.capability_id == capability_id).all()
         
         # Calculate summary statistics
-        vendors = ["comarch", "servicenow", "salesforce"]
+        vendors = CapabilityService.get_active_vendors(db)
         summary_stats = {}
         
         for vendor in vendors:
@@ -250,20 +387,24 @@ async def export_capability_report(
 @router.get("/{capability_id}/vendor-analysis", response_model=APIResponse)
 async def get_vendor_analysis_data(
     capability_id: int, 
-    vendors: str = "comarch,servicenow,salesforce",
+    vendors: str = None,
     db: Session = Depends(get_db)
 ):
-    """Get detailed vendor analysis data for comparison"""
+    """Get vendor analysis data for a capability"""
     try:
         capability = CapabilityService.get_capability(db, capability_id)
         if not capability:
             return APIResponse(success=False, error="Capability not found")
         
-        # Parse vendors from query parameter with URL decoding
-        vendor_list = [unquote(v.strip()) for v in vendors.split(",")]
+        # Parse vendors parameter or use all active vendors
+        if vendors:
+            vendor_list = [v.strip() for v in vendors.split(",")]
+        else:
+            vendor_list = CapabilityService.get_active_vendors(db)
         
-        # Get detailed vendor analysis data
+        # Generate vendor analysis data
         analysis_data = CapabilityService.generate_vendor_analysis_data(db, capability_id, vendor_list)
+        
         return APIResponse(success=True, data=analysis_data)
     except Exception as e:
         return APIResponse(success=False, error=str(e))
@@ -271,75 +412,71 @@ async def get_vendor_analysis_data(
 @router.get("/{capability_id}/vendor-analysis/export", response_model=APIResponse)
 async def export_vendor_analysis(
     capability_id: int,
-    vendors: str = "comarch,servicenow,salesforce",
+    vendors: str = None,
     format: str = "excel",
     db: Session = Depends(get_db)
 ):
-    """Export vendor analysis to Excel with detailed format"""
+    """Export vendor analysis data for a capability"""
     try:
         capability = CapabilityService.get_capability(db, capability_id)
         if not capability:
             return APIResponse(success=False, error="Capability not found")
         
-        # Parse vendors from query parameter with URL decoding
-        vendor_list = [unquote(v.strip()) for v in vendors.split(",")]
+        # Parse vendors parameter or use all active vendors
+        if vendors:
+            vendor_list = [v.strip() for v in vendors.split(",")]
+        else:
+            vendor_list = CapabilityService.get_active_vendors(db)
         
-        # Get detailed vendor analysis data
+        # Generate vendor analysis data
         analysis_data = CapabilityService.generate_vendor_analysis_data(db, capability_id, vendor_list)
         
         if format == "excel":
             excel_data = generate_vendor_analysis_excel(analysis_data, capability.name, vendor_list)
             return APIResponse(
                 success=True,
-                data={
-                    "excel_data": excel_data, 
-                    "filename": f"{capability.name}_vendor_analysis.xlsx"
-                }
+                data={"excel_data": excel_data, "filename": f"{capability.name}_vendor_analysis.xlsx"}
             )
         else:
-            return APIResponse(success=False, error="Only Excel format supported for vendor analysis")
+            return APIResponse(success=False, error="Unsupported format")
             
     except Exception as e:
         return APIResponse(success=False, error=str(e))
 
 @router.get("/vendor-analysis/export-all", response_model=APIResponse)
 async def export_all_vendor_analysis(
-    vendors: str = "comarch,servicenow,salesforce",
+    vendors: str = None,
     format: str = "excel",
     db: Session = Depends(get_db)
 ):
     """Export vendor analysis data for all capabilities"""
     try:
-        # Parse vendors from query parameter with URL decoding
-        vendor_list = [unquote(v.strip()) for v in vendors.split(",")]
+        # Parse vendors parameter or use all active vendors
+        if vendors:
+            vendor_list = [v.strip() for v in vendors.split(",")]
+        else:
+            vendor_list = CapabilityService.get_active_vendors(db)
         
-        # Get all completed capabilities
-        capabilities = db.query(Capability).filter(Capability.status == "completed").all()
+        # Get all capabilities
+        capabilities = CapabilityService.get_capabilities(db)
         
-        if not capabilities:
-            return APIResponse(success=False, error="No completed capabilities found")
-        
-        # Generate Excel data for all capabilities
-        excel_data = generate_all_capabilities_excel(capabilities, vendor_list, db)
-        
-        filename = f"vendor_analysis_all_capabilities_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
-        
-        return APIResponse(
-            success=True,
-            data={
-                "excel_data": excel_data,
-                "filename": filename
-            }
-        )
+        if format == "excel":
+            excel_data = generate_all_capabilities_excel(capabilities, vendor_list, db)
+            return APIResponse(
+                success=True,
+                data={"excel_data": excel_data, "filename": f"all_capabilities_vendor_analysis.xlsx"}
+            )
+        else:
+            return APIResponse(success=False, error="Unsupported format")
+            
     except Exception as e:
-        logger.error(f"Error exporting all vendor analysis: {str(e)}")
-        return APIResponse(success=False, error=f"Failed to export vendor analysis: {str(e)}")
+        return APIResponse(success=False, error=str(e))
 
 @router.get("/{capability_id}/filtered-reports", response_model=APIResponse)
 async def get_filtered_reports(
     capability_id: int,
     domains: str = "",
-    vendors: str = "comarch,servicenow,salesforce",
+    vendors: str = None,
     attributes: str = "",
     db: Session = Depends(get_db)
 ):
@@ -349,16 +486,15 @@ async def get_filtered_reports(
         if not capability:
             return APIResponse(success=False, error="Capability not found")
         
-        # Only proceed if capability is completed
-        if capability.status != "completed":
-            return APIResponse(success=False, error="Capability research is not completed")
+        # Parse filter parameters
+        domain_list = [d.strip() for d in domains.split(",")] if domains else []
+        if vendors:
+            vendor_list = [v.strip() for v in vendors.split(",")]
+        else:
+            vendor_list = CapabilityService.get_active_vendors(db)
+        attribute_list = [a.strip() for a in attributes.split(",")] if attributes else []
         
-        # Parse filter parameters with URL decoding
-        domain_list = [unquote(d.strip()) for d in domains.split(",") if d.strip()] if domains else []
-        vendor_list = [unquote(v.strip()) for v in vendors.split(",") if v.strip()] if vendors else []
-        attribute_list = [unquote(a.strip()) for a in attributes.split(",") if a.strip()] if attributes else []
-        
-        # Get filtered data
+        # Generate filtered reports data
         filtered_data = CapabilityService.generate_filtered_reports_data(
             db, capability_id, domain_list, vendor_list, attribute_list
         )

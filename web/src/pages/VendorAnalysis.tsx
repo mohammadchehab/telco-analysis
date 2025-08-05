@@ -42,7 +42,7 @@ import {
   Error as ErrorIcon,
 
 } from '@mui/icons-material';
-import { apiClient, vendorAnalysisAPI } from '../utils/api';
+import { vendorAnalysisAPI } from '../utils/api';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useNavigationState } from '../hooks/useLocalStorage';
 
@@ -101,10 +101,7 @@ const VendorAnalysis: React.FC = () => {
   const [filterScore, setFilterScore] = useState<string>('');
 
   const [expandedAttributes, setExpandedAttributes] = useState<Set<string>>(new Set());
-
-  const availableVendors = [
-    'comarch', 'servicenow', 'salesforce', 'oracle', 'ibm', 'microsoft'
-  ];
+  const [availableVendors, setAvailableVendors] = useState<string[]>([]);
 
   const sortOptions = [
     { value: 'attribute_name', label: 'Attribute Name' },
@@ -121,6 +118,7 @@ const VendorAnalysis: React.FC = () => {
 
   useEffect(() => {
     fetchCapabilities();
+    fetchVendors();
   }, []);
 
   useEffect(() => {
@@ -201,16 +199,34 @@ const VendorAnalysis: React.FC = () => {
 
   const fetchCapabilities = async () => {
     try {
-      setLoading(true);
-      const response: any = await apiClient.get('/api/capabilities/');
-      if (response.success && response.data) {
-        setCapabilities(response.data.capabilities.filter((c: any) => c.status === 'completed' || c.status === 'ready'));
+      const response = await fetch('/api/capabilities/');
+      const data = await response.json();
+      if (data.success) {
+        setCapabilities(data.data);
+      } else {
+        console.error('Failed to fetch capabilities:', data.error);
       }
-    } catch (err) {
-      setError('Failed to fetch capabilities');
-      console.error(err);
-    } finally {
-      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching capabilities:', error);
+    }
+  };
+
+  // Fetch available vendors from API
+  const fetchVendors = async () => {
+    try {
+      const response = await fetch('/api/vendors/active/names');
+      const data = await response.json();
+      if (data.success) {
+        setAvailableVendors(data.data);
+      } else {
+        console.error('Failed to fetch vendors:', data.error);
+        // Fallback to default vendors
+        setAvailableVendors(['comarch', 'servicenow', 'salesforce']);
+      }
+    } catch (error) {
+      console.error('Error fetching vendors:', error);
+      // Fallback to default vendors
+      setAvailableVendors(['comarch', 'servicenow', 'salesforce']);
     }
   };
 

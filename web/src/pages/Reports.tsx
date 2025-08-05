@@ -158,15 +158,20 @@ const Reports: React.FC = () => {
   const [capabilities, setCapabilities] = useState<Capability[]>([]);
   const [hasRestoredState, setHasRestoredState] = useState(false);
   const [isRestoringState, setIsRestoringState] = useState(false);
-  const [selectedCapability, setSelectedCapability] = useState<number | ''>('');
+  const [selectedCapability, setSelectedCapability] = useState<Capability | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [reportData, setReportData] = useState<FilteredReportsData | null>(null);
-  const [filterOptions, setFilterOptions] = useState<FilterOptions | null>(null);
+  const [filterOptions, setFilterOptions] = useState<FilterOptions>({
+    domains: [],
+    attributes: [],
+    vendors: [],
+    capability_name: ''
+  });
   
   // Filter states
   const [selectedDomains, setSelectedDomains] = useState<string[]>([]);
-  const [selectedVendors, setSelectedVendors] = useState<string[]>(['comarch', 'servicenow', 'salesforce']);
+  const [selectedVendors, setSelectedVendors] = useState<string[]>([]);
   const [selectedAttributes, setSelectedAttributes] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
   
@@ -180,6 +185,7 @@ const Reports: React.FC = () => {
   // Fetch capabilities on component mount
   useEffect(() => {
     fetchCapabilities();
+    fetchVendors();
   }, []);
 
   // Fetch filter options when capability changes
@@ -191,7 +197,7 @@ const Reports: React.FC = () => {
 
   // Fetch report data when filters change
   useEffect(() => {
-    if (selectedCapability && filterOptions) {
+    if (selectedCapability && (selectedDomains.length > 0 || selectedVendors.length > 0 || selectedAttributes.length > 0)) {
       fetchReportData();
     }
   }, [selectedCapability, selectedDomains, selectedVendors, selectedAttributes, filterOptions]);
@@ -338,12 +344,36 @@ const Reports: React.FC = () => {
     }
   };
 
+  // Fetch available vendors from API
+  const fetchVendors = async () => {
+    try {
+      const response = await fetch('/api/vendors/active/names');
+      const data = await response.json();
+      if (data.success) {
+        setSelectedVendors(data.data);
+        setFilterOptions(prev => ({ ...prev, vendors: data.data }));
+      } else {
+        console.error('Failed to fetch vendors:', data.error);
+        // Fallback to default vendors
+        const defaultVendors = ['comarch', 'servicenow', 'salesforce'];
+        setSelectedVendors(defaultVendors);
+        setFilterOptions(prev => ({ ...prev, vendors: defaultVendors }));
+      }
+    } catch (error) {
+      console.error('Error fetching vendors:', error);
+      // Fallback to default vendors
+      const defaultVendors = ['comarch', 'servicenow', 'salesforce'];
+      setSelectedVendors(defaultVendors);
+      setFilterOptions(prev => ({ ...prev, vendors: defaultVendors }));
+    }
+  };
+
   const fetchFilterOptions = async () => {
     if (!selectedCapability) return;
 
     try {
       setLoading(true);
-      const response = await apiClient.get(`/api/reports/${selectedCapability}/available-filters`);
+      const response = await apiClient.get(`/api/reports/${selectedCapability.id}/available-filters`);
       const data = response as any;
       
       if (data.success) {
@@ -378,7 +408,7 @@ const Reports: React.FC = () => {
       const attributesParam = selectedAttributes.join(',');
 
       const response = await apiClient.get(
-        `/api/reports/${selectedCapability}/filtered-reports?domains=${domainsParam}&vendors=${vendorsParam}&attributes=${attributesParam}`
+        `/api/reports/${selectedCapability.id}/filtered-reports?domains=${domainsParam}&vendors=${vendorsParam}&attributes=${attributesParam}`
       );
       const data = response as any;
 
@@ -400,7 +430,7 @@ const Reports: React.FC = () => {
     try {
       setLoading(true);
       const response = await apiClient.get(
-        `/api/reports/${selectedCapability}/export/${exportFormat}?report_type=comprehensive`
+        `/api/reports/${selectedCapability.id}/export/${exportFormat}?report_type=comprehensive`
       );
       const data = response as any;
 
@@ -580,9 +610,12 @@ const Reports: React.FC = () => {
             <FormControl fullWidth>
               <InputLabel>Select Capability</InputLabel>
               <Select
-                value={selectedCapability}
+                value={selectedCapability?.id || ''}
                 label="Select Capability"
-                onChange={(e) => setSelectedCapability(e.target.value as number)}
+                onChange={(e) => {
+                  const capabilityId = typeof e.target.value === 'string' ? parseInt(e.target.value) : e.target.value;
+                  setSelectedCapability(capabilities.find(c => c.id === capabilityId) || null);
+                }}
                 disabled={loading}
               >
                 {capabilities.map((capability) => (
@@ -966,7 +999,7 @@ const Reports: React.FC = () => {
                               try {
                                 // Save current page state before navigating
                                 const stateToSave = {
-                                  selectedCapability,
+                                  selectedCapability: selectedCapability?.id,
                                   selectedDomains,
                                   selectedVendors,
                                   selectedAttributes,
@@ -986,14 +1019,14 @@ const Reports: React.FC = () => {
                                 saveCurrentState('/reports', stateToSave, openDialog);
                                 
                                 console.log('Looking up score ID for:', {
-                                  capabilityId: selectedCapability,
+                                  capabilityId: selectedCapability?.id,
                                   attributeName: selectedAttributeDetail.attribute_name,
                                   vendor: vendor
                                 });
                                 
                                 // Get the score ID from the backend
                                 const response = await vendorScoreAPI.getScoreId(
-                                  selectedCapability as number,
+                                  selectedCapability?.id as number,
                                   selectedAttributeDetail.attribute_name,
                                   vendor
                                 );

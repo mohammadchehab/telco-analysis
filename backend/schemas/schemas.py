@@ -6,6 +6,29 @@ from datetime import datetime
 class Base(BaseModel):
     pass
 
+# Vendor schemas
+class VendorBase(Base):
+    name: str
+    display_name: Optional[str] = None
+    description: Optional[str] = None
+    website_url: Optional[str] = None
+    is_active: bool = True
+
+class VendorCreate(VendorBase):
+    pass
+
+class VendorUpdate(Base):
+    name: Optional[str] = None
+    display_name: Optional[str] = None
+    description: Optional[str] = None
+    website_url: Optional[str] = None
+    is_active: Optional[bool] = None
+
+class VendorResponse(VendorBase):
+    id: int
+    created_at: str
+    updated_at: Optional[str] = None
+
 # Authentication schemas
 class UserLogin(Base):
     username: str

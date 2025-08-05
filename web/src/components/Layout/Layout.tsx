@@ -37,8 +37,8 @@ import {
   PushPin as PinIcon,
   PushPinOutlined as PinOutlinedIcon,
   Architecture as ArchitectureIcon,
-  Link as LinkIcon,
-  Business as BusinessIcon
+  Business as BusinessIcon,
+  Store as StoreIcon
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
@@ -141,8 +141,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     { text: 'Architecture Canvas', icon: <ArchitectureIcon />, path: '/architecture-canvas' },
     { text: 'Business Process Canvas', icon: <BusinessIcon />, path: '/business-process-canvas' },
     { text: 'Reports', icon: <AssessmentIcon />, path: '/reports' },
+    { text: 'Vendors', icon: <StoreIcon />, path: '/vendors' },
     { text: 'Vendor Analysis', icon: <CompareIcon />, path: '/vendor-analysis' },
-    { text: 'Evidence Review', icon: <LinkIcon />, path: '/evidence-review' },
     { text: 'AI Assistant', icon: <BotIcon />, path: '/data-quality-chat' },
 
     ...(hasAdminAccess ? [{ text: 'User Management', icon: <GroupIcon />, path: '/user-management' }] : []),

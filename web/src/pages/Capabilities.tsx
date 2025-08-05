@@ -28,7 +28,6 @@ import {
 import {
   PlayArrow as StartIcon,
   Assessment as ReportsIcon,
-  Visibility as ViewIcon,
   FilterList as FilterIcon,
   Clear as ClearIcon,
   Download as ExportIcon,
@@ -51,7 +50,7 @@ import {
 } from '../store/slices/capabilitiesSlice';
 import { addNotification } from '../store/slices/uiSlice';
 import { capabilityAPI } from '../utils/api';
-import type { WorkflowState, BulkAction, Capability } from '../types';
+import type { WorkflowState, BulkAction, Capability, CapabilitySummary } from '../types';
 import { useCapabilitiesLocalStorage } from '../hooks/useLocalStorage';
 import KanbanBoard from '../components/UI/KanbanBoard';
 
@@ -348,10 +347,15 @@ const Capabilities: React.FC = () => {
         break;
       case 'export_data':
         // Export selected capability
-        dispatch(addNotification({
-          type: 'info',
-          message: `Exporting capability "${selectedCapabilities[0]}"...`,
-        }));
+        const capabilityToExport = capabilitySummaries.find(c => c.name === selectedCapabilities[0]);
+        if (capabilityToExport) {
+          handleExportComprehensiveReport(capabilityToExport);
+        } else {
+          dispatch(addNotification({
+            type: 'error',
+            message: `Capability "${selectedCapabilities[0]}" not found`,
+          }));
+        }
         break;
       default:
         dispatch(addNotification({
@@ -403,6 +407,43 @@ const Capabilities: React.FC = () => {
         return 'Completed';
       default:
         return status;
+    }
+  };
+
+  const handleExportComprehensiveReport = async (capability: CapabilitySummary) => {
+    try {
+      console.log('Starting export for capability:', capability.name, 'ID:', capability.id);
+      
+      // Get comprehensive report data
+      const reportResponse = await capabilityAPI.exportComprehensiveReport(capability.id);
+      
+      if (reportResponse.success && reportResponse.data) {
+        // Create and download the JSON file
+        const dataStr = JSON.stringify(reportResponse.data, null, 2);
+        const dataBlob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(dataBlob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${capability.name}_comprehensive_report.json`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        
+        console.log('File download initiated');
+        dispatch(addNotification({
+          type: 'success',
+          message: 'Comprehensive report exported successfully!',
+        }));
+      } else {
+        throw new Error(reportResponse.error || 'Failed to generate report');
+      }
+    } catch (error) {
+      console.error('Export error:', error);
+      dispatch(addNotification({
+        type: 'error',
+        message: error instanceof Error ? error.message : 'Failed to export report',
+      }));
     }
   };
 
@@ -593,10 +634,10 @@ const Capabilities: React.FC = () => {
             status: capability.status,
             created_at: capability.last_updated
           })}
-          onViewDetails={(capabilityId) => navigate(`/capabilities/${capabilityId}`)}
           onStatusChange={handleStatusChange}
           onManageDomains={(capabilityId) => navigate(`/capabilities/${capabilityId}/domains`)}
           onManageAttributes={(capabilityId) => navigate(`/capabilities/${capabilityId}/attributes`)}
+          onExportComprehensiveReport={handleExportComprehensiveReport}
         />
       ) : settings.viewMode === 'grid' ? (
         // Grid View (Cards)
@@ -738,15 +779,16 @@ const Capabilities: React.FC = () => {
                     </span>
                   </Tooltip>
                   
-                  <Tooltip title="View Details">
+                  <Tooltip title="Export Comprehensive Report">
                     <IconButton
                       size="small"
+                      color="primary"
                       onClick={(e) => {
                         e.stopPropagation();
-                        navigate(`/capabilities/${capability.id}`);
+                        handleExportComprehensiveReport(capability);
                       }}
                     >
-                      <ViewIcon />
+                      <ExportIcon />
                     </IconButton>
                   </Tooltip>
                 </Box>
@@ -937,15 +979,16 @@ const Capabilities: React.FC = () => {
                         </span>
                       </Tooltip>
                       
-                      <Tooltip title="View Details">
+                      <Tooltip title="Export Comprehensive Report">
                         <IconButton
                           size="small"
+                          color="primary"
                           onClick={(e) => {
                             e.stopPropagation();
-                            navigate(`/capabilities/${capability.id}`);
+                            handleExportComprehensiveReport(capability);
                           }}
                         >
-                          <ViewIcon />
+                          <ExportIcon />
                         </IconButton>
                       </Tooltip>
                     </Box>

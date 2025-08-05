@@ -358,6 +358,34 @@ export const capabilityAPI = {
   async exportReport(id: number, format: string, reportType: string): Promise<APIResponse<{ export_data: string; filename: string }>> {
     return apiClient.get(`/api/capabilities/reports/${id}/export/${format}?report_type=${reportType}`);
   },
+
+  async exportComprehensiveReport(capabilityId: number): Promise<APIResponse<{
+    capability: string;
+    analysis_date: string;
+    capability_status: string;
+    current_framework: {
+      domains_count: number;
+      attributes_count: number;
+      domains: any[];
+    };
+    gap_analysis: {
+      missing_domains: any[];
+      missing_attributes: any[];
+    };
+    market_research: {
+      major_vendors: string[];
+      industry_standards: string[];
+      competitive_analysis: string;
+    };
+    recommendations: {
+      priority_domains: string[];
+      priority_attributes: string[];
+      framework_completeness: string;
+      next_steps: string;
+    };
+  }>> {
+    return apiClient.get(`/api/reports/${capabilityId}/comprehensive-export`);
+  },
 };
 
 export const domainAPI = {
@@ -576,6 +604,23 @@ export const vendorAnalysisAPI = {
   async exportVendorAnalysis(vendors: string[]): Promise<APIResponse<{excel_data: string, filename: string}>> {
     const vendorsParam = vendors.join(',');
     return apiClient.get<APIResponse<{excel_data: string, filename: string}>>(`/api/reports/vendor-analysis/export-all?vendors=${vendorsParam}&format=excel`);
+  },
+
+  // Vendor management methods
+  async get(endpoint: string): Promise<any> {
+    return apiClient.get(`/api${endpoint}`);
+  },
+
+  async post(endpoint: string, data: any): Promise<any> {
+    return apiClient.post(`/api${endpoint}`, data);
+  },
+
+  async put(endpoint: string, data: any): Promise<any> {
+    return apiClient.put(`/api${endpoint}`, data);
+  },
+
+  async delete(endpoint: string): Promise<any> {
+    return apiClient.delete(`/api${endpoint}`);
   },
 };
 
