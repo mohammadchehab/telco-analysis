@@ -43,6 +43,7 @@ export interface VendorScore {
   capability_id: number;
   attribute_name: string;
   domain_name?: string;
+  attribute_definition?: string;
   vendor: string;
   weight: number; // 1-100 scale
   score: string;

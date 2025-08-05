@@ -7,7 +7,10 @@ import {
   Alert,
   CircularProgress,
   Breadcrumbs,
-  Link
+  Link,
+  Card,
+  CardContent,
+  Chip
 } from '@mui/material';
 import { ArrowBack as ArrowBackIcon } from '@mui/icons-material';
 import VendorScoreEditor from '../components/UI/VendorScoreEditor';
@@ -20,6 +23,8 @@ interface VendorScore {
   id: number;
   capability_id: number;
   attribute_name: string;
+  domain_name?: string;
+  attribute_definition?: string;
   vendor: string;
   weight: number;
   score: string;
@@ -201,9 +206,46 @@ const VendorScoreEdit: React.FC = () => {
         <Typography variant="h4" component="h1" gutterBottom>
           Edit Vendor Score
         </Typography>
-        <Typography variant="body1" color="text.secondary">
+        <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
           Modify vendor assessment data, observations, and evidence
         </Typography>
+        
+        {/* Attribute Information Card */}
+        {scoreData && (
+          <Card sx={{ mb: 3, backgroundColor: 'background.paper' }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Typography variant="h6" color="primary" sx={{ fontWeight: 'bold' }}>
+                    {scoreData.attribute_name}
+                  </Typography>
+                  <Chip 
+                    label={`Weight: ${scoreData.weight}`} 
+                    color="secondary" 
+                    size="small"
+                    variant="outlined"
+                  />
+                </Box>
+                
+                {scoreData.domain_name && (
+                  <Typography variant="body2" color="text.secondary">
+                    <strong>Domain:</strong> {scoreData.domain_name}
+                  </Typography>
+                )}
+                
+                {scoreData.attribute_definition && (
+                  <Typography variant="body2" color="text.secondary">
+                    <strong>Definition:</strong> {scoreData.attribute_definition}
+                  </Typography>
+                )}
+                
+                <Typography variant="body2" color="text.secondary">
+                  <strong>Vendor:</strong> {scoreData.vendor}
+                </Typography>
+              </Box>
+            </CardContent>
+          </Card>
+        )}
       </Box>
 
       {/* Editor Component */}

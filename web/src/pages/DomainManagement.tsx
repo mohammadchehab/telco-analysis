@@ -719,7 +719,7 @@ const DomainManagement: React.FC = () => {
 {
   "capability": "IT Service Management",
   "analysis_date": "2025-08-01",
-  "capability_status": "existing",
+  "capability_status": "new",
   "current_framework": {
     "domains_count": 1,
     "attributes_count": 0,

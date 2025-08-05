@@ -56,6 +56,7 @@ interface VendorScore {
   capability_id: number;
   attribute_name: string;
   domain_name?: string;
+  attribute_definition?: string;
   vendor: string;
   weight: number;
   score: string;

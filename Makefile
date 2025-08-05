@@ -97,7 +97,7 @@ deploy-backend:
 		echo "$(RED)Backend directory not found.$(NC)"; \
 		exit 1; \
 	fi
-	rsync -avz --delete \
+	rsync -avz \
 		--exclude='.venv' \
 		--exclude='venv' \
 		--exclude='__pycache__' \

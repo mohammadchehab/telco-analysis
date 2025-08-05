@@ -103,7 +103,7 @@ Return ONLY valid JSON in this exact format:
 {{
     "capability": "{capability_name}",
     "analysis_date": "YYYY-MM-DD",
-    "capability_status": "existing",
+    "capability_status": "new",
     "current_framework": {{
         "domains_count": {domain_count},
         "attributes_count": {attribute_count},

@@ -175,6 +175,7 @@ const Reports: React.FC = () => {
   const [exportFormat, setExportFormat] = useState('excel');
   const [showAttributeDetails, setShowAttributeDetails] = useState(false);
   const [selectedAttributeDetail, setSelectedAttributeDetail] = useState<any>(null);
+  const [shouldOpenDialog, setShouldOpenDialog] = useState(false);
 
   // Fetch capabilities on component mount
   useEffect(() => {
@@ -194,6 +195,14 @@ const Reports: React.FC = () => {
       fetchReportData();
     }
   }, [selectedCapability, selectedDomains, selectedVendors, selectedAttributes, filterOptions]);
+
+  // Handle opening dialog when shouldOpenDialog is set
+  useEffect(() => {
+    if (shouldOpenDialog && selectedAttributeDetail) {
+      setShowAttributeDetails(true);
+      setShouldOpenDialog(false);
+    }
+  }, [shouldOpenDialog, selectedAttributeDetail]);
 
   // Restore state when returning from edit page
   useEffect(() => {
@@ -243,9 +252,14 @@ const Reports: React.FC = () => {
       if (params.openDialog && params.openDialog.type === 'attributeDetail') {
         console.log('Reports - restoring dialog state from location.state:', params.openDialog.data);
         setSelectedAttributeDetail(params.openDialog.data);
+        setShouldOpenDialog(true);
       } else if (params.selectedAttributeDetail) {
         console.log('Reports - setting selectedAttributeDetail:', params.selectedAttributeDetail);
         setSelectedAttributeDetail(params.selectedAttributeDetail);
+        // Check if the dialog was open when state was saved
+        if (params.showAttributeDetails) {
+          setShouldOpenDialog(true);
+        }
       }
       
       setHasRestoredState(true);
@@ -285,9 +299,14 @@ const Reports: React.FC = () => {
         if (previousPage.openDialog && previousPage.openDialog.type === 'attributeDetail') {
           console.log('Reports - restoring dialog state:', previousPage.openDialog.data);
           setSelectedAttributeDetail(previousPage.openDialog.data);
+          setShouldOpenDialog(true);
         } else if (params.selectedAttributeDetail) {
           // Fallback to regular state if no dialog state
           setSelectedAttributeDetail(params.selectedAttributeDetail);
+          // Check if the dialog was open when state was saved
+          if (params.showAttributeDetails) {
+            setShouldOpenDialog(true);
+          }
         }
         
         setHasRestoredState(true);
@@ -427,6 +446,12 @@ const Reports: React.FC = () => {
   const handleAttributeClick = (attribute: any) => {
     setSelectedAttributeDetail(attribute);
     setShowAttributeDetails(true);
+  };
+
+  const handleCloseAttributeDetails = () => {
+    setShowAttributeDetails(false);
+    // Don't clear selectedAttributeDetail immediately to preserve state
+    // It will be cleared when navigating away or when a new attribute is selected
   };
 
   const getScoreColor = (score: number) => {
@@ -895,7 +920,7 @@ const Reports: React.FC = () => {
       {/* Attribute Details Dialog */}
       <Dialog 
         open={showAttributeDetails} 
-        onClose={() => setShowAttributeDetails(false)}
+        onClose={handleCloseAttributeDetails}
         maxWidth="md"
         fullWidth
       >
@@ -946,7 +971,8 @@ const Reports: React.FC = () => {
                                   selectedVendors,
                                   selectedAttributes,
                                   showFilters,
-                                  selectedAttributeDetail
+                                  selectedAttributeDetail,
+                                  showAttributeDetails: showAttributeDetails
                                 };
                                 console.log('Reports - saving state before edit:', stateToSave);
                                 console.log('Reports - stateToSave keys:', Object.keys(stateToSave));
@@ -1080,7 +1106,7 @@ const Reports: React.FC = () => {
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setShowAttributeDetails(false)}>Close</Button>
+          <Button onClick={handleCloseAttributeDetails}>Close</Button>
         </DialogActions>
       </Dialog>
     </Container>

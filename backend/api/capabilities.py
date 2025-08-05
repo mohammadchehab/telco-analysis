@@ -349,6 +349,7 @@ async def get_vendor_score_by_id(score_id: int, db: Session = Depends(get_db)):
             "attribute_id": vendor_score.attribute_id,
             "attribute_name": attribute.attribute_name,
             "domain_name": attribute.domain_name,
+            "attribute_definition": attribute.definition,
             "vendor": vendor_score.vendor,
             "weight": attribute.importance,  # Use weight from Attribute table instead of VendorScore
             "score": vendor_score.score,
