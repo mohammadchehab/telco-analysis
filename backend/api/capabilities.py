@@ -512,12 +512,17 @@ async def start_research_workflow_by_id(capability_id: int, db: Session = Depend
         if not capability:
             return APIResponse(success=False, error="Capability not found")
         
-        # Update capability status to 'ready'
-        CapabilityService.update_capability_status(db, capability.name, "ready")
+        # Don't change the status - let it remain as is
+        # The status should only change when actual work is completed
         
         return APIResponse(
             success=True,
-            data={"message": f"Research workflow started for {capability.name}"}
+            data={
+                "message": f"Research workflow started for {capability.name}",
+                "current_status": capability.status,
+                "capability_name": capability.name,
+                "capability_id": capability_id
+            }
         )
     except Exception as e:
         return APIResponse(success=False, error=str(e))
@@ -526,15 +531,20 @@ async def start_research_workflow_by_id(capability_id: int, db: Session = Depend
 async def start_research_workflow(capability_name: str, db: Session = Depends(get_db)):
     """Start research workflow by capability name"""
     try:
-        # Update capability status to 'ready'
-        success = CapabilityService.update_capability_status(db, capability_name, "ready")
-        if not success:
+        # Get the capability to check if it exists and get current status
+        capability = CapabilityService.get_capability_by_name(db, capability_name)
+        if not capability:
             return APIResponse(success=False, error="Capability not found")
+        
+        # Don't change the status - let it remain as is
+        # The status should only change when actual work is completed
         
         return APIResponse(
             success=True,
             data={
                 "workflow_state": "domain_analysis",
+                "current_status": capability.status,
+                "capability_name": capability_name,
                 "prompt_url": f"/api/capabilities/{capability_name}/workflow/generate-prompt",
                 "next_steps": [
                     "Generate research prompt",
