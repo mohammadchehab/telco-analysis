@@ -50,8 +50,8 @@ async def import_domains(
             return APIResponse(success=False, error="Unsupported file format. Expected either simple domains format or research file format.")
         
         # Process import based on format
-        if file_format in ["research_file", "proposed_framework"]:
-            # Process research file or proposed framework (no validation needed for research format)
+        if file_format in ["research_file", "proposed_framework", "current_framework"]:
+            # Process research file or framework (no validation needed for research format)
             stats = ImportService.process_research_import(
                 db, capability_id, data, file.filename
             )

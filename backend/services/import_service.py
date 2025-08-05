@@ -20,7 +20,14 @@ class ImportService:
             'recommendations' in data):
             return "research_file"
         
-        # Check for proposed framework format (like sample.json)
+        # Check for current framework format (like sample.json)
+        if ('capability' in data and 
+            'current_framework' in data and 
+            'domains' in data['current_framework'] and 
+            isinstance(data['current_framework']['domains'], list)):
+            return "current_framework"
+        
+        # Check for proposed framework format
         if ('capability' in data and 
             'proposed_framework' in data and 
             'domains' in data['proposed_framework'] and 
@@ -226,8 +233,10 @@ class ImportService:
                 if not existing_capability:
                     capability.name = research_data['capability']
             
-            if research_data.get('capability_status'):
-                capability.status = research_data['capability_status']
+            # Don't change the capability status during import
+            # The status should only change when actual work is completed
+            # if research_data.get('capability_status'):
+            #     capability.status = research_data['capability_status']
         
         # Extract domains from gap analysis or proposed framework
         domains_data = []
@@ -257,7 +266,29 @@ class ImportService:
                 
                 domains_data.append(domain_data)
         
-        # Check for proposed framework format (like sample.json)
+        # Check for current framework format (like sample.json)
+        elif 'current_framework' in research_data and 'domains' in research_data['current_framework']:
+            for domain_info in research_data['current_framework']['domains']:
+                domain_data = {
+                    'domain_name': domain_info['domain_name'],
+                    'description': domain_info.get('description', ''),
+                    'importance': domain_info.get('importance', 'medium'),
+                    'attributes': []
+                }
+                
+                # Extract attributes for this domain
+                if 'attributes' in domain_info:
+                    for attr_info in domain_info['attributes']:
+                        domain_data['attributes'].append({
+                            'attribute_name': attr_info['attribute_name'],
+                            'definition': attr_info.get('description', ''),  # Note: sample.json uses 'description' not 'definition'
+                            'tm_forum_mapping': attr_info.get('tm_forum_mapping', ''),
+                            'importance': attr_info.get('importance', '50')
+                        })
+                
+                domains_data.append(domain_data)
+        
+        # Check for proposed framework format
         elif 'proposed_framework' in research_data and 'domains' in research_data['proposed_framework']:
             for domain_info in research_data['proposed_framework']['domains']:
                 domain_data = {
