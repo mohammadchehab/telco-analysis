@@ -62,7 +62,7 @@ import {
   BarElement,
   ArcElement
 } from 'chart.js';
-import { apiClient, vendorScoreAPI } from '../utils/api';
+import { apiClient, vendorScoreAPI, vendorAnalysisAPI } from '../utils/api';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useNavigationState } from '../hooks/useLocalStorage';
 
@@ -234,25 +234,20 @@ const Reports: React.FC = () => {
       
       // Restore all the saved state
       if (params.selectedCapability) {
-        console.log('Reports - setting selectedCapability:', params.selectedCapability);
-        setSelectedCapability(params.selectedCapability);
+        // If selectedCapability is a number (ID), find the corresponding capability object
+        if (typeof params.selectedCapability === 'number') {
+          const capability = capabilities.find(c => c.id === params.selectedCapability);
+          if (capability) {
+            setSelectedCapability(capability);
+          }
+        } else {
+          setSelectedCapability(params.selectedCapability);
+        }
       }
-      if (params.selectedDomains) {
-        console.log('Reports - setting selectedDomains:', params.selectedDomains);
-        setSelectedDomains(params.selectedDomains);
-      }
-      if (params.selectedVendors) {
-        console.log('Reports - setting selectedVendors:', params.selectedVendors);
-        setSelectedVendors(params.selectedVendors);
-      }
-      if (params.selectedAttributes) {
-        console.log('Reports - setting selectedAttributes:', params.selectedAttributes);
-        setSelectedAttributes(params.selectedAttributes);
-      }
-      if (params.showFilters !== undefined) {
-        console.log('Reports - setting showFilters:', params.showFilters);
-        setShowFilters(params.showFilters);
-      }
+      if (params.selectedDomains) setSelectedDomains(params.selectedDomains);
+      if (params.selectedVendors) setSelectedVendors(params.selectedVendors);
+      if (params.selectedAttributes) setSelectedAttributes(params.selectedAttributes);
+      if (params.showFilters !== undefined) setShowFilters(params.showFilters);
       
       // Check if we have dialog state in location.state
       if (params.openDialog && params.openDialog.type === 'attributeDetail') {
@@ -288,7 +283,17 @@ const Reports: React.FC = () => {
         setIsRestoringState(true);
         
         // Restore all the saved state
-        if (params.selectedCapability) setSelectedCapability(params.selectedCapability);
+        if (params.selectedCapability) {
+          // If selectedCapability is a number (ID), find the corresponding capability object
+          if (typeof params.selectedCapability === 'number') {
+            const capability = capabilities.find(c => c.id === params.selectedCapability);
+            if (capability) {
+              setSelectedCapability(capability);
+            }
+          } else {
+            setSelectedCapability(params.selectedCapability);
+          }
+        }
         if (params.selectedDomains) setSelectedDomains(params.selectedDomains);
         if (params.selectedVendors) setSelectedVendors(params.selectedVendors);
         if (params.selectedAttributes) setSelectedAttributes(params.selectedAttributes);
@@ -347,13 +352,13 @@ const Reports: React.FC = () => {
   // Fetch available vendors from API
   const fetchVendors = async () => {
     try {
-      const response = await fetch('/api/vendors/active/names');
-      const data = await response.json();
-      if (data.success) {
-        setSelectedVendors(data.data);
-        setFilterOptions(prev => ({ ...prev, vendors: data.data }));
+      const response = await vendorAnalysisAPI.get('/vendors/active/names');
+      if (response.success) {
+        const vendors = response.data.vendors;
+        setSelectedVendors(vendors);
+        setFilterOptions(prev => ({ ...prev, vendors }));
       } else {
-        console.error('Failed to fetch vendors:', data.error);
+        console.error('Failed to fetch vendors:', response.error);
         // Fallback to default vendors
         const defaultVendors = ['comarch', 'servicenow', 'salesforce'];
         setSelectedVendors(defaultVendors);

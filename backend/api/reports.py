@@ -230,7 +230,7 @@ async def export_comprehensive_report(capability_id: int, db: Session = Depends(
             formatted_domains.append(formatted_domain)
         
         # Analyze vendor performance for market research
-        vendors = ["comarch", "servicenow", "salesforce"]
+        vendors = CapabilityService.get_active_vendors(db)
         vendor_performance = {}
         for vendor in vendors:
             vendor_scores_list = [score for score in vendor_scores if score.vendor == vendor]
@@ -925,12 +925,13 @@ def generate_all_capabilities_excel(capabilities: list, vendors: list, db: Sessi
         # Create summary sheet
         summary_ws = wb.create_sheet("Summary")
         
+        # Get active vendors for dynamic headers
+        active_vendors = CapabilityService.get_active_vendors(db)
+        
         # Summary headers
-        summary_headers = [
-            "Capability", "Total Attributes", "Total Domains", 
-            "Average Score (Comarch)", "Average Score (ServiceNow)", "Average Score (Salesforce)",
-            "Average Score (Oracle)", "Average Score (IBM)", "Average Score (Microsoft)"
-        ]
+        summary_headers = ["Capability", "Total Attributes", "Total Domains"]
+        for vendor in active_vendors:
+            summary_headers.append(f"Average Score ({vendor.capitalize()})")
         
         for col, header in enumerate(summary_headers, 1):
             summary_ws.cell(row=1, column=col, value=header)
@@ -948,7 +949,7 @@ def generate_all_capabilities_excel(capabilities: list, vendors: list, db: Sessi
             summary_ws.cell(row=row, column=3, value=len(domains))
             
             # Calculate average scores for each vendor
-            for col, vendor in enumerate(vendors, 4):
+            for col, vendor in enumerate(active_vendors, 4):
                 vendor_scores = db.query(VendorScore).filter(
                     VendorScore.capability_id == capability.id,
                     VendorScore.vendor == vendor

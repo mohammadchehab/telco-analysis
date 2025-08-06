@@ -124,9 +124,7 @@ export interface ComprehensiveResearchResponse {
     attribute: string;
     weight: number; // 1-100 scale
     tm_capability: string;
-    comarch: VendorScoreDetail;
-    servicenow: VendorScoreDetail;
-    salesforce: VendorScoreDetail;
+    [key: string]: VendorScoreDetail | string | number; // Dynamic vendor scores - key is vendor name
   }>;
 }
 

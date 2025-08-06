@@ -36,6 +36,16 @@ try:
 except Exception as e:
     print(f"⚠️ TMF processes initialization warning: {e}")
 
+# Initialize vendors if not already present
+try:
+    from migration.migrate_vendors import create_vendors_table, populate_vendors
+    print("🔄 Checking vendors table...")
+    create_vendors_table()
+    populate_vendors()
+    print("✅ Vendors initialized")
+except Exception as e:
+    print(f"⚠️ Vendors initialization warning: {e}")
+
 # Create main FastAPI app
 app = FastAPI(
     title="Telco Capability Analysis Platform",

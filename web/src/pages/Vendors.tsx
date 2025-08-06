@@ -78,10 +78,11 @@ const Vendors: React.FC = () => {
       setLoading(true);
       setError(null);
       const response = await vendorAnalysisAPI.get('/vendors/');
-      if (response.data.success) {
-        setVendors(response.data.data.vendors);
+      console.log('Vendors API response:', response);
+      if (response.success) {
+        setVendors(response.data.vendors);
       } else {
-        setError('Failed to fetch vendors');
+        setError('Failed to fetch vendors: ' + (response.error || 'Unknown error'));
       }
     } catch (err: any) {
       setError(err.message || 'Failed to fetch vendors');
@@ -135,20 +136,20 @@ const Vendors: React.FC = () => {
       if (editingVendor) {
         // Update existing vendor
         const response = await vendorAnalysisAPI.put(`/vendors/${editingVendor.id}`, formData);
-        if (response.data.success) {
+        if (response.success) {
           await fetchVendors();
           handleCloseDialog();
         } else {
-          setError(response.data.error || 'Failed to update vendor');
+          setError(response.error || 'Failed to update vendor');
         }
       } else {
         // Create new vendor
         const response = await vendorAnalysisAPI.post('/vendors/', formData);
-        if (response.data.success) {
+        if (response.success) {
           await fetchVendors();
           handleCloseDialog();
         } else {
-          setError(response.data.error || 'Failed to create vendor');
+          setError(response.error || 'Failed to create vendor');
         }
       }
     } catch (err: any) {
@@ -159,14 +160,20 @@ const Vendors: React.FC = () => {
   };
 
   const handleDelete = async (vendorId: number) => {
-    if (window.confirm('Are you sure you want to delete this vendor?')) {
+    const vendor = vendors.find(v => v.id === vendorId);
+    const vendorName = vendor?.display_name || `Vendor ${vendorId}`;
+    
+    if (window.confirm(`Are you sure you want to delete "${vendorName}"? This action cannot be undone.`)) {
       try {
         setLoading(true);
+        setError(null);
         const response = await vendorAnalysisAPI.delete(`/vendors/${vendorId}`);
-        if (response.data.success) {
+        
+        if (response.success) {
           await fetchVendors();
+          // Show success message (you could add a success state if needed)
         } else {
-          setError(response.data.error || 'Failed to delete vendor');
+          setError(response.error || 'Failed to delete vendor');
         }
       } catch (err: any) {
         setError(err.message || 'Failed to delete vendor');
@@ -183,10 +190,10 @@ const Vendors: React.FC = () => {
         ...vendor,
         is_active: !vendor.is_active
       });
-      if (response.data.success) {
+      if (response.success) {
         await fetchVendors();
       } else {
-        setError(response.data.error || 'Failed to update vendor status');
+        setError(response.error || 'Failed to update vendor status');
       }
     } catch (err: any) {
       setError(err.message || 'Failed to update vendor status');
@@ -320,36 +327,42 @@ const Vendors: React.FC = () => {
                     <TableCell align="right">
                       <Stack direction="row" spacing={1}>
                         <Tooltip title="Toggle Status">
-                          <IconButton
-                            size="small"
-                            onClick={() => handleToggleActive(vendor)}
-                            disabled={loading}
-                          >
-                            <Switch
-                              checked={vendor.is_active}
+                          <span>
+                            <IconButton
                               size="small"
-                              onClick={(e) => e.stopPropagation()}
-                            />
-                          </IconButton>
+                              onClick={() => handleToggleActive(vendor)}
+                              disabled={loading}
+                            >
+                              <Switch
+                                checked={vendor.is_active}
+                                size="small"
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                            </IconButton>
+                          </span>
                         </Tooltip>
                         <Tooltip title="Edit Vendor">
-                          <IconButton
-                            size="small"
-                            onClick={() => handleOpenDialog(vendor)}
-                            disabled={loading}
-                          >
-                            <EditIcon />
-                          </IconButton>
+                          <span>
+                            <IconButton
+                              size="small"
+                              onClick={() => handleOpenDialog(vendor)}
+                              disabled={loading}
+                            >
+                              <EditIcon />
+                            </IconButton>
+                          </span>
                         </Tooltip>
                         <Tooltip title="Delete Vendor">
-                          <IconButton
-                            size="small"
-                            onClick={() => handleDelete(vendor.id)}
-                            disabled={loading}
-                            color="error"
-                          >
-                            <DeleteIcon />
-                          </IconButton>
+                          <span>
+                            <IconButton
+                              size="small"
+                              onClick={() => handleDelete(vendor.id)}
+                              disabled={loading}
+                              color="error"
+                            >
+                              <DeleteIcon />
+                            </IconButton>
+                          </span>
                         </Tooltip>
                       </Stack>
                     </TableCell>

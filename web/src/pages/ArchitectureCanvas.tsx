@@ -20,9 +20,7 @@ import {
   ListItemText,
   Avatar,
   LinearProgress,
-  Snackbar,
-  Tooltip,
-  IconButton
+  Snackbar
 } from '@mui/material';
 import {
   ExpandMore as ExpandMoreIcon,
@@ -39,12 +37,10 @@ import {
   Warning as WarningIcon,
   Error as ErrorIcon,
   Info as InfoIcon,
-  Refresh as RefreshIcon,
-  Download as DownloadIcon,
-  Print as PrintIcon
+  Refresh as RefreshIcon
 } from '@mui/icons-material';
 
-import { architectureAPI, apiClient } from '../utils/api';
+import { architectureAPI } from '../utils/api';
 
 interface ArchitectureLayer {
   id: string;
@@ -62,9 +58,7 @@ interface ArchitectureCapability {
   recommendedVendor: string;
   vendorScore: number;
   vendorScores: {
-    comarch: number;
-    servicenow: number;
-    salesforce: number;
+    [key: string]: number; // Dynamic vendor scores - key is vendor name, value is score
   };
   status: 'excellent' | 'good' | 'fair' | 'poor' | 'no-data';
   evidence: string[];
@@ -93,7 +87,6 @@ const ArchitectureCanvas: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [selectedCapability, setSelectedCapability] = useState<ArchitectureCapability | null>(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
-  const [exportLoading, setExportLoading] = useState(false);
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
     message: string;
@@ -161,109 +154,13 @@ const ArchitectureCanvas: React.FC = () => {
     }
   };
 
-  const handleCapabilityClick = (capability: ArchitectureCapability) => {
-    setSelectedCapability(capability);
-    setDetailDialogOpen(true);
-  };
-
   const handleRefresh = () => {
     loadArchitectureData();
   };
 
-  const handleExport = async () => {
-    try {
-      setLoading(true);
-      const response = await apiClient.get('/api/architecture/canvas/export/pdf') as any;
-      
-      if (response.success) {
-        const { data } = response;
-        const fileData = data.pdf_data;
-        const filename = data.filename;
-        
-        // Convert base64 to blob and download
-        const byteCharacters = atob(fileData);
-        const byteNumbers = new Array(byteCharacters.length);
-        for (let i = 0; i < byteCharacters.length; i++) {
-          byteNumbers[i] = byteCharacters.charCodeAt(i);
-        }
-        const byteArray = new Uint8Array(byteNumbers);
-        const blob = new Blob([byteArray], { 
-          type: 'application/pdf'
-        });
-        
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = filename;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
-      } else {
-        setError('Failed to export report');
-      }
-    } catch (error) {
-      setError('Error exporting report');
-      console.error('Export error:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handlePrint = () => {
-    window.print();
-  };
-
-  const handleExportComprehensiveReport = async (capability: ArchitectureCapability) => {
-    console.log('Starting export for capability:', capability.name, 'ID:', capability.id);
-    setExportLoading(true);
-    try {
-      // Use the capability ID directly from the capability object
-      const capabilityId = parseInt(capability.id);
-      console.log('Parsed capability ID:', capabilityId);
-      
-      // Get comprehensive report data
-      console.log('Calling API endpoint:', `/api/reports/${capabilityId}/comprehensive-export`);
-      const reportResponse = await apiClient.get<{
-        success: boolean;
-        data?: any;
-        error?: string;
-      }>(`/api/reports/${capabilityId}/comprehensive-export`);
-      
-      console.log('API response:', reportResponse);
-      
-      if (reportResponse.success && reportResponse.data) {
-        // Create and download the JSON file
-        const dataStr = JSON.stringify(reportResponse.data, null, 2);
-        const dataBlob = new Blob([dataStr], { type: 'application/json' });
-        const url = URL.createObjectURL(dataBlob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `${capability.name}_comprehensive_report.json`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-        
-        console.log('File download initiated');
-        setSnackbar({
-          open: true,
-          message: 'Comprehensive report exported successfully!',
-          severity: 'success'
-        });
-      } else {
-        throw new Error(reportResponse.error || 'Failed to generate report');
-      }
-    } catch (error) {
-      console.error('Export error:', error);
-      setSnackbar({
-        open: true,
-        message: error instanceof Error ? error.message : 'Failed to export report',
-        severity: 'error'
-      });
-    } finally {
-      setExportLoading(false);
-    }
+  const handleCapabilityClick = (capability: ArchitectureCapability) => {
+    setSelectedCapability(capability);
+    setDetailDialogOpen(true);
   };
 
   if (loading) {
@@ -316,42 +213,6 @@ const ArchitectureCanvas: React.FC = () => {
             onClick={handleRefresh}
           >
             Refresh
-          </Button>
-          <Button
-            variant="outlined"
-            startIcon={<DownloadIcon />}
-            onClick={handleExport}
-          >
-            Export
-          </Button>
-          <Button
-            variant="outlined"
-            startIcon={<PrintIcon />}
-            onClick={handlePrint}
-          >
-            Print
-          </Button>
-          <Button
-            variant="contained"
-            color="primary"
-            startIcon={<DownloadIcon />}
-            onClick={() => {
-              console.log('Test export button clicked');
-              // Test with capability ID 1
-              handleExportComprehensiveReport({
-                id: "1",
-                name: "IT Service Management",
-                description: "Test capability",
-                tmForumMapping: "TMF513",
-                recommendedVendor: "Servicenow",
-                vendorScore: 4.5,
-                vendorScores: { comarch: 4.2, servicenow: 4.5, salesforce: 3.8 },
-                status: "excellent" as const,
-                evidence: []
-              });
-            }}
-          >
-            Test Export
           </Button>
         </Box>
       </Box>
@@ -463,6 +324,7 @@ const ArchitectureCanvas: React.FC = () => {
                         transition: 'all 0.2s'
                       }
                     }}
+                    onClick={() => handleCapabilityClick(capability)}
                   >
                     <CardContent>
                       <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={1}>
@@ -471,40 +333,6 @@ const ArchitectureCanvas: React.FC = () => {
                         </Typography>
                         <Box display="flex" alignItems="center" gap={1}>
                           {getStatusIcon(capability.status)}
-                          <Box display="flex" alignItems="center" gap={0.5}>
-                            <Typography variant="caption" color="primary" sx={{ fontSize: '0.7rem' }}>
-                              Export
-                            </Typography>
-                            <Tooltip title="Export Comprehensive Report">
-                              <IconButton
-                                size="medium"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  console.log('Export button clicked for capability:', capability.name, 'ID:', capability.id);
-                                  handleExportComprehensiveReport(capability);
-                                }}
-                                disabled={exportLoading}
-                                sx={{ 
-                                  color: 'white',
-                                  backgroundColor: '#1976d2',
-                                  border: '2px solid #1976d2',
-                                  width: 32,
-                                  height: 32,
-                                  '&:hover': { 
-                                    backgroundColor: '#1565c0',
-                                    borderColor: '#1565c0',
-                                    transform: 'scale(1.1)'
-                                  },
-                                  '&:disabled': {
-                                    backgroundColor: '#ccc',
-                                    borderColor: '#ccc'
-                                  }
-                                }}
-                              >
-                                {exportLoading ? <CircularProgress size={20} color="inherit" /> : <DownloadIcon />}
-                              </IconButton>
-                            </Tooltip>
-                          </Box>
                         </Box>
                       </Box>
                       <Typography variant="caption" color="text.secondary" display="block" mb={1}>
@@ -531,19 +359,6 @@ const ArchitectureCanvas: React.FC = () => {
                           }
                         }}
                       />
-                      <Box 
-                        sx={{ 
-                          mt: 1, 
-                          pt: 1, 
-                          borderTop: '1px solid rgba(0,0,0,0.1)',
-                          cursor: 'pointer'
-                        }}
-                        onClick={() => handleCapabilityClick(capability)}
-                      >
-                        <Typography variant="caption" color="primary" sx={{ textDecoration: 'underline' }}>
-                          View Details
-                        </Typography>
-                      </Box>
                     </CardContent>
                   </Card>
                 ))}
@@ -595,7 +410,9 @@ const ArchitectureCanvas: React.FC = () => {
                       Vendor Performance
                     </Typography>
                     <Box display="flex" flexDirection="column" gap={1}>
-                      {Object.entries(selectedCapability.vendorScores).map(([vendor, score]) => (
+                      {Object.entries(selectedCapability.vendorScores)
+                        .filter(([_vendor, score]) => score > 0) // Only show vendors with score > 0
+                        .map(([vendor, score]) => (
                         <Box key={vendor} display="flex" justifyContent="space-between" alignItems="center">
                           <Typography variant="body2" sx={{ textTransform: 'capitalize' }}>
                             {vendor}

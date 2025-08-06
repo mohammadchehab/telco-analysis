@@ -640,9 +640,7 @@ export const architectureAPI = {
         recommendedVendor: string;
         vendorScore: number;
         vendorScores: {
-          comarch: number;
-          servicenow: number;
-          salesforce: number;
+          [key: string]: number; // Dynamic vendor scores - key is vendor name, value is score
         };
         status: 'excellent' | 'good' | 'fair' | 'poor' | 'no-data';
         evidence: string[];

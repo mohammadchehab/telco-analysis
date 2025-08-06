@@ -4,6 +4,8 @@ from typing import List, Dict, Any, Optional
 from sqlalchemy.orm import Session
 from models.models import Capability, Domain, Attribute, Vendor
 from utils.version_manager import VersionManager
+from sqlalchemy import func
+from sqlalchemy import text
 
 class ImportService:
     
@@ -56,34 +58,32 @@ class ImportService:
     def _import_vendors_from_market_research(db: Session, market_research: dict) -> List[str]:
         """Import vendors from market research data"""
         imported_vendors = []
-        
         if not market_research or 'major_vendors' not in market_research:
             return imported_vendors
         
         for vendor_name in market_research['major_vendors']:
             if not vendor_name:
                 continue
-                
-            # Check if vendor already exists
+            vendor_name = vendor_name.strip()
+            # Always check for existence in the main session before insert
             existing_vendor = db.query(Vendor).filter(
-                Vendor.name == vendor_name,
+                func.lower(Vendor.name) == func.lower(vendor_name),
                 Vendor.is_active == True
             ).first()
-            
-            if not existing_vendor:
-                # Create new vendor
-                new_vendor = Vendor(
-                    name=vendor_name,
-                    display_name=vendor_name,
-                    description=f"Vendor imported from market research: {vendor_name}",
-                    is_active=True
-                )
-                db.add(new_vendor)
+            if existing_vendor:
                 imported_vendors.append(vendor_name)
-            else:
-                imported_vendors.append(vendor_name)
-        
-        # Note: Don't commit here - let the calling method handle the transaction
+                print(f"DEBUG: Found existing vendor: {vendor_name} -> {existing_vendor.name}")
+                continue
+            # Only create if not exists
+            new_vendor = Vendor(
+                name=vendor_name,
+                display_name=vendor_name,
+                description=f"Vendor imported from market research: {vendor_name}",
+                is_active=True
+            )
+            db.add(new_vendor)
+            imported_vendors.append(vendor_name)
+            print(f"DEBUG: Created new vendor: {vendor_name}")
         return imported_vendors
 
     @staticmethod
@@ -267,24 +267,35 @@ class ImportService:
         if 'current_framework' in research_data and 'domains' in research_data['current_framework']:
             print(f"DEBUG: Processing current_framework with {len(research_data['current_framework']['domains'])} domains")
             for domain_info in research_data['current_framework']['domains']:
-                domain_data = {
-                    'domain_name': domain_info['domain_name'],
-                    'description': domain_info.get('description', ''),
-                    'importance': domain_info.get('importance', 'medium'),
-                    'attributes': []
-                }
-                
-                # Extract attributes for this domain
-                if 'attributes' in domain_info:
-                    for attr_info in domain_info['attributes']:
-                        # Handle both 'description' and 'definition' fields for current_framework
-                        definition = attr_info.get('definition', '') or attr_info.get('description', '')
-                        domain_data['attributes'].append({
-                            'attribute_name': attr_info['attribute_name'],
-                            'definition': definition,
-                            'tm_forum_mapping': attr_info.get('tm_forum_mapping', ''),
-                            'importance': attr_info.get('importance', '50')
-                        })
+                # Handle both string and object formats for domains
+                if isinstance(domain_info, str):
+                    # Simple string format (like comprehensive_sample.json)
+                    domain_data = {
+                        'domain_name': domain_info,
+                        'description': '',
+                        'importance': 'medium',
+                        'attributes': []
+                    }
+                else:
+                    # Object format (like sample.json)
+                    domain_data = {
+                        'domain_name': domain_info['domain_name'],
+                        'description': domain_info.get('description', ''),
+                        'importance': domain_info.get('importance', 'medium'),
+                        'attributes': []
+                    }
+                    
+                    # Extract attributes for this domain
+                    if 'attributes' in domain_info:
+                        for attr_info in domain_info['attributes']:
+                            # Handle both 'description' and 'definition' fields for current_framework
+                            definition = attr_info.get('definition', '') or attr_info.get('description', '')
+                            domain_data['attributes'].append({
+                                'attribute_name': attr_info['attribute_name'],
+                                'definition': definition,
+                                'tm_forum_mapping': attr_info.get('tm_forum_mapping', ''),
+                                'importance': attr_info.get('importance', '50')
+                            })
                 
                 domains_data.append(domain_data)
                 print(f"DEBUG: Added domain {domain_data['domain_name']} with {len(domain_data['attributes'])} attributes")
@@ -344,7 +355,10 @@ class ImportService:
                 print(f"DEBUG: Imported {len(imported_vendors)} vendors: {imported_vendors}")
             except Exception as e:
                 print(f"DEBUG: Error importing vendors: {e}")
+                # If there's an error with vendor import, we need to handle it gracefully
+                # Don't rollback the entire transaction - just skip vendor import
                 imported_vendors = []
+                # Try to continue with the import without vendors
         
         # Process domains using existing logic
         print(f"DEBUG: Processing {len(domains_data)} domains")

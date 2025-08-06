@@ -673,7 +673,9 @@ class CapabilityService:
                     created_attributes += 1
                 
                 # Process vendor scores
-                for vendor in ["comarch", "servicenow", "salesforce"]:
+                # Get active vendors from database
+                active_vendors = CapabilityService.get_active_vendors(db)
+                for vendor in active_vendors:
                     if vendor in attr_data:
                         vendor_data = attr_data[vendor]
                         

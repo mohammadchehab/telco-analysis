@@ -8,9 +8,11 @@ import json
 import sys
 import os
 from unittest.mock import Mock, patch
+from pathlib import Path
 
-# Add the current directory to Python path
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+# Add the backend directory to Python path
+backend_dir = Path(__file__).parent.parent
+sys.path.insert(0, str(backend_dir))
 
 from services.import_service import ImportService
 from models.models import Capability, Domain, Attribute, Vendor

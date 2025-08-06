@@ -204,7 +204,7 @@ Conduct comprehensive vendor research for the telecom capability **{capability_n
 ### Research Requirements
 
 1. **Vendor Analysis**
-   - Research primary vendors: **Comarch**, **ServiceNow**, **Salesforce**
+   - Research primary vendors: {dynamic_vendors}
    - Evaluate each vendor's capabilities against the existing domains and attributes
    - Assess strengths and weaknesses for each domain
 
@@ -250,23 +250,7 @@ Please provide your research in the following JSON format:
       "domain": "string",
       "weight": 50,
       "tm_capability": "string",
-      "comarch": {{
-        "score": "X - Level",
-        "observations": [
-          {{
-            "observation": "Detailed observation point 1",
-            "type": "STRENGTH|WEAKNESS|GAP|FEATURE|LIMITATION|ADVANTAGE|DISADVANTAGE|NOTE"
-          }},
-          {{
-            "observation": "Detailed observation point 2", 
-            "type": "STRENGTH|WEAKNESS|GAP|FEATURE|LIMITATION|ADVANTAGE|DISADVANTAGE|NOTE"
-          }}
-        ],
-        "evidence": ["url1", "url2", "url3", "url4"],
-        "score_decision": "string"
-      }},
-      "servicenow": {{ ... }},
-      "salesforce": {{ ... }}
+      {dynamic_vendor_sections}
     }}
   ]
 }}
@@ -360,8 +344,9 @@ def get_dynamic_vendor_sections(vendors: list) -> str:
 
 def get_json_template(capability_name: str, capability_data: dict = None, vendors: list = None) -> str:
     """Generate the JSON template for comprehensive research"""
+    # Use dynamic vendors from database, fallback to default only if no vendors exist
     if not vendors:
-        vendors = ["comarch", "servicenow", "salesforce"]  # Default vendors
+        vendors = ["comarch", "servicenow", "salesforce"]  # Default vendors only if none exist in database
     
     vendor_sections = get_dynamic_vendor_sections(vendors)
     
@@ -396,8 +381,9 @@ def get_json_template(capability_name: str, capability_data: dict = None, vendor
 def get_prompt_template(prompt_type: str, capability_name: str, capability_data: dict = None, vendors: list = None) -> str:
     """Get the appropriate prompt template based on type and capability data"""
     
+    # Use dynamic vendors from database, fallback to default only if no vendors exist
     if not vendors:
-        vendors = ["comarch", "servicenow", "salesforce"]  # Default vendors
+        vendors = ["comarch", "servicenow", "salesforce"]  # Default vendors only if none exist in database
     
     if prompt_type == "domain_analysis":
         if not capability_data or not capability_data.get("exists", False):
@@ -423,10 +409,10 @@ def get_prompt_template(prompt_type: str, capability_name: str, capability_data:
                 domain_count=capability_data.get("domain_count", 0),
                 attribute_count=capability_data.get("attribute_count", 0),
                 domains_text=domains_text,
-                domains=capability_data.get("domains", [])
+                domains=capability_data.get("domains", []),
+                dynamic_vendors=', '.join([f'**{v.capitalize()}**' for v in vendors]),
+                dynamic_vendor_sections=get_dynamic_vendor_sections(vendors)
             )
-            # Replace hardcoded vendors with dynamic ones
-            template = template.replace('**Comarch**, **ServiceNow**, **Salesforce**', ', '.join([f'**{v.capitalize()}**' for v in vendors]))
             return template
         else:
             # New capability without domains
@@ -435,10 +421,10 @@ def get_prompt_template(prompt_type: str, capability_name: str, capability_data:
                 domain_count=0,
                 attribute_count=0,
                 domains_text="No existing domains found. Research should focus on identifying key domains and attributes for this capability.",
-                domains=[]
+                domains=[],
+                dynamic_vendors=', '.join([f'**{v.capitalize()}**' for v in vendors]),
+                dynamic_vendor_sections=get_dynamic_vendor_sections(vendors)
             )
-            # Replace hardcoded vendors with dynamic ones
-            template = template.replace('**Comarch**, **ServiceNow**, **Salesforce**', ', '.join([f'**{v.capitalize()}**' for v in vendors]))
             return template
     
     else:

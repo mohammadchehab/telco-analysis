@@ -7,12 +7,14 @@ import sys
 import os
 import subprocess
 import argparse
+from pathlib import Path
 
 def run_tests(test_type="all", coverage=False, verbose=False):
     """Run tests based on the specified type"""
     
-    # Add the current directory to Python path
-    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    # Add the backend directory to Python path
+    backend_dir = Path(__file__).parent.parent
+    sys.path.insert(0, str(backend_dir))
     
     # Base pytest command
     cmd = ["python", "-m", "pytest"]
@@ -38,7 +40,7 @@ def run_tests(test_type="all", coverage=False, verbose=False):
     
     # Run the tests
     try:
-        result = subprocess.run(cmd, cwd=os.path.dirname(os.path.abspath(__file__)))
+        result = subprocess.run(cmd, cwd=backend_dir)
         return result.returncode == 0
     except Exception as e:
         print(f"Error running tests: {e}")

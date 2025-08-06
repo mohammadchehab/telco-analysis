@@ -45,6 +45,7 @@ import {
 import { vendorAnalysisAPI } from '../utils/api';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useNavigationState } from '../hooks/useLocalStorage';
+import { capabilityAPI } from '../utils/api';
 
 interface VendorObservation {
   observation: string;
@@ -89,7 +90,7 @@ const VendorAnalysis: React.FC = () => {
   const [hasRestoredState, setHasRestoredState] = useState(false);
   // const [isRestoringState, setIsRestoringState] = useState(false);
   const [selectedCapability, setSelectedCapability] = useState<number | null>(null);
-  const [selectedVendors, setSelectedVendors] = useState<string[]>(['comarch', 'servicenow', 'salesforce']);
+  const [selectedVendors, setSelectedVendors] = useState<string[]>([]); // Will be populated from API
   const [analysisData, setAnalysisData] = useState<VendorAnalysisData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -199,34 +200,49 @@ const VendorAnalysis: React.FC = () => {
 
   const fetchCapabilities = async () => {
     try {
-      const response = await fetch('/api/capabilities/');
-      const data = await response.json();
-      if (data.success) {
-        setCapabilities(data.data);
+      const response = await capabilityAPI.getAll();
+      if (response.success && response.data && response.data.capabilities) {
+        // Convert CapabilitySummary to Capability format and filter for completed capabilities only
+        const convertedCapabilities = response.data.capabilities
+          .filter((cap: any) => cap.status === 'completed') // Only show completed capabilities
+          .map((cap: any) => ({
+            id: cap.id,
+            name: cap.name,
+            status: cap.status || 'new', // Convert WorkflowState to string
+            description: cap.description || '',
+            created_at: cap.last_updated || new Date().toISOString(),
+            version_string: cap.version_string
+          }));
+        setCapabilities(convertedCapabilities);
       } else {
-        console.error('Failed to fetch capabilities:', data.error);
+        console.error('Failed to fetch capabilities:', response.error);
+        setCapabilities([]);
       }
     } catch (error) {
       console.error('Error fetching capabilities:', error);
+      setCapabilities([]);
     }
   };
 
   // Fetch available vendors from API
   const fetchVendors = async () => {
     try {
-      const response = await fetch('/api/vendors/active/names');
-      const data = await response.json();
-      if (data.success) {
-        setAvailableVendors(data.data);
+      console.log('Fetching vendors from API...');
+      const response = await vendorAnalysisAPI.get('/vendors/active/names');
+      console.log('Vendors API response:', response);
+      
+      if (response && response.success && response.data && Array.isArray(response.data.vendors)) {
+        console.log('Setting vendors:', response.data.vendors);
+        setAvailableVendors(response.data.vendors);
       } else {
-        console.error('Failed to fetch vendors:', data.error);
-        // Fallback to default vendors
-        setAvailableVendors(['comarch', 'servicenow', 'salesforce']);
+        console.error('Failed to fetch vendors - invalid response format:', response);
+        // Fallback to empty array - will be populated when vendors are fetched
+        setAvailableVendors([]);
       }
     } catch (error) {
       console.error('Error fetching vendors:', error);
-      // Fallback to default vendors
-      setAvailableVendors(['comarch', 'servicenow', 'salesforce']);
+      // Fallback to empty array - will be populated when vendors are fetched
+      setAvailableVendors([]);
     }
   };
 
@@ -368,15 +384,37 @@ const VendorAnalysis: React.FC = () => {
   };
 
   const getVendorColor = (vendor: string) => {
-    const colors = {
+    // Predefined colors for common vendors
+    const predefinedColors: { [key: string]: string } = {
       comarch: '#1976d2',
       servicenow: '#ff6b35',
       salesforce: '#00a1e0',
       oracle: '#ff0000',
       ibm: '#0066cc',
-      microsoft: '#7fba00'
+      microsoft: '#7fba00',
+      'microsoft azure': '#0078d4',
+      aws: '#ff9900',
+      'google cloud': '#4285f4',
+      databricks: '#ff3621',
+      snowflake: '#29b5e8',
+      collibra: '#0066cc',
+      tableau: '#e97627',
+      'power bi': '#f2c811'
     };
-    return colors[vendor as keyof typeof colors] || '#666';
+    
+    // Check if vendor has a predefined color
+    const vendorLower = vendor.toLowerCase();
+    if (predefinedColors[vendorLower]) {
+      return predefinedColors[vendorLower];
+    }
+    
+    // Generate a consistent color based on vendor name hash
+    let hash = 0;
+    for (let i = 0; i < vendor.length; i++) {
+      hash = vendor.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const hue = Math.abs(hash) % 360;
+    return `hsl(${hue}, 70%, 50%)`;
   };
 
   const getUniqueDomains = () => {
@@ -432,108 +470,130 @@ const VendorAnalysis: React.FC = () => {
       {/* Controls Section */}
       <Card sx={{ mb: 3, boxShadow: 2 }}>
         <CardContent sx={{ p: 3 }}>
-          <Box sx={{ 
-            display: 'grid', 
-            gridTemplateColumns: { xs: '1fr', md: '1fr 2fr 1fr' }, 
-            gap: 3, 
-            alignItems: 'center' 
-          }}>
-            <Autocomplete
-              options={capabilities}
-              getOptionLabel={(option) => option.name}
-              value={capabilities.find(c => c.id === selectedCapability) || null}
-              onChange={(_, newValue) => setSelectedCapability(newValue?.id || null)}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Select Capability"
-                  variant="outlined"
-                  fullWidth
-                  size="small"
-                />
-              )}
-            />
-            
-            <Autocomplete
-              multiple
-              options={availableVendors}
-              value={selectedVendors}
-              onChange={(_, newValue) => setSelectedVendors(newValue)}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Select Vendors to Compare"
-                  variant="outlined"
-                  fullWidth
-                  size="small"
-                />
-              )}
-              renderTags={(value, getTagProps) =>
-                value.map((option, index) => {
-                  const { key, ...tagProps } = getTagProps({ index });
-                  return (
-                    <Chip
-                      key={key}
-                      label={option}
-                      {...tagProps}
-                      size="small"
-                      sx={{ 
-                        bgcolor: getVendorColor(option),
-                        color: 'white',
-                        fontWeight: 'bold'
-                      }}
-                    />
-                  );
-                })
-              }
-            />
+          {capabilities.length === 0 ? (
+            <Box sx={{ textAlign: 'center', py: 4 }}>
+              <Typography variant="h6" color="text.secondary" gutterBottom>
+                No Completed Capabilities Available
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Only completed capabilities are shown in the vendor analysis. 
+                Please complete research for a capability before analyzing vendors.
+              </Typography>
+            </Box>
+          ) : (
+            <Box sx={{ 
+              display: 'grid', 
+              gridTemplateColumns: { xs: '1fr', md: '1fr 2fr 1fr' }, 
+              gap: 3, 
+              alignItems: 'center' 
+            }}>
+              <Autocomplete
+                options={Array.isArray(capabilities) ? capabilities : []}
+                getOptionLabel={(option) => option.name || ''}
+                value={Array.isArray(capabilities) && capabilities.length > 0 ? capabilities.find(c => c.id === selectedCapability) || null : null}
+                onChange={(_, newValue) => setSelectedCapability(newValue?.id || null)}
+                loading={capabilities.length === 0}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Select Capability"
+                    variant="outlined"
+                    fullWidth
+                    size="small"
+                  />
+                )}
+              />
+              
+              <Autocomplete
+                multiple
+                options={Array.isArray(availableVendors) ? availableVendors : []}
+                value={Array.isArray(selectedVendors) ? selectedVendors : []}
+                onChange={(_, newValue) => setSelectedVendors(Array.isArray(newValue) ? newValue : [])}
+                loading={availableVendors.length === 0}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Select Vendors to Compare"
+                    variant="outlined"
+                    fullWidth
+                    size="small"
+                  />
+                )}
+                renderTags={(value, getTagProps) =>
+                  value.map((option, index) => {
+                    const { key, ...tagProps } = getTagProps({ index });
+                    return (
+                      <Chip
+                        key={key}
+                        label={option}
+                        {...tagProps}
+                        size="small"
+                        sx={{ 
+                          bgcolor: getVendorColor(option),
+                          color: 'white',
+                          fontWeight: 'bold'
+                        }}
+                      />
+                    );
+                  })
+                }
+              />
 
-            <Stack direction="row" spacing={1} justifyContent="flex-end">
-              <Tooltip title="Filters">
-                <IconButton
-                  onClick={() => setShowFilters(!showFilters)}
-                  color={showFilters ? 'primary' : 'default'}
-                >
-                  <FilterIcon />
-                </IconButton>
-              </Tooltip>
-              <Tooltip title="Expand All">
-                <IconButton
-                  onClick={handleExpandAll}
-                  disabled={!analysisData || filteredData.length === 0}
-                  color="primary"
-                >
-                  <ExpandMoreIcon />
-                </IconButton>
-              </Tooltip>
-              <Tooltip title="Collapse All">
-                <IconButton
-                  onClick={handleCollapseAll}
-                  disabled={!analysisData || expandedAttributes.size === 0}
-                  color="default"
-                >
-                  <ExpandMoreIcon sx={{ transform: 'rotate(180deg)' }} />
-                </IconButton>
-              </Tooltip>
-              <Tooltip title="Export Data">
-                <IconButton
-                  onClick={handleExport}
-                  disabled={!selectedCapability || loading}
-                  color="primary"
-                >
-                  <DownloadIcon />
-                </IconButton>
-              </Tooltip>
-              <Tooltip title="Refresh">
-                <IconButton
-                  onClick={fetchVendorAnalysis}
-                  disabled={!selectedCapability || loading}
-                >
-                  <RefreshIcon />
-                </IconButton>
-              </Tooltip>
-            </Stack>
-          </Box>
+              <Stack direction="row" spacing={1} justifyContent="flex-end">
+                <Tooltip title="Filters">
+                  <IconButton
+                    onClick={() => setShowFilters(!showFilters)}
+                    color={showFilters ? 'primary' : 'default'}
+                  >
+                    <FilterIcon />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title="Expand All">
+                  <span>
+                    <IconButton
+                      onClick={handleExpandAll}
+                      disabled={!analysisData || filteredData.length === 0}
+                      color="primary"
+                    >
+                      <ExpandMoreIcon />
+                    </IconButton>
+                  </span>
+                </Tooltip>
+                <Tooltip title="Collapse All">
+                  <span>
+                    <IconButton
+                      onClick={handleCollapseAll}
+                      disabled={!analysisData || expandedAttributes.size === 0}
+                      color="default"
+                    >
+                      <ExpandMoreIcon sx={{ transform: 'rotate(180deg)' }} />
+                    </IconButton>
+                  </span>
+                </Tooltip>
+                <Tooltip title="Export Data">
+                  <span>
+                    <IconButton
+                      onClick={handleExport}
+                      disabled={!analysisData || filteredData.length === 0}
+                      color="primary"
+                    >
+                      <DownloadIcon />
+                    </IconButton>
+                  </span>
+                </Tooltip>
+                <Tooltip title="Refresh">
+                  <span>
+                    <IconButton
+                      onClick={fetchVendorAnalysis}
+                      disabled={!selectedCapability || loading}
+                    >
+                      <RefreshIcon />
+                    </IconButton>
+                  </span>
+                </Tooltip>
+              </Stack>
+            </Box>
+          )}
 
           {/* Filters Panel */}
           {showFilters && (
@@ -544,8 +604,8 @@ const VendorAnalysis: React.FC = () => {
                 gap: 2 
               }}>
                 <Autocomplete
-                  options={getUniqueDomains()}
-                  value={filterDomain}
+                  options={Array.isArray(getUniqueDomains()) ? getUniqueDomains() : []}
+                  value={filterDomain || ''}
                   onChange={(_, newValue) => setFilterDomain(newValue || '')}
                   renderInput={(params) => (
                     <TextField
@@ -558,8 +618,8 @@ const VendorAnalysis: React.FC = () => {
                   )}
                 />
                 <Autocomplete
-                  options={getUniqueAttributes()}
-                  value={filterAttribute}
+                  options={Array.isArray(getUniqueAttributes()) ? getUniqueAttributes() : []}
+                  value={filterAttribute || ''}
                   onChange={(_, newValue) => setFilterAttribute(newValue || '')}
                   renderInput={(params) => (
                     <TextField
