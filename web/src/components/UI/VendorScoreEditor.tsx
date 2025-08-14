@@ -61,7 +61,6 @@ interface VendorScore {
   weight: number;
   score: string;
   score_numeric: number;
-  evidence_url: string;
   score_decision: string;
   research_type: string;
   research_date: string;
@@ -115,7 +114,6 @@ const VendorScoreEditor: React.FC<VendorScoreEditorProps> = ({
   const [scoreDecision, setScoreDecision] = useState<string>('');
   // const [researchType, setResearchType] = useState<string>('capability_research');
   const [researchDate, setResearchDate] = useState<string>('');
-  const [evidenceUrls, setEvidenceUrls] = useState<string[]>([]);
   const [observations, setObservations] = useState<VendorScoreObservation[]>([]);
   
   // UI states
@@ -166,28 +164,6 @@ const VendorScoreEditor: React.FC<VendorScoreEditorProps> = ({
     // setResearchType(data.research_type || 'capability_research');
     setResearchDate(data.research_date ? new Date(data.research_date).toISOString().split('T')[0] : '');
     
-    // Parse evidence URLs - handle both JSON arrays and plain strings
-    if (data.evidence_url && data.evidence_url.trim()) {
-      try {
-        // First try to parse as JSON
-        const parsed = JSON.parse(data.evidence_url);
-        if (Array.isArray(parsed)) {
-          // Filter out empty strings and whitespace-only strings
-          const filteredUrls = parsed.filter(url => url && url.trim());
-          setEvidenceUrls(filteredUrls);
-        } else {
-          // If it's not an array, treat as a single URL
-          setEvidenceUrls([data.evidence_url]);
-        }
-      } catch (e) {
-        // If JSON parsing fails, treat as a single URL or split by newlines
-        const urls = data.evidence_url.split('\n').filter(url => url && url.trim());
-        setEvidenceUrls(urls.length > 0 ? urls : []);
-      }
-    } else {
-      setEvidenceUrls([]);
-    }
-    
     // Set observations
     setObservations(data.observations || []);
   };
@@ -202,7 +178,6 @@ const VendorScoreEditor: React.FC<VendorScoreEditorProps> = ({
         score_numeric: score,
         score_decision: scoreDecision,
         research_date: researchDate,
-        evidence_url: JSON.stringify(evidenceUrls),
         observations: observations.map(obs => ({
           observation: obs.observation,
           observation_type: obs.observation_type
@@ -284,18 +259,6 @@ const VendorScoreEditor: React.FC<VendorScoreEditorProps> = ({
 
   const handleDeleteObservation = (observationId?: number) => {
     setObservations(prev => prev.filter(obs => obs.id !== observationId));
-  };
-
-  const handleAddEvidenceUrl = () => {
-    setEvidenceUrls(prev => [...prev, '']);
-  };
-
-  const handleUpdateEvidenceUrl = (index: number, url: string) => {
-    setEvidenceUrls(prev => prev.map((u, i) => i === index ? url : u));
-  };
-
-  const handleDeleteEvidenceUrl = (index: number) => {
-    setEvidenceUrls(prev => prev.filter((_, i) => i !== index));
   };
 
   const getScoreColor = (score: number) => {
@@ -493,53 +456,6 @@ const VendorScoreEditor: React.FC<VendorScoreEditorProps> = ({
                   );
                 })}
               </List>
-            )}
-          </Box>
-
-          <Divider sx={{ my: 3 }} />
-
-          {/* Evidence Section */}
-          <Box sx={{ mb: 3 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-              <Typography variant="subtitle1">
-                Evidence URLs
-              </Typography>
-              <Button
-                startIcon={<AddIcon />}
-                onClick={handleAddEvidenceUrl}
-                variant="outlined"
-                size="small"
-              >
-                Add URL
-              </Button>
-            </Box>
-
-            {evidenceUrls.length === 0 ? (
-              <Alert severity="info">
-                No evidence URLs added yet. Click "Add URL" to add your first evidence link.
-              </Alert>
-            ) : (
-              <Stack spacing={1}>
-                {evidenceUrls.map((url, index) => (
-                  <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <LinkIcon color="action" />
-                    <TextField
-                      fullWidth
-                      size="small"
-                      value={url}
-                      onChange={(e) => handleUpdateEvidenceUrl(index, e.target.value)}
-                      placeholder="https://example.com/evidence"
-                    />
-                    <IconButton
-                      size="small"
-                      onClick={() => handleDeleteEvidenceUrl(index)}
-                      color="error"
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  </Box>
-                ))}
-              </Stack>
             )}
           </Box>
 

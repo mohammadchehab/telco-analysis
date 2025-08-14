@@ -29,7 +29,6 @@ interface VendorScore {
   weight: number;
   score: string;
   score_numeric: number;
-  evidence_url: string;
   score_decision: string;
   research_type: string;
   research_date: string;

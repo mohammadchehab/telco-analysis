@@ -49,7 +49,6 @@ export interface VendorScore {
   score: string;
   score_numeric: number;
   observation: string; // JSON array as string
-  evidence_url: string; // JSON array as string
   score_decision: string;
   research_type: 'capability_research' | 'domain_analysis';
   research_date: string;
@@ -283,7 +282,6 @@ export interface VendorAnalysisItem {
       score: string;
       score_numeric: number;
       observation: string;
-      evidence_url: string;
       score_decision: string;
       weight: number;
     };
@@ -350,7 +348,6 @@ export interface ProcessVendorScore {
   vendor: string;
   score: number;
   score_level: string;
-  evidence_url?: string;
   score_decision?: string;
   research_date: string;
   created_at: string;

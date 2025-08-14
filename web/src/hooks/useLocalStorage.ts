@@ -11,6 +11,21 @@ interface CapabilitiesLocalStorage {
 }
 
 /**
+ * Interface for vendor analysis page local storage settings
+ */
+interface VendorAnalysisLocalStorage {
+  selectedCapability: number | null;
+  selectedVendors: string[];
+  showFilters: boolean;
+  sortBy: string;
+  sortOrder: 'asc' | 'desc';
+  filterDomain: string;
+  filterAttribute: string;
+  filterScore: string;
+  expandedAttributes: string[];
+}
+
+/**
  * Interface for navigation state to remember where user came from
  */
 interface NavigationState {
@@ -25,6 +40,7 @@ interface NavigationState {
 }
 
 const CAPABILITIES_STORAGE_KEY = 'capabilities-settings';
+const VENDOR_ANALYSIS_STORAGE_KEY = 'vendor-analysis-settings';
 const NAVIGATION_STORAGE_KEY = 'navigation-state';
 
 const defaultSettings: CapabilitiesLocalStorage = {
@@ -32,6 +48,18 @@ const defaultSettings: CapabilitiesLocalStorage = {
   statusFilter: '',
   viewMode: 'kanban',
   showFilters: false,
+};
+
+const defaultVendorAnalysisSettings: VendorAnalysisLocalStorage = {
+  selectedCapability: null,
+  selectedVendors: [],
+  showFilters: false,
+  sortBy: 'attribute_name',
+  sortOrder: 'asc',
+  filterDomain: '',
+  filterAttribute: '',
+  filterScore: '',
+  expandedAttributes: [],
 };
 
 const defaultNavigationState: NavigationState = {
@@ -91,6 +119,66 @@ export const useCapabilitiesLocalStorage = () => {
       localStorage.removeItem(CAPABILITIES_STORAGE_KEY);
     } catch (error) {
       console.warn('Failed to clear capabilities settings from localStorage:', error);
+    }
+  };
+
+  return {
+    settings,
+    updateSettings,
+    clearSettings,
+    isLoaded,
+  };
+};
+
+/**
+ * Custom hook to manage local storage for vendor analysis page settings
+ * 
+ * This hook provides:
+ * - Persistent storage of selected capability, vendors, filters, sorting, and expanded attributes
+ * - Automatic loading of saved settings on component mount
+ * - Automatic saving of settings when they change
+ * - Clear function to reset all settings to defaults
+ * 
+ * @returns Object containing settings, updateSettings function, clearSettings function, and isLoaded state
+ */
+export const useVendorAnalysisLocalStorage = () => {
+  const [settings, setSettings] = useState<VendorAnalysisLocalStorage>(defaultVendorAnalysisSettings);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  // Load settings from localStorage on mount
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(VENDOR_ANALYSIS_STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        setSettings({ ...defaultVendorAnalysisSettings, ...parsed });
+      }
+    } catch (error) {
+      console.warn('Failed to load vendor analysis settings from localStorage:', error);
+    } finally {
+      setIsLoaded(true);
+    }
+  }, []);
+
+  // Save settings to localStorage whenever they change
+  const updateSettings = (newSettings: Partial<VendorAnalysisLocalStorage>) => {
+    const updated = { ...settings, ...newSettings };
+    setSettings(updated);
+    
+    try {
+      localStorage.setItem(VENDOR_ANALYSIS_STORAGE_KEY, JSON.stringify(updated));
+    } catch (error) {
+      console.warn('Failed to save vendor analysis settings to localStorage:', error);
+    }
+  };
+
+  // Clear all settings
+  const clearSettings = () => {
+    setSettings(defaultVendorAnalysisSettings);
+    try {
+      localStorage.removeItem(VENDOR_ANALYSIS_STORAGE_KEY);
+    } catch (error) {
+      console.warn('Failed to clear vendor analysis settings from localStorage:', error);
     }
   };
 

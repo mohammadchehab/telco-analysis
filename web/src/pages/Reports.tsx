@@ -36,8 +36,6 @@ import {
   Link
 } from '@mui/material';
 import {
-  Download as DownloadIcon,
-  Refresh as RefreshIcon,
   Assessment as AssessmentIcon,
   TrendingUp as TrendingUpIcon,
   PieChart as PieChartIcon,
@@ -65,6 +63,7 @@ import {
 import { apiClient, vendorScoreAPI, vendorAnalysisAPI } from '../utils/api';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useNavigationState } from '../hooks/useLocalStorage';
+import CapabilitySelector from '../components/UI/CapabilitySelector';
 
 // Register Chart.js components
 ChartJS.register(
@@ -134,7 +133,6 @@ interface FilteredReportsData {
         score: string;
         score_numeric: number;
         observation: string;
-        evidence_url: string[] | string;
         score_decision: string;
         weight: number;
       };
@@ -609,66 +607,23 @@ const Reports: React.FC = () => {
       )}
 
       {/* Capability Selection */}
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' }, gap: 2, alignItems: 'center' }}>
-            <FormControl fullWidth>
-              <InputLabel>Select Capability</InputLabel>
-              <Select
-                value={selectedCapability?.id || ''}
-                label="Select Capability"
-                onChange={(e) => {
-                  const capabilityId = typeof e.target.value === 'string' ? parseInt(e.target.value) : e.target.value;
-                  setSelectedCapability(capabilities.find(c => c.id === capabilityId) || null);
-                }}
-                disabled={loading}
-              >
-                {capabilities.map((capability) => (
-                  <MenuItem 
-                    key={capability.id} 
-                    value={capability.id}
-                    disabled={capability.status !== "completed"}
-                  >
-                    {capability.name} ({capability.status})
-                    {capability.status !== "completed" && " - Reports not available"}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            <Box sx={{ display: 'flex', gap: 2 }}>
-              <Button
-                variant="outlined"
-                startIcon={<FilterIcon />}
-                onClick={() => setShowFilters(!showFilters)}
-                disabled={!selectedCapability}
-              >
-                {showFilters ? 'Hide' : 'Show'} Filters
-              </Button>
-              <Button
-                variant="outlined"
-                startIcon={<RefreshIcon />}
-                onClick={fetchReportData}
-                disabled={!selectedCapability || loading}
-              >
-                Refresh
-              </Button>
-              <Button
-                variant="contained"
-                startIcon={<DownloadIcon />}
-                onClick={() => setExportDialogOpen(true)}
-                disabled={!selectedCapability || loading}
-              >
-                Export
-              </Button>
-            </Box>
-          </Box>
-          {capabilities.length > 0 && !capabilities.some(c => c.status === "completed") && (
-            <Alert severity="info" sx={{ mt: 2 }}>
-              No completed capabilities found. Reports are only available for capabilities with "completed" status.
-            </Alert>
-          )}
-        </CardContent>
-      </Card>
+      <CapabilitySelector
+        capabilities={capabilities}
+        selectedCapability={selectedCapability}
+        onCapabilityChange={(capability) => setSelectedCapability(capability as Capability | null)}
+        loading={loading}
+        showFilters={showFilters}
+        onToggleFilters={() => setShowFilters(!showFilters)}
+        onRefresh={fetchReportData}
+        onExport={() => setExportDialogOpen(true)}
+        showClearButton={false}
+        showExportButton={true}
+        showRefreshButton={true}
+        showFiltersButton={true}
+        disabled={loading}
+        title="Select Capability"
+        standalone={true}
+      />
 
       {/* Filters */}
       {showFilters && renderFilters()}
@@ -1067,75 +1022,6 @@ const Reports: React.FC = () => {
                       <Typography variant="body2" paragraph>
                         <strong>Score Decision:</strong> {data.score_decision}
                       </Typography>
-                      <Typography variant="body2" paragraph>
-                        <strong>Observations:</strong>
-                      </Typography>
-                      {(() => {
-                        try {
-                          const observations = JSON.parse(data.observation);
-                          if (Array.isArray(observations)) {
-                            return (
-                              <Box component="ul" sx={{ m: 0, pl: 2, mb: 2 }}>
-                                {observations.map((obs, idx) => (
-                                  <Box key={idx} component="li" sx={{ mb: 0.5 }}>
-                                    <Typography variant="body2">
-                                      {obs}
-                                    </Typography>
-                                  </Box>
-                                ))}
-                              </Box>
-                            );
-                          }
-                        } catch (e) {
-                          // If parsing fails, display as plain text
-                        }
-                        return (
-                          <Typography variant="body2" paragraph>
-                            {data.observation}
-                          </Typography>
-                        );
-                      })()}
-                      <Typography variant="body2" paragraph>
-                        <strong>Evidence:</strong>
-                      </Typography>
-                      {(() => {
-                        const evidence = data.evidence_url;
-                        if (Array.isArray(evidence)) {
-                          if (evidence.length === 0) {
-                            return (
-                              <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
-                                No evidence URLs provided
-                              </Typography>
-                            );
-                          }
-                          return (
-                            <Box component="ul" sx={{ m: 0, pl: 2 }}>
-                              {evidence.map((url, idx) => (
-                                <Box key={idx} component="li" sx={{ mb: 0.5 }}>
-                                  <Typography variant="body2">
-                                    <Link href={url} target="_blank" rel="noopener noreferrer">
-                                      {url}
-                                    </Link>
-                                  </Typography>
-                                </Box>
-                              ))}
-                            </Box>
-                          );
-                        } else if (typeof evidence === 'string') {
-                          // Fallback for legacy string format
-                          return (
-                            <Typography variant="body2">
-                              {evidence}
-                            </Typography>
-                          );
-                        } else {
-                          return (
-                            <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
-                              No evidence URLs provided
-                            </Typography>
-                          );
-                        }
-                      })()}
                     </Box>
                   </AccordionDetails>
                 </Accordion>

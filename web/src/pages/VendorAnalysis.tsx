@@ -25,12 +25,12 @@ import {
   AccordionSummary,
   AccordionDetails,
   Avatar,
-  Stack
+  Stack,
+  OutlinedInput,
+  Checkbox,
+  ListItemText
 } from '@mui/material';
 import {
-  Download as DownloadIcon,
-  Refresh as RefreshIcon,
-  FilterList as FilterIcon,
   ExpandMore as ExpandMoreIcon,
   Link as LinkIcon,
   Compare as CompareIcon,
@@ -39,13 +39,13 @@ import {
   Info as InfoIcon,
   Star as StarIcon,
   CheckCircle as CheckCircleIcon,
-  Error as ErrorIcon,
-
+  Error as ErrorIcon
 } from '@mui/icons-material';
 import { vendorAnalysisAPI } from '../utils/api';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useNavigationState } from '../hooks/useLocalStorage';
+import { useNavigationState, useVendorAnalysisLocalStorage } from '../hooks/useLocalStorage';
 import { capabilityAPI } from '../utils/api';
+import CapabilitySelector from '../components/UI/CapabilitySelector';
 
 interface VendorObservation {
   observation: string;
@@ -61,7 +61,6 @@ interface VendorAnalysisItem {
       score: string;
       score_numeric: number;
       observations: VendorObservation[];
-      evidence_url: string;
       score_decision: string;
       weight: number;
     };
@@ -86,23 +85,25 @@ const VendorAnalysis: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { getPreviousPage, clearNavigationState } = useNavigationState();
+  const { settings, updateSettings, isLoaded, clearSettings } = useVendorAnalysisLocalStorage();
   const [capabilities, setCapabilities] = useState<Capability[]>([]);
-  const [hasRestoredState, setHasRestoredState] = useState(false);
-  // const [isRestoringState, setIsRestoringState] = useState(false);
-  const [selectedCapability, setSelectedCapability] = useState<number | null>(null);
-  const [selectedVendors, setSelectedVendors] = useState<string[]>([]); // Will be populated from API
   const [analysisData, setAnalysisData] = useState<VendorAnalysisData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showFilters, setShowFilters] = useState(false);
-  const [sortBy, setSortBy] = useState('attribute_name');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-  const [filterDomain, setFilterDomain] = useState<string>('');
-  const [filterAttribute, setFilterAttribute] = useState<string>('');
-  const [filterScore, setFilterScore] = useState<string>('');
-
-  const [expandedAttributes, setExpandedAttributes] = useState<Set<string>>(new Set());
   const [availableVendors, setAvailableVendors] = useState<string[]>([]);
+
+  // Extract state from settings
+  const {
+    selectedCapability,
+    selectedVendors,
+    showFilters,
+    sortBy,
+    sortOrder,
+    filterDomain,
+    filterAttribute,
+    filterScore,
+    expandedAttributes
+  } = settings;
 
   const sortOptions = [
     { value: 'attribute_name', label: 'Attribute Name' },
@@ -122,6 +123,12 @@ const VendorAnalysis: React.FC = () => {
     fetchVendors();
   }, []);
 
+  // Debug effect to log when vendors change
+  useEffect(() => {
+    console.log('Available vendors updated:', availableVendors);
+    console.log('Selected vendors:', selectedVendors);
+  }, [availableVendors, selectedVendors]);
+
   useEffect(() => {
     if (selectedCapability) {
       fetchVendorAnalysis();
@@ -130,7 +137,8 @@ const VendorAnalysis: React.FC = () => {
 
   // Restore state when returning from edit page
   useEffect(() => {
-    if (hasRestoredState) {
+    if (!isLoaded) {
+      console.log('VendorAnalysis - not loaded yet, skipping state restoration');
       return;
     }
     
@@ -140,22 +148,25 @@ const VendorAnalysis: React.FC = () => {
       return;
     }
     
+    console.log('VendorAnalysis - restoring state from localStorage:', settings);
+    
     // First check if we have state from navigation
     if (location.state) {
       const params = location.state;
+      console.log('VendorAnalysis - restoring from location state:', params);
       
       // Restore all the saved state
-      if (params.selectedCapability) setSelectedCapability(params.selectedCapability);
-      if (params.selectedVendors) setSelectedVendors(params.selectedVendors);
-      if (params.showFilters !== undefined) setShowFilters(params.showFilters);
-      if (params.sortBy) setSortBy(params.sortBy);
-      if (params.sortOrder) setSortOrder(params.sortOrder);
-      if (params.filterDomain) setFilterDomain(params.filterDomain);
-      if (params.filterAttribute) setFilterAttribute(params.filterAttribute);
-      if (params.filterScore) setFilterScore(params.filterScore);
-      if (params.expandedAttributes) setExpandedAttributes(new Set(params.expandedAttributes));
-      
-      setHasRestoredState(true);
+      updateSettings({
+        selectedCapability: params.selectedCapability,
+        selectedVendors: params.selectedVendors || [],
+        showFilters: params.showFilters || false,
+        sortBy: params.sortBy || 'attribute_name',
+        sortOrder: params.sortOrder || 'asc',
+        filterDomain: params.filterDomain || '',
+        filterAttribute: params.filterAttribute || '',
+        filterScore: params.filterScore || '',
+        expandedAttributes: params.expandedAttributes || []
+      });
       
       // Clear the location state to prevent re-restoration
       navigate(location.pathname, { replace: true, state: null });
@@ -165,20 +176,20 @@ const VendorAnalysis: React.FC = () => {
       
       if (previousPage && previousPage.previousPage === '/vendor-analysis') {
         const params = previousPage.previousParams;
-        
-        // Set flag to prevent automatic data fetching
-        // setIsRestoringState(true);
+        console.log('VendorAnalysis - restoring from navigation state:', params);
         
         // Restore all the saved state
-        if (params.selectedCapability) setSelectedCapability(params.selectedCapability);
-        if (params.selectedVendors) setSelectedVendors(params.selectedVendors);
-        if (params.showFilters !== undefined) setShowFilters(params.showFilters);
-        if (params.sortBy) setSortBy(params.sortBy);
-        if (params.sortOrder) setSortOrder(params.sortOrder);
-        if (params.filterDomain) setFilterDomain(params.filterDomain);
-        if (params.filterAttribute) setFilterAttribute(params.filterAttribute);
-        if (params.filterScore) setFilterScore(params.filterScore);
-        if (params.expandedAttributes) setExpandedAttributes(new Set(params.expandedAttributes));
+        updateSettings({
+          selectedCapability: params.selectedCapability,
+          selectedVendors: params.selectedVendors || [],
+          showFilters: params.showFilters || false,
+          sortBy: params.sortBy || 'attribute_name',
+          sortOrder: params.sortOrder || 'asc',
+          filterDomain: params.filterDomain || '',
+          filterAttribute: params.filterAttribute || '',
+          filterScore: params.filterScore || '',
+          expandedAttributes: params.expandedAttributes || []
+        });
         
         // Restore scroll position
         if (previousPage.scrollPosition) {
@@ -187,16 +198,11 @@ const VendorAnalysis: React.FC = () => {
           }, 100);
         }
         
-        setHasRestoredState(true);
-        
-        // Reset the restoring flag after a short delay
-        // setTimeout(() => setIsRestoringState(false), 100);
-        
         // Clear the navigation state after a longer delay to ensure everything is restored
         setTimeout(() => clearNavigationState(), 1000);
       }
     }
-  }, [location.state, getPreviousPage, clearNavigationState, navigate, location.pathname, hasRestoredState, capabilities]);
+  }, [location.state, getPreviousPage, clearNavigationState, navigate, location.pathname, isLoaded, capabilities, selectedCapability, updateSettings, selectedVendors, settings]);
 
   const fetchCapabilities = async () => {
     try {
@@ -213,6 +219,7 @@ const VendorAnalysis: React.FC = () => {
             created_at: cap.last_updated || new Date().toISOString(),
             version_string: cap.version_string
           }));
+        console.log('Filtered capabilities (completed only):', convertedCapabilities);
         setCapabilities(convertedCapabilities);
       } else {
         console.error('Failed to fetch capabilities:', response.error);
@@ -231,17 +238,37 @@ const VendorAnalysis: React.FC = () => {
       const response = await vendorAnalysisAPI.get('/vendors/active/names');
       console.log('Vendors API response:', response);
       
-      if (response && response.success && response.data && Array.isArray(response.data.vendors)) {
-        console.log('Setting vendors:', response.data.vendors);
-        setAvailableVendors(response.data.vendors);
+      if (response && response.success && response.data) {
+        // Handle the correct response structure from /vendors/active/names
+        let vendors: string[] = [];
+        
+        if (response.data.vendors && Array.isArray(response.data.vendors)) {
+          vendors = response.data.vendors;
+        } else if (Array.isArray(response.data)) {
+          vendors = response.data;
+        } else if (typeof response.data === 'object' && response.data !== null) {
+          // Try to extract vendors from object
+          const vendorKeys = Object.keys(response.data);
+          if (vendorKeys.length > 0) {
+            vendors = vendorKeys;
+          }
+        }
+        
+        console.log('Setting vendors:', vendors);
+        setAvailableVendors(vendors);
+        
+        // If no vendors are selected and we have vendors available, select the first few
+        if ((selectedVendors || []).length === 0 && vendors.length > 0) {
+          const defaultVendors = vendors.slice(0, Math.min(3, vendors.length));
+          console.log('Setting default vendors:', defaultVendors);
+          updateSettings({ selectedVendors: defaultVendors });
+        }
       } else {
         console.error('Failed to fetch vendors - invalid response format:', response);
-        // Fallback to empty array - will be populated when vendors are fetched
         setAvailableVendors([]);
       }
     } catch (error) {
       console.error('Error fetching vendors:', error);
-      // Fallback to empty array - will be populated when vendors are fetched
       setAvailableVendors([]);
     }
   };
@@ -287,79 +314,92 @@ const VendorAnalysis: React.FC = () => {
     }
   };
 
+  const handleClearSettings = () => {
+    clearSettings();
+    setAnalysisData(null);
+    setError(null);
+  };
+
   const getFilteredAndSortedData = () => {
-    if (!analysisData || !analysisData.analysis_items) return [];
+    if (!analysisData) return [];
+    let filteredItems = analysisData.analysis_items;
 
-    let filtered = analysisData.analysis_items;
-
-    // Apply filters
+    // Apply domain filter
     if (filterDomain) {
-      filtered = filtered.filter(item => 
-        item.domain_name.toLowerCase().includes(filterDomain.toLowerCase())
-      );
+      filteredItems = filteredItems.filter(item => item.domain_name === filterDomain);
     }
 
+    // Apply attribute filter
     if (filterAttribute) {
-      filtered = filtered.filter(item => 
-        item.attribute_name.toLowerCase().includes(filterAttribute.toLowerCase())
-      );
+      filteredItems = filteredItems.filter(item => item.attribute_name === filterAttribute);
     }
 
+    // Apply score filter
     if (filterScore) {
-      filtered = filtered.filter(item => {
-        const avgScore = selectedVendors.reduce((sum, vendor) => {
-          return sum + (item.vendors[vendor]?.score_numeric || 0);
-        }, 0) / selectedVendors.length;
-
-        switch (filterScore) {
-          case 'high': return avgScore >= 8;
-          case 'medium': return avgScore >= 5 && avgScore < 8;
-          case 'low': return avgScore < 5;
-          default: return true;
-        }
+      filteredItems = filteredItems.filter(item => {
+        const avgScore = Object.values(item.vendors).reduce((sum, vendor) => sum + vendor.score_numeric, 0) / Object.keys(item.vendors).length;
+        if (filterScore === 'high') return avgScore >= 8;
+        if (filterScore === 'medium') return avgScore >= 5 && avgScore < 8;
+        if (filterScore === 'low') return avgScore < 5;
+        return true; // All scores if no filter
       });
     }
 
-    // Apply sorting
-    filtered.sort((a, b) => {
-      let aValue: any, bValue: any;
-
-      switch (sortBy) {
-        case 'attribute_name':
-          aValue = a.attribute_name;
-          bValue = b.attribute_name;
-          break;
-        case 'domain_name':
-          aValue = a.domain_name;
-          bValue = b.domain_name;
-          break;
-        case 'average_score':
-          aValue = selectedVendors.reduce((sum, vendor) => 
-            sum + (a.vendors[vendor]?.score_numeric || 0), 0) / selectedVendors.length;
-          bValue = selectedVendors.reduce((sum, vendor) => 
-            sum + (b.vendors[vendor]?.score_numeric || 0), 0) / selectedVendors.length;
-          break;
-        default:
-          aValue = a.attribute_name;
-          bValue = b.attribute_name;
+    // Sorting
+    filteredItems.sort((a, b) => {
+      if (sortBy === 'average_score') {
+        const avgScoreA = Object.values(a.vendors).reduce((sum, vendor) => sum + vendor.score_numeric, 0) / Object.keys(a.vendors).length;
+        const avgScoreB = Object.values(b.vendors).reduce((sum, vendor) => sum + vendor.score_numeric, 0) / Object.keys(b.vendors).length;
+        return sortOrder === 'desc' ? avgScoreB - avgScoreA : avgScoreA - avgScoreB;
       }
-
-      if (sortOrder === 'asc') {
-        return aValue > bValue ? 1 : -1;
-      } else {
-        return aValue < bValue ? 1 : -1;
+      if (sortBy === 'attribute_name') {
+        return sortOrder === 'desc' ? b.attribute_name.localeCompare(a.attribute_name) : a.attribute_name.localeCompare(b.attribute_name);
       }
+      if (sortBy === 'domain_name') {
+        return sortOrder === 'desc' ? b.domain_name.localeCompare(a.domain_name) : a.domain_name.localeCompare(b.domain_name);
+      }
+      return 0; // Default sort
     });
 
-    return filtered;
+    return filteredItems;
   };
 
+  const getUniqueDomains = () => {
+    if (!analysisData) return [];
+    const domains = new Set<string>();
+    analysisData.analysis_items.forEach(item => {
+      domains.add(item.domain_name);
+    });
+    return Array.from(domains);
+  };
 
+  const getUniqueAttributes = () => {
+    if (!analysisData) return [];
+    const attributes = new Set<string>();
+    analysisData.analysis_items.forEach(item => {
+      attributes.add(item.attribute_name);
+    });
+    return Array.from(attributes);
+  };
 
+  const handleExpandAll = () => {
+    const allAttributes = getUniqueAttributes();
+    updateSettings({ expandedAttributes: allAttributes });
+  };
 
+  const handleCollapseAll = () => {
+    updateSettings({ expandedAttributes: [] });
+  };
+
+  const handleToggleAttribute = (attributeName: string) => {
+    const currentExpanded = expandedAttributes || [];
+    const newExpanded = currentExpanded.includes(attributeName)
+      ? currentExpanded.filter(name => name !== attributeName)
+      : [...currentExpanded, attributeName];
+    updateSettings({ expandedAttributes: newExpanded });
+  };
 
   const getScoreLabelFromNumeric = (score: number) => {
-    // Use the actual rubric from prompts.py
     if (score >= 5) return 'Excellent/Leading';
     if (score >= 4) return 'Very Good/Strong';
     if (score >= 3) return 'Good/Adequate';
@@ -376,15 +416,14 @@ const VendorAnalysis: React.FC = () => {
   };
 
   const getScoreColor = (score: number) => {
-    if (score >= 5) return '#1b5e20'; // Dark green for excellent
-    if (score >= 4) return '#2e7d32'; // Green for very good
-    if (score >= 3) return '#4caf50'; // Light green for good
-    if (score >= 2) return '#ff9800'; // Orange for basic
-    return '#f44336'; // Red for poor
+    if (score >= 5) return '#1b5e20';
+    if (score >= 4) return '#2e7d32';
+    if (score >= 3) return '#4caf50';
+    if (score >= 2) return '#ff9800';
+    return '#f44336';
   };
 
   const getVendorColor = (vendor: string) => {
-    // Predefined colors for common vendors
     const predefinedColors: { [key: string]: string } = {
       comarch: '#1976d2',
       servicenow: '#ff6b35',
@@ -402,48 +441,17 @@ const VendorAnalysis: React.FC = () => {
       'power bi': '#f2c811'
     };
     
-    // Check if vendor has a predefined color
     const vendorLower = vendor.toLowerCase();
     if (predefinedColors[vendorLower]) {
       return predefinedColors[vendorLower];
     }
     
-    // Generate a consistent color based on vendor name hash
     let hash = 0;
     for (let i = 0; i < vendor.length; i++) {
       hash = vendor.charCodeAt(i) + ((hash << 5) - hash);
     }
     const hue = Math.abs(hash) % 360;
     return `hsl(${hue}, 70%, 50%)`;
-  };
-
-  const getUniqueDomains = () => {
-    if (!analysisData) return [];
-    return [...new Set(analysisData.analysis_items.map(item => item.domain_name))];
-  };
-
-  const getUniqueAttributes = () => {
-    if (!analysisData) return [];
-    return [...new Set(analysisData.analysis_items.map(item => item.attribute_name))];
-  };
-
-  const handleExpandAll = () => {
-    const allAttributes = new Set(filteredData.map(item => item.attribute_name));
-    setExpandedAttributes(allAttributes);
-  };
-
-  const handleCollapseAll = () => {
-    setExpandedAttributes(new Set());
-  };
-
-  const handleToggleAttribute = (attributeName: string) => {
-    const newExpanded = new Set(expandedAttributes);
-    if (newExpanded.has(attributeName)) {
-      newExpanded.delete(attributeName);
-    } else {
-      newExpanded.add(attributeName);
-    }
-    setExpandedAttributes(newExpanded);
   };
 
   const filteredData = getFilteredAndSortedData();
@@ -481,73 +489,76 @@ const VendorAnalysis: React.FC = () => {
               </Typography>
             </Box>
           ) : (
-            <Box sx={{ 
-              display: 'grid', 
-              gridTemplateColumns: { xs: '1fr', md: '1fr 2fr 1fr' }, 
-              gap: 3, 
-              alignItems: 'center' 
-            }}>
-              <Autocomplete
-                options={Array.isArray(capabilities) ? capabilities : []}
-                getOptionLabel={(option) => option.name || ''}
-                value={Array.isArray(capabilities) && capabilities.length > 0 ? capabilities.find(c => c.id === selectedCapability) || null : null}
-                onChange={(_, newValue) => setSelectedCapability(newValue?.id || null)}
+            <>
+              {/* Capability Selection */}
+              <CapabilitySelector
+                capabilities={capabilities}
+                selectedCapability={capabilities.find(c => c.id === selectedCapability) || null}
+                onCapabilityChange={(capability) => updateSettings({ selectedCapability: capability?.id || null })}
                 loading={capabilities.length === 0}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Select Capability"
-                    variant="outlined"
-                    fullWidth
-                    size="small"
-                  />
-                )}
+                showFilters={showFilters}
+                onToggleFilters={() => updateSettings({ showFilters: !showFilters })}
+                onRefresh={fetchVendorAnalysis}
+                onExport={handleExport}
+                onClear={handleClearSettings}
+                showClearButton={true}
+                showExportButton={true}
+                showRefreshButton={true}
+                showFiltersButton={true}
+                disabled={loading}
+                title="Select Capability"
+                standalone={false}
               />
               
-              <Autocomplete
-                multiple
-                options={Array.isArray(availableVendors) ? availableVendors : []}
-                value={Array.isArray(selectedVendors) ? selectedVendors : []}
-                onChange={(_, newValue) => setSelectedVendors(Array.isArray(newValue) ? newValue : [])}
-                loading={availableVendors.length === 0}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Select Vendors to Compare"
-                    variant="outlined"
-                    fullWidth
-                    size="small"
-                  />
-                )}
-                renderTags={(value, getTagProps) =>
-                  value.map((option, index) => {
-                    const { key, ...tagProps } = getTagProps({ index });
-                    return (
-                      <Chip
-                        key={key}
-                        label={option}
-                        {...tagProps}
-                        size="small"
-                        sx={{ 
-                          bgcolor: getVendorColor(option),
-                          color: 'white',
-                          fontWeight: 'bold'
-                        }}
-                      />
-                    );
-                  })
-                }
-              />
-
-              <Stack direction="row" spacing={1} justifyContent="flex-end">
-                <Tooltip title="Filters">
-                  <IconButton
-                    onClick={() => setShowFilters(!showFilters)}
-                    color={showFilters ? 'primary' : 'default'}
+              {/* Vendor Selection */}
+              <Box sx={{ mt: 3 }}>
+                <FormControl fullWidth>
+                  <InputLabel>Select Vendors to Compare</InputLabel>
+                  <Select
+                    multiple
+                    value={selectedVendors || []}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      const vendors = typeof value === 'string' ? value.split(',') : value as string[];
+                      console.log('Updating selected vendors:', vendors);
+                      updateSettings({ selectedVendors: vendors });
+                    }}
+                    input={<OutlinedInput label="Select Vendors to Compare" />}
+                    renderValue={(selected) => (
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                        {selected.map((value) => (
+                          <Chip 
+                            key={value} 
+                            label={value} 
+                            size="small"
+                            sx={{ 
+                              bgcolor: getVendorColor(value),
+                              color: 'white',
+                              fontWeight: 'bold'
+                            }}
+                          />
+                        ))}
+                      </Box>
+                    )}
                   >
-                    <FilterIcon />
-                  </IconButton>
-                </Tooltip>
+                    {availableVendors && availableVendors.length > 0 ? (
+                      availableVendors.map((vendor) => (
+                        <MenuItem key={vendor} value={vendor}>
+                          <Checkbox checked={(selectedVendors || []).indexOf(vendor) > -1} />
+                          <ListItemText primary={vendor} />
+                        </MenuItem>
+                      ))
+                    ) : (
+                      <MenuItem disabled>
+                        <ListItemText primary="No vendors available" />
+                      </MenuItem>
+                    )}
+                  </Select>
+                </FormControl>
+              </Box>
+
+              {/* Additional Controls */}
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2, gap: 1 }}>
                 <Tooltip title="Expand All">
                   <span>
                     <IconButton
@@ -563,36 +574,15 @@ const VendorAnalysis: React.FC = () => {
                   <span>
                     <IconButton
                       onClick={handleCollapseAll}
-                      disabled={!analysisData || expandedAttributes.size === 0}
+                      disabled={!analysisData || expandedAttributes.length === 0}
                       color="default"
                     >
                       <ExpandMoreIcon sx={{ transform: 'rotate(180deg)' }} />
                     </IconButton>
                   </span>
                 </Tooltip>
-                <Tooltip title="Export Data">
-                  <span>
-                    <IconButton
-                      onClick={handleExport}
-                      disabled={!analysisData || filteredData.length === 0}
-                      color="primary"
-                    >
-                      <DownloadIcon />
-                    </IconButton>
-                  </span>
-                </Tooltip>
-                <Tooltip title="Refresh">
-                  <span>
-                    <IconButton
-                      onClick={fetchVendorAnalysis}
-                      disabled={!selectedCapability || loading}
-                    >
-                      <RefreshIcon />
-                    </IconButton>
-                  </span>
-                </Tooltip>
-              </Stack>
-            </Box>
+              </Box>
+            </>
           )}
 
           {/* Filters Panel */}
@@ -606,7 +596,7 @@ const VendorAnalysis: React.FC = () => {
                 <Autocomplete
                   options={Array.isArray(getUniqueDomains()) ? getUniqueDomains() : []}
                   value={filterDomain || ''}
-                  onChange={(_, newValue) => setFilterDomain(newValue || '')}
+                  onChange={(_, newValue) => updateSettings({ filterDomain: newValue || '' })}
                   renderInput={(params) => (
                     <TextField
                       {...params}
@@ -620,7 +610,7 @@ const VendorAnalysis: React.FC = () => {
                 <Autocomplete
                   options={Array.isArray(getUniqueAttributes()) ? getUniqueAttributes() : []}
                   value={filterAttribute || ''}
-                  onChange={(_, newValue) => setFilterAttribute(newValue || '')}
+                  onChange={(_, newValue) => updateSettings({ filterAttribute: newValue || '' })}
                   renderInput={(params) => (
                     <TextField
                       {...params}
@@ -634,8 +624,8 @@ const VendorAnalysis: React.FC = () => {
                 <FormControl fullWidth size="small">
                   <InputLabel>Score Filter</InputLabel>
                   <Select
-                    value={filterScore}
-                    onChange={(e) => setFilterScore(e.target.value)}
+                    value={filterScore || ''}
+                    onChange={(e) => updateSettings({ filterScore: e.target.value || '' })}
                     label="Score Filter"
                   >
                     {scoreFilterOptions.map(option => (
@@ -648,8 +638,8 @@ const VendorAnalysis: React.FC = () => {
                 <FormControl fullWidth size="small">
                   <InputLabel>Sort By</InputLabel>
                   <Select
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value)}
+                    value={sortBy || ''}
+                    onChange={(e) => updateSettings({ sortBy: e.target.value || '' })}
                     label="Sort By"
                   >
                     {sortOptions.map(option => (
@@ -662,8 +652,8 @@ const VendorAnalysis: React.FC = () => {
                 <FormControl fullWidth size="small">
                   <InputLabel>Order</InputLabel>
                   <Select
-                    value={sortOrder}
-                    onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
+                    value={sortOrder || ''}
+                    onChange={(e) => updateSettings({ sortOrder: e.target.value as 'asc' | 'desc' || '' })}
                     label="Order"
                   >
                     <MenuItem value="asc">Ascending</MenuItem>
@@ -691,7 +681,7 @@ const VendorAnalysis: React.FC = () => {
       )}
 
       {/* Analysis Results */}
-      {analysisData && !loading && (
+      {analysisData && (
         <Box>
           {/* Summary Header */}
           <Card sx={{ mb: 3, bgcolor: 'primary.main', color: 'white' }}>
@@ -703,9 +693,9 @@ const VendorAnalysis: React.FC = () => {
                   </Typography>
                   <Typography variant="body1">
                     {filteredData.length} of {analysisData.total_attributes} attributes analyzed
-                    {expandedAttributes.size > 0 && (
+                    {expandedAttributes.length > 0 && (
                       <span style={{ marginLeft: '8px', opacity: 0.9 }}>
-                        • {expandedAttributes.size} expanded
+                        • {expandedAttributes.length} expanded
                       </span>
                     )}
                   </Typography>
@@ -796,10 +786,10 @@ const VendorAnalysis: React.FC = () => {
 
           {/* Attribute Comparison */}
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            {expandedAttributes.size > 0 && (
+            {expandedAttributes.length > 0 && (
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
                 <Typography variant="body2" color="text.secondary">
-                  {expandedAttributes.size} of {filteredData.length} attributes expanded
+                  {expandedAttributes.length} of {filteredData.length} attributes expanded
                 </Typography>
                 <Button
                   size="small"
@@ -813,7 +803,7 @@ const VendorAnalysis: React.FC = () => {
             {filteredData.map((item, index) => (
               <Accordion 
                 key={index}
-                expanded={expandedAttributes.has(item.attribute_name)}
+                expanded={expandedAttributes.includes(item.attribute_name)}
                 onChange={() => handleToggleAttribute(item.attribute_name)}
                 sx={{ 
                   boxShadow: 2,
@@ -919,8 +909,6 @@ const VendorAnalysis: React.FC = () => {
                                 </Box>
                               </Box>
 
-
-
                               {/* Score Progress */}
                               <Box sx={{ mb: 2 }}>
                                 <LinearProgress
@@ -975,47 +963,6 @@ const VendorAnalysis: React.FC = () => {
                                 </Box>
                               )}
 
-                              {/* Evidence */}
-                              {vendorData.evidence_url && (() => {
-                                try {
-                                  const evidence = JSON.parse(vendorData.evidence_url);
-                                  if (Array.isArray(evidence) && evidence.length > 0) {
-                                    return (
-                                      <Box sx={{ mb: 2 }}>
-                                        <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
-                                          Evidence
-                                        </Typography>
-                                        <Stack spacing={0.5}>
-                                          {evidence.map((url, idx) => (
-                                            <Link 
-                                              key={idx}
-                                              href={url} 
-                                              target="_blank" 
-                                              rel="noopener noreferrer"
-                                              sx={{ 
-                                                display: 'flex', 
-                                                alignItems: 'center', 
-                                                gap: 0.5, 
-                                                fontSize: '0.75rem',
-                                                color: 'primary.main',
-                                                textDecoration: 'none',
-                                                '&:hover': { textDecoration: 'underline' }
-                                              }}
-                                            >
-                                              <LinkIcon fontSize="small" />
-                                              {url.length > 40 ? url.substring(0, 40) + '...' : url}
-                                            </Link>
-                                          ))}
-                                        </Stack>
-                                      </Box>
-                                    );
-                                  }
-                                } catch (e) {
-                                  // If parsing fails, display as plain text
-                                }
-                                return null;
-                              })()}
-
                               {/* Justification */}
                               <Box>
                                 <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
@@ -1027,14 +974,14 @@ const VendorAnalysis: React.FC = () => {
                               </Box>
                             </CardContent>
                           </Card>
-                        );
-                    })}
-                  </Box>
-                </AccordionDetails>
-              </Accordion>
-            ))}
-          </Box>
+                      );
+                  })}
+                </Box>
+              </AccordionDetails>
+            </Accordion>
+          ))}
         </Box>
+      </Box>
       )}
     </Container>
   );

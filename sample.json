@@ -1,0 +1,1331 @@
+{
+    "capability": "Case & Issue Management",
+    "research_date": "2025-08-09",
+    "attributes": [
+        {
+            "attribute": "Omnichannel Intake",
+            "domain": "Case Intake & Classification",
+            "weight": 80,
+            "tm_capability": "TMF621 Trouble Ticket; TMF688 Event",
+            "comarch": {
+                "score": "3 - Good",
+                "observations": [
+                    {
+                        "observation": "Comarch CRM for Telecoms states case management and contact management with single platform intake but does not detail channel specific adapters in public docs.",
+                        "type": "NOTE"
+                    }
+                ],
+                "evidence": [
+                    "https://www.comarch.com/telecommunications/bss-solutions/crm-for-telecoms/"
+                ],
+                "score_decision": "General case intake is indicated. Lack of detailed channel adapters keeps score moderate."
+            },
+            "servicenow": {
+                "score": "5 - Excellent",
+                "observations": [
+                    {
+                        "observation": "ServiceNow CSM supports creating cases from portal, email, phone, chat and APIs. TMF621 Trouble Ticket Open API provides standardized external creation and updates.",
+                        "type": "STRENGTH"
+                    }
+                ],
+                "evidence": [
+                    "https://www.servicenow.com/docs/bundle/zurich-customer-service-management/page/product/customer-service-management/concept/case-management.html",
+                    "https://www.servicenow.com/docs/bundle/zurich-api-reference/page/integrate/inbound-rest/concept/trouble-ticket-open-api.html"
+                ],
+                "score_decision": "Broad intake options plus telecom standard API support justify top score."
+            },
+            "salesforce": {
+                "score": "4 - Very Good",
+                "observations": [
+                    {
+                        "observation": "Service Cloud supports omni-channel case creation and routing across messaging, chat, email and phone with TMF621 industry API for telecom scenarios.",
+                        "type": "STRENGTH"
+                    }
+                ],
+                "evidence": [
+                    "https://help.salesforce.com/s/articleView?id=service.omnichannel_intro.htm&type=5",
+                    "https://developer.salesforce.com/docs/industries/communications/guide/TMF621.html"
+                ],
+                "score_decision": "Rich intake and routing. Telecom TMF621 available. Score 4."
+            }
+        },
+        {
+            "attribute": "Categorization & Taxonomy",
+            "domain": "Case Intake & Classification",
+            "weight": 70,
+            "tm_capability": "TMF621 troubleTicket.category, type",
+            "comarch": {
+                "score": "3 - Good",
+                "observations": [
+                    {
+                        "observation": "Comarch CRM for Telecoms references configurable case management but public docs do not show taxonomy designer details.",
+                        "type": "NOTE"
+                    }
+                ],
+                "evidence": [
+                    "https://www.comarch.com/telecommunications/bss-solutions/crm-for-telecoms/"
+                ],
+                "score_decision": "Likely present yet not documented deeply in public pages."
+            },
+            "servicenow": {
+                "score": "4 - Very Good",
+                "observations": [
+                    {
+                        "observation": "Case types and categories are configurable. TMF621 mapping supports standard category fields for external exchange.",
+                        "type": "FEATURE"
+                    }
+                ],
+                "evidence": [
+                    "https://www.servicenow.com/docs/bundle/zurich-customer-service-management/page/product/customer-service-management/concept/case-management.html",
+                    "https://www.servicenow.com/docs/bundle/yokohama-api-reference/page/integrate/inbound-rest/concept/trouble-ticket-open-api.html"
+                ],
+                "score_decision": "Strong configuration and standard field mapping supports 4."
+            },
+            "salesforce": {
+                "score": "5 - Excellent",
+                "observations": [
+                    {
+                        "observation": "Case record types, page layouts and picklists allow granular taxonomies per product or customer segment; reports reflect categories. TMF621 resources available for telecom interoperability.",
+                        "type": "STRENGTH"
+                    }
+                ],
+                "evidence": [
+                    "https://help.salesforce.com/s/articleView?id=service.case_settings.htm&type=5",
+                    "https://developer.salesforce.com/docs/industries/communications/guide/TMF621v5.html"
+                ],
+                "score_decision": "Mature taxonomy controls with enterprise scale."
+            }
+        },
+        {
+            "attribute": "Duplicate Detection",
+            "domain": "Case Intake & Classification",
+            "weight": 55,
+            "tm_capability": "TMF621 relatedTroubleTicket, relatedEntity",
+            "comarch": {
+                "score": "2 - Basic",
+                "observations": [
+                    {
+                        "observation": "No explicit public guidance on case duplicate detection or merge in CRM pages; OSS Service Desk discusses impact analysis but not dedupe specifics.",
+                        "type": "WEAKNESS"
+                    }
+                ],
+                "evidence": [
+                    "https://www.comarch.com/telecommunications/bss-solutions/crm-for-telecoms/",
+                    "https://www.comarch.com/telecommunications/service-assurance/oss-service-desk/"
+                ],
+                "score_decision": "Limited public evidence keeps score low."
+            },
+            "servicenow": {
+                "score": "3 - Good",
+                "observations": [
+                    {
+                        "observation": "Standard case configuration and scripting allow duplicate checks and linking. TMF621 notification utilities support related ticket events.",
+                        "type": "NOTE"
+                    }
+                ],
+                "evidence": [
+                    "https://www.servicenow.com/docs/bundle/xanadu-api-reference/page/app-store/dev_portal/API_reference/TroubleTicketNotificationUtilOOB/concept/TroubleTicketNotifScopedAPI.html",
+                    "https://www.servicenow.com/docs/bundle/zurich-customer-service-management/page/product/customer-service-management/concept/case-management.html"
+                ],
+                "score_decision": "Supported by configuration and API but not a packaged dedupe module."
+            },
+            "salesforce": {
+                "score": "4 - Very Good",
+                "observations": [
+                    {
+                        "observation": "Duplicate rules and matching can be applied to cases and related objects; links and parent-child cases help consolidation.",
+                        "type": "FEATURE"
+                    }
+                ],
+                "evidence": [
+                    "https://help.salesforce.com/s/articleView?id=matching_rules_overview.htm&type=5",
+                    "https://help.salesforce.com/s/articleView?id=customize_casehierarchy.htm&type=5"
+                ],
+                "score_decision": "Native dedupe framework and case hierarchy justify 4."
+            }
+        },
+        {
+            "attribute": "Priority & SLA Clock Start",
+            "domain": "Case Intake & Classification",
+            "weight": 85,
+            "tm_capability": "TMF621 priority; TMF657 KPI context",
+            "comarch": {
+                "score": "3 - Good",
+                "observations": [
+                    {
+                        "observation": "Comarch CRM mentions SLA; Comarch SLA Monitoring provides SLA definitions and tracking on services which can drive case priorities by integration.",
+                        "type": "NOTE"
+                    }
+                ],
+                "evidence": [
+                    "https://www.comarch.com/telecommunications/bss-solutions/crm-for-telecoms/",
+                    "https://www.comarch.com/telecommunications/service-assurance/sla-monitoring/"
+                ],
+                "score_decision": "SLA capability exists in assurance suite with CRM mention. Public linkage details are light."
+            },
+            "servicenow": {
+                "score": "5 - Excellent",
+                "observations": [
+                    {
+                        "observation": "Entitlements and SLAs drive timers on cases; escalation and major incident communications are built in with configurable milestones and pause rules.",
+                        "type": "STRENGTH"
+                    }
+                ],
+                "evidence": [
+                    "https://www.servicenow.com/community/csm-forum/what-are-features-of-customer-service-management-a-skills-based/m-p/384390",
+                    "https://www.servicenow.com/docs/bundle/washingtondc-it-service-management/page/product/incident-management/concept/major-incident-management.html",
+                    "https://www.servicenow.com/docs/bundle/xanadu-it-service-management/page/product/service-operations-workspace/task/configure-comm-plan-mim-sow.html"
+                ],
+                "score_decision": "Robust SLA and escalation framework earns top score."
+            },
+            "salesforce": {
+                "score": "5 - Excellent",
+                "observations": [
+                    {
+                        "observation": "Entitlements and Milestones start clocks for first response and resolution; milestone tracking appears on the case with reporting support.",
+                        "type": "STRENGTH"
+                    }
+                ],
+                "evidence": [
+                    "https://help.salesforce.com/s/articleView?id=service.entitlements_milestones_parent.htm&type=5",
+                    "https://help.salesforce.com/s/articleView?id=service.cases_milestones.htm&type=5"
+                ],
+                "score_decision": "Native entitlements and milestones justify 5."
+            }
+        },
+        {
+            "attribute": "Auto Assignment & Reassignment",
+            "domain": "Assignment, Routing & Work Management",
+            "weight": 75,
+            "tm_capability": "TMF621 assignment fields; TMF669 roles",
+            "comarch": {
+                "score": "3 - Good",
+                "observations": [
+                    {
+                        "observation": "FSM materials describe automatic task assignments and integration with trouble ticketing which implies auto assignment patterns.",
+                        "type": "NOTE"
+                    }
+                ],
+                "evidence": [
+                    "https://www.comarch.com/field-service-management/energy-and-utilities/"
+                ],
+                "score_decision": "Evidence via FSM and OSS; CRM page is light on details."
+            },
+            "servicenow": {
+                "score": "5 - Excellent",
+                "observations": [
+                    {
+                        "observation": "CSM supports assignment rules, skills based routing and dynamic reassignment when SLA risk is detected through workflows.",
+                        "type": "STRENGTH"
+                    }
+                ],
+                "evidence": [
+                    "https://www.servicenow.com/docs/bundle/zurich-customer-service-management/page/product/customer-service-management/concept/case-management.html",
+                    "https://www.servicenow.com/docs/bundle/vancouver-customer-service-management/page/product/customer-service-management/reference/r_RolesInstalledWithCustomerService.html"
+                ],
+                "score_decision": "Mature routing and reassignment with policy controls."
+            },
+            "salesforce": {
+                "score": "5 - Excellent",
+                "observations": [
+                    {
+                        "observation": "Omni-Channel with skills based routing and attribute rules sends work to the best available agent and supports reroute policies.",
+                        "type": "STRENGTH"
+                    }
+                ],
+                "evidence": [
+                    "https://help.salesforce.com/s/articleView?id=service.omnichannel_how_skills_based_routing_works.htm&type=5",
+                    "https://help.salesforce.com/s/articleView?id=service.omnichannel_attribute_based_routing.htm&type=5",
+                    "https://help.salesforce.com/s/articleView?id=service.omnichannel_psr_lifecycle.htm&type=5"
+                ],
+                "score_decision": "Rich and proven routing capability earns 5."
+            }
+        },
+        {
+            "attribute": "Queue & Backlog Management",
+            "domain": "Assignment, Routing & Work Management",
+            "weight": 60,
+            "tm_capability": "Operational on TMF621 state",
+            "comarch": {
+                "score": "3 - Good",
+                "observations": [
+                    {
+                        "observation": "OSS Service Desk focuses on operational control and multi-tenant domains which suggests queue handling for NOC and care teams.",
+                        "type": "NOTE"
+                    }
+                ],
+                "evidence": [
+                    "https://www.comarch.com/telecommunications/service-assurance/oss-service-desk/"
+                ],
+                "score_decision": "Evidence present though not detailed in public guides."
+            },
+            "servicenow": {
+                "score": "5 - Excellent",
+                "observations": [
+                    {
+                        "observation": "Multiple queues, aging, and SLA at risk views are standard in workspaces. Major incident views for prioritized backlog are available.",
+                        "type": "STRENGTH"
+                    }
+                ],
+                "evidence": [
+                    "https://www.servicenow.com/docs/bundle/washingtondc-it-service-management/page/product/incident-management/concept/major-incident-management.html",
+                    "https://www.servicenow.com/docs/bundle/zurich-customer-service-management/page/product/customer-service-management/concept/csm-case-management.html"
+                ],
+                "score_decision": "Operational workspace strength merits 5."
+            },
+            "salesforce": {
+                "score": "4 - Very Good",
+                "observations": [
+                    {
+                        "observation": "Queues with Omni-Channel routing and capacity based presence provide backlog control within Service Console.",
+                        "type": "FEATURE"
+                    }
+                ],
+                "evidence": [
+                    "https://help.salesforce.com/s/articleView?id=service.service_presence_intro.htm&type=5",
+                    "https://help.salesforce.com/s/articleView?id=service.omnichannel_intro.htm&type=5"
+                ],
+                "score_decision": "Strong console and queue model justify 4."
+            }
+        },
+        {
+            "attribute": "Skills Based Routing",
+            "domain": "Assignment, Routing & Work Management",
+            "weight": 70,
+            "tm_capability": "TMF669 roles with platform routing",
+            "comarch": {
+                "score": "3 - Good",
+                "observations": [
+                    {
+                        "observation": "FSM includes automatic task assignment and planning which implies skills and geography routing for field tasks linked to tickets.",
+                        "type": "NOTE"
+                    }
+                ],
+                "evidence": [
+                    "https://www.comarch.com/field-service-management/energy-and-utilities/"
+                ],
+                "score_decision": "Field focus is clear; CRM agent skills routing not detailed."
+            },
+            "servicenow": {
+                "score": "4 - Very Good",
+                "observations": [
+                    {
+                        "observation": "Assignment workbench and skills support in CSM and platform routing enable precise dispatch to qualified agents.",
+                        "type": "FEATURE"
+                    }
+                ],
+                "evidence": [
+                    "https://www.servicenow.com/docs/bundle/zurich-customer-service-management/page/product/customer-service-management/concept/case-management.html"
+                ],
+                "score_decision": "Well supported, earns 4."
+            },
+            "salesforce": {
+                "score": "5 - Excellent",
+                "observations": [
+                    {
+                        "observation": "Omni-Channel skills based routing rules route cases and conversations using required skills and capacity with detailed configuration.",
+                        "type": "STRENGTH"
+                    }
+                ],
+                "evidence": [
+                    "https://help.salesforce.com/s/articleView?id=service.omnichannel_how_skills_based_routing_works.htm&type=5",
+                    "https://help.salesforce.com/s/articleView?id=service.omnichannel_attribute_based_routing.htm&type=5",
+                    "https://trailhead.salesforce.com/content/learn/modules/omni-channel-lex/understand-sbr"
+                ],
+                "score_decision": "Industry leading skills routing earns 5."
+            }
+        },
+        {
+            "attribute": "Entitlement Verification",
+            "domain": "SLA, Entitlements & Major Incident",
+            "weight": 90,
+            "tm_capability": "TMF620, TMF637 context; TMF621 link",
+            "comarch": {
+                "score": "3 - Good",
+                "observations": [
+                    {
+                        "observation": "CRM page references SLA and contract context and the SLA Monitoring product supports policy checks; explicit entitlement checks at case creation are not documented publicly.",
+                        "type": "NOTE"
+                    }
+                ],
+                "evidence": [
+                    "https://www.comarch.com/telecommunications/bss-solutions/crm-for-telecoms/",
+                    "https://www.comarch.com/telecommunications/service-assurance/sla-monitoring/"
+                ],
+                "score_decision": "Evidence suggests capability through integration. Score 3."
+            },
+            "servicenow": {
+                "score": "5 - Excellent",
+                "observations": [
+                    {
+                        "observation": "Entitlement checks are performed when a case is opened considering account, product, asset and service contract; workflows can be tied to entitlements.",
+                        "type": "STRENGTH"
+                    }
+                ],
+                "evidence": [
+                    "https://www.servicenow.com/community/csm-forum/what-are-features-of-customer-service-management-a-skills-based/m-p/384390"
+                ],
+                "score_decision": "Explicit entitlement engine supports top score."
+            },
+            "salesforce": {
+                "score": "5 - Excellent",
+                "observations": [
+                    {
+                        "observation": "Entitlements and entitlement processes with milestones are native and automatically attach to cases for SLA verification.",
+                        "type": "STRENGTH"
+                    }
+                ],
+                "evidence": [
+                    "https://help.salesforce.com/s/articleView?id=service.entitlements_milestones_parent.htm&type=5",
+                    "https://help.salesforce.com/s/articleView?id=service.cases_milestones.htm&type=5"
+                ],
+                "score_decision": "Mature entitlement framework justifies 5."
+            }
+        },
+        {
+            "attribute": "Escalation & Major Incident Handling",
+            "domain": "SLA, Entitlements & Major Incident",
+            "weight": 85,
+            "tm_capability": "TMF621 state transitions and notifications",
+            "comarch": {
+                "score": "3 - Good",
+                "observations": [
+                    {
+                        "observation": "OSS Service Desk discusses financial impact and multi-tenant domains which supports escalation processes for NOC incidents. Public MI playbooks are not detailed.",
+                        "type": "NOTE"
+                    }
+                ],
+                "evidence": [
+                    "https://www.comarch.com/telecommunications/service-assurance/oss-service-desk/",
+                    "https://www.comarch.com/telecommunications/service-assurance/"
+                ],
+                "score_decision": "Evidence implies escalation capability; lack of playbook detail keeps 3."
+            },
+            "servicenow": {
+                "score": "5 - Excellent",
+                "observations": [
+                    {
+                        "observation": "Major Incident Management with communication plans, status updates and war room coordination is documented and integrated with Incident and CSM.",
+                        "type": "STRENGTH"
+                    }
+                ],
+                "evidence": [
+                    "https://www.servicenow.com/docs/bundle/washingtondc-it-service-management/page/product/incident-management/concept/major-incident-management.html",
+                    "https://www.servicenow.com/docs/bundle/xanadu-it-service-management/page/product/service-operations-workspace/task/configure-comm-plan-mim-sow.html"
+                ],
+                "score_decision": "Comprehensive MI handling earns 5."
+            },
+            "salesforce": {
+                "score": "4 - Very Good",
+                "observations": [
+                    {
+                        "observation": "Service Cloud Incident Management provides incident records, major incident designation and communication to customers.",
+                        "type": "FEATURE"
+                    }
+                ],
+                "evidence": [
+                    "https://www.salesforce.com/service/customer-service-incident-management/",
+                    "https://help.salesforce.com/s/articleView?id=service.incident_mgmt_objects.htm&type=5"
+                ],
+                "score_decision": "Strong MI features. Score 4."
+            }
+        },
+        {
+            "attribute": "Guided Troubleshooting",
+            "domain": "Diagnostics, Resolution & Knowledge",
+            "weight": 70,
+            "tm_capability": "TMF621 characteristics and notes; knowledge linked",
+            "comarch": {
+                "score": "3 - Good",
+                "observations": [
+                    {
+                        "observation": "Predictive maintenance and assurance describe analytics driven recommendations for anomalies which can inform guided steps for resolution.",
+                        "type": "ADVANTAGE"
+                    }
+                ],
+                "evidence": [
+                    "https://www.comarch.com/artificial-intelligence-management/predictive-maintenance/",
+                    "https://www.comarch.com/telecommunications/service-assurance/"
+                ],
+                "score_decision": "Analytics assist is evident though a packaged guided flow is not shown."
+            },
+            "servicenow": {
+                "score": "4 - Very Good",
+                "observations": [
+                    {
+                        "observation": "CSM and platform include decisioning and playbooks with task communications management; knowledge entitlements can surface relevant articles.",
+                        "type": "FEATURE"
+                    }
+                ],
+                "evidence": [
+                    "https://www.servicenow.com/docs/bundle/vancouver-customer-service-management/page/product/customer-service-management/concept/c_KnowledgeProductEntitlements.html",
+                    "https://www.servicenow.com/docs/bundle/zurich-customer-service-management/page/product/customer-service-management/concept/csm-case-management.html"
+                ],
+                "score_decision": "Guided flows are available through playbooks and knowledge."
+            },
+            "salesforce": {
+                "score": "4 - Very Good",
+                "observations": [
+                    {
+                        "observation": "Service Console with Knowledge and Flow enables guided diagnostics. Omni-Channel and skills ensure correct agent receives context.",
+                        "type": "FEATURE"
+                    }
+                ],
+                "evidence": [
+                    "https://www.salesforce.com/service/cloud/",
+                    "https://help.salesforce.com/s/articleView?id=knowledge_setup_overview.htm&type=5"
+                ],
+                "score_decision": "Strong guided support via Knowledge and Flow."
+            }
+        },
+        {
+            "attribute": "Knowledge Linkage",
+            "domain": "Diagnostics, Resolution & Knowledge",
+            "weight": 60,
+            "tm_capability": "Linked via relatedEntity",
+            "comarch": {
+                "score": "2 - Basic",
+                "observations": [
+                    {
+                        "observation": "Public CRM pages do not document explicit knowledge article linkage to cases.",
+                        "type": "GAP"
+                    }
+                ],
+                "evidence": [
+                    "https://www.comarch.com/telecommunications/bss-solutions/crm-for-telecoms/"
+                ],
+                "score_decision": "Insufficient public detail."
+            },
+            "servicenow": {
+                "score": "5 - Excellent",
+                "observations": [
+                    {
+                        "observation": "Knowledge product entitlements allow controlling which knowledge bases and articles customers can view and link to cases.",
+                        "type": "STRENGTH"
+                    }
+                ],
+                "evidence": [
+                    "https://www.servicenow.com/docs/bundle/vancouver-customer-service-management/page/product/customer-service-management/concept/c_KnowledgeProductEntitlements.html"
+                ],
+                "score_decision": "Granular entitlement backed knowledge earns 5."
+            },
+            "salesforce": {
+                "score": "4 - Very Good",
+                "observations": [
+                    {
+                        "observation": "Salesforce Knowledge integrates with cases and can recommend articles; entitlements determine visibility in communities.",
+                        "type": "FEATURE"
+                    }
+                ],
+                "evidence": [
+                    "https://help.salesforce.com/s/articleView?id=knowledge_considerations.htm&type=5",
+                    "https://help.salesforce.com/s/articleView?id=knowledge_lightning_overview.htm&type=5"
+                ],
+                "score_decision": "Mature linkage between case and knowledge."
+            }
+        },
+        {
+            "attribute": "Work Orders & Field Handover",
+            "domain": "Diagnostics, Resolution & Knowledge",
+            "weight": 65,
+            "tm_capability": "Related to FSM; TMF702 and related references",
+            "comarch": {
+                "score": "5 - Excellent",
+                "observations": [
+                    {
+                        "observation": "FSM integrates with trouble ticketing and CRM to generate and manage field work orders triggered by issues and IoT events.",
+                        "type": "STRENGTH"
+                    }
+                ],
+                "evidence": [
+                    "https://www.comarch.com/field-service-management/energy-and-utilities/",
+                    "https://www.comarch.com/field-service-management/data-integration-reporting-and-forecasting/"
+                ],
+                "score_decision": "Clear strength in field handover earns 5."
+            },
+            "servicenow": {
+                "score": "4 - Very Good",
+                "observations": [
+                    {
+                        "observation": "Integration with FSM and tasks from cases allow dispatch when physical intervention is required; major incident coordination supports field teams.",
+                        "type": "FEATURE"
+                    }
+                ],
+                "evidence": [
+                    "https://www.servicenow.com/docs/bundle/zurich-customer-service-management/page/product/customer-service-management/concept/case-management.html",
+                    "https://www.servicenow.com/docs/bundle/washingtondc-it-service-management/page/product/incident-management/concept/major-incident-management.html"
+                ],
+                "score_decision": "Strong linkage with work management."
+            },
+            "salesforce": {
+                "score": "4 - Very Good",
+                "observations": [
+                    {
+                        "observation": "Field Service can create work orders from cases with scheduling and mobile execution for technicians.",
+                        "type": "FEATURE"
+                    }
+                ],
+                "evidence": [
+                    "https://help.salesforce.com/s/articleView?id=fs_overview.htm&type=5",
+                    "https://help.salesforce.com/s/articleView?id=fs_work_orders_introduction.htm&type=5"
+                ],
+                "score_decision": "Well integrated field handover."
+            }
+        },
+        {
+            "attribute": "Incident to Problem Correlation",
+            "domain": "Problem Linkage & Root Cause",
+            "weight": 70,
+            "tm_capability": "TMF656 Service Problem; TMF621 relatedTroubleTicket",
+            "comarch": {
+                "score": "4 - Very Good",
+                "observations": [
+                    {
+                        "observation": "Integrated Assurance includes service problem management with links to faults and performance, enabling systemic problem records tied to tickets.",
+                        "type": "STRENGTH"
+                    }
+                ],
+                "evidence": [
+                    "https://www.comarch.com/telecommunications/service-assurance/"
+                ],
+                "score_decision": "Assurance suite supports problem linkage strongly."
+            },
+            "servicenow": {
+                "score": "5 - Excellent",
+                "observations": [
+                    {
+                        "observation": "Problem Management integrates with incidents and cases and supports known error databases and RCA with approvals.",
+                        "type": "STRENGTH"
+                    }
+                ],
+                "evidence": [
+                    "https://www.servicenow.com/docs/bundle/washingtondc-it-service-management/page/product/problem-management/concept/problem-management.html"
+                ],
+                "score_decision": "Mature ITIL aligned problem linkage earns 5."
+            },
+            "salesforce": {
+                "score": "4 - Very Good",
+                "observations": [
+                    {
+                        "observation": "Incident Management includes problem records and major incident handling with related cases for root cause tracking.",
+                        "type": "FEATURE"
+                    }
+                ],
+                "evidence": [
+                    "https://help.salesforce.com/s/articleView?id=service.incident_mgmt_objects.htm&type=5"
+                ],
+                "score_decision": "Good correlation mechanisms justify 4."
+            }
+        },
+        {
+            "attribute": "Known Error & Workaround",
+            "domain": "Problem Linkage & Root Cause",
+            "weight": 55,
+            "tm_capability": "TMF656 references to known error",
+            "comarch": {
+                "score": "3 - Good",
+                "observations": [
+                    {
+                        "observation": "Assurance pages emphasize knowledge accumulation and impact analysis. Explicit known error database references are not public.",
+                        "type": "NOTE"
+                    }
+                ],
+                "evidence": [
+                    "https://www.comarch.com/telecommunications/service-assurance/oss-service-desk/"
+                ],
+                "score_decision": "Implied capability but not documented in detail."
+            },
+            "servicenow": {
+                "score": "5 - Excellent",
+                "observations": [
+                    {
+                        "observation": "Problem Management supports known error records and publishing workarounds to Knowledge for agent and customer use.",
+                        "type": "STRENGTH"
+                    }
+                ],
+                "evidence": [
+                    "https://www.servicenow.com/docs/bundle/washingtondc-it-service-management/page/product/problem-management/concept/problem-management.html",
+                    "https://www.servicenow.com/docs/bundle/vancouver-customer-service-management/page/product/customer-service-management/concept/c_KnowledgeProductEntitlements.html"
+                ],
+                "score_decision": "Robust known error practice earns 5."
+            },
+            "salesforce": {
+                "score": "4 - Very Good",
+                "observations": [
+                    {
+                        "observation": "Knowledge articles with workarounds can be linked to incidents and cases; problem object supports RCA and workaround fields.",
+                        "type": "FEATURE"
+                    }
+                ],
+                "evidence": [
+                    "https://help.salesforce.com/s/articleView?id=knowledge_lightning_overview.htm&type=5",
+                    "https://help.salesforce.com/s/articleView?id=service.incident_mgmt_objects.htm&type=5"
+                ],
+                "score_decision": "Good support via Knowledge and problem entity."
+            }
+        },
+        {
+            "attribute": "Root Cause Analysis",
+            "domain": "Problem Linkage & Root Cause",
+            "weight": 70,
+            "tm_capability": "TMF656 RCA lifecycle",
+            "comarch": {
+                "score": "4 - Very Good",
+                "observations": [
+                    {
+                        "observation": "Service Problem Management and assurance analytics provide RCA context with linkage to performance, alarms and tickets.",
+                        "type": "STRENGTH"
+                    }
+                ],
+                "evidence": [
+                    "https://www.comarch.com/telecommunications/service-assurance/"
+                ],
+                "score_decision": "Strong assurance driven RCA."
+            },
+            "servicenow": {
+                "score": "5 - Excellent",
+                "observations": [
+                    {
+                        "observation": "Problem Management supports structured RCA templates, approvals and corrective actions linked to incidents and changes.",
+                        "type": "STRENGTH"
+                    }
+                ],
+                "evidence": [
+                    "https://www.servicenow.com/docs/bundle/washingtondc-it-service-management/page/product/problem-management/concept/problem-management.html"
+                ],
+                "score_decision": "Mature RCA processes earn 5."
+            },
+            "salesforce": {
+                "score": "4 - Very Good",
+                "observations": [
+                    {
+                        "observation": "Problem records enable RCA tracking and association with related incidents and cases in Service Cloud Incident Management.",
+                        "type": "FEATURE"
+                    }
+                ],
+                "evidence": [
+                    "https://help.salesforce.com/s/articleView?id=service.incident_mgmt_objects.htm&type=5"
+                ],
+                "score_decision": "Solid RCA support."
+            }
+        },
+        {
+            "attribute": "Intercompany Ticket Federation",
+            "domain": "B2B Federation & Partner Collaboration",
+            "weight": 80,
+            "tm_capability": "TMF621 B2B scenarios; notifications",
+            "comarch": {
+                "score": "4 - Very Good",
+                "observations": [
+                    {
+                        "observation": "Comarch achieved TM Forum Open API conformance including TMF642, indicating strong alignment for cross provider exchange and federation patterns.",
+                        "type": "ADVANTAGE"
+                    }
+                ],
+                "evidence": [
+                    "https://www.comarch.com/telecommunications/news/comarch-achieves-gold-status-for-tm-forum-open-api-conformance-certification/"
+                ],
+                "score_decision": "Conformance status and OSS focus merit 4."
+            },
+            "servicenow": {
+                "score": "5 - Excellent",
+                "observations": [
+                    {
+                        "observation": "Trouble Ticket Open API and notification support implement TMF621 patterns to integrate with external ticketing systems and buses including callback registration.",
+                        "type": "STRENGTH"
+                    }
+                ],
+                "evidence": [
+                    "https://www.servicenow.com/docs/bundle/yokohama-api-reference/page/integrate/inbound-rest/concept/trouble-ticket-open-api.html",
+                    "https://www.servicenow.com/community/telecom-articles/trouble-ticket-notification-open-api-tmf-621-support/ta-p/2837640"
+                ],
+                "score_decision": "Explicit federation capabilities justify 5."
+            },
+            "salesforce": {
+                "score": "4 - Very Good",
+                "observations": [
+                    {
+                        "observation": "Communications Cloud provides TMF621 v4 and v5 APIs for trouble ticket integration with external partners in telecom ecosystems.",
+                        "type": "FEATURE"
+                    }
+                ],
+                "evidence": [
+                    "https://developer.salesforce.com/docs/industries/communications/guide/TMF621.html",
+                    "https://developer.salesforce.com/docs/industries/communications/guide/TMF621v5.html",
+                    "https://developer.salesforce.com/docs/industries/communications/guide/industry_api_version.html"
+                ],
+                "score_decision": "Industry APIs available. Score 4."
+            }
+        },
+        {
+            "attribute": "Status Synchronization & Handover",
+            "domain": "B2B Federation & Partner Collaboration",
+            "weight": 70,
+            "tm_capability": "TMF621 notifications; TMF688 event",
+            "comarch": {
+                "score": "3 - Good",
+                "observations": [
+                    {
+                        "observation": "Open API conformance and OSS service desk suggest support for synchronized lifecycle with partners but details are sparse publicly.",
+                        "type": "NOTE"
+                    }
+                ],
+                "evidence": [
+                    "https://www.comarch.com/telecommunications/service-assurance/oss-service-desk/",
+                    "https://www.comarch.com/telecommunications/news/comarch-achieves-gold-status-for-tm-forum-open-api-conformance-certification/"
+                ],
+                "score_decision": "Likely supported through Open APIs. Score 3."
+            },
+            "servicenow": {
+                "score": "5 - Excellent",
+                "observations": [
+                    {
+                        "observation": "TMF621 notification utilities and event architecture enable outbound notifications of state changes and information required to external subscribers.",
+                        "type": "STRENGTH"
+                    }
+                ],
+                "evidence": [
+                    "https://www.servicenow.com/community/telecom-articles/trouble-ticket-notification-open-api-tmf-621-support/ta-p/2837640",
+                    "https://www.servicenow.com/docs/bundle/yokohama-api-reference/page/integrate/inbound-rest/concept/trouble-ticket-open-api.html"
+                ],
+                "score_decision": "Clear support for synchronized updates earns 5."
+            },
+            "salesforce": {
+                "score": "4 - Very Good",
+                "observations": [
+                    {
+                        "observation": "TMF621 resources and mappings support status exchange; Omni-Channel presence and routing maintain internal handover integrity.",
+                        "type": "FEATURE"
+                    }
+                ],
+                "evidence": [
+                    "https://developer.salesforce.com/docs/industries/communications/guide/tmf621_v5_resource_mapping.html",
+                    "https://help.salesforce.com/s/articleView?id=service.omnichannel_psr_lifecycle.htm&type=5"
+                ],
+                "score_decision": "Standards based status mapping justifies 4."
+            }
+        },
+        {
+            "attribute": "Alarm Intake",
+            "domain": "Alarm, Event & Monitoring Integration",
+            "weight": 80,
+            "tm_capability": "TMF642 Alarm; TMF621 link",
+            "comarch": {
+                "score": "5 - Excellent",
+                "observations": [
+                    {
+                        "observation": "Integrated Assurance includes fault management and service problem management which consume alarms. TM Forum conformance includes TMF642.",
+                        "type": "STRENGTH"
+                    }
+                ],
+                "evidence": [
+                    "https://www.comarch.com/telecommunications/service-assurance/",
+                    "https://www.comarch.com/telecommunications/news/comarch-achieves-gold-status-for-tm-forum-open-api-conformance-certification/"
+                ],
+                "score_decision": "Strong telecom alarm handling earns 5."
+            },
+            "servicenow": {
+                "score": "5 - Excellent",
+                "observations": [
+                    {
+                        "observation": "ServiceNow provides a TMF642 Alarm Management Open API plugin for telecom, enabling CRUD on alarms and integration with monitoring tools.",
+                        "type": "STRENGTH"
+                    }
+                ],
+                "evidence": [
+                    "https://www.servicenow.com/docs/bundle/yokohama-api-reference/page/integrate/inbound-rest/concept/alarm-open-api.html",
+                    "https://www.servicenow.com/community/telecom-articles/tmf-642-alarm-management-api-basic-testing-steps-quick-n-crisp/ta-p/2553608"
+                ],
+                "score_decision": "Native TMF642 support justifies 5."
+            },
+            "salesforce": {
+                "score": "3 - Good",
+                "observations": [
+                    {
+                        "observation": "No native TMF642. Events and incidents can be created through integrations; telecom TMF621 is supported for tickets.",
+                        "type": "LIMITATION"
+                    }
+                ],
+                "evidence": [
+                    "https://developer.salesforce.com/docs/industries/communications/guide/TMF621.html",
+                    "https://www.salesforce.com/service/customer-service-incident-management/software/"
+                ],
+                "score_decision": "Alarm intake relies on integration rather than native TMF642."
+            }
+        },
+        {
+            "attribute": "Correlation & Noise Reduction",
+            "domain": "Alarm, Event & Monitoring Integration",
+            "weight": 70,
+            "tm_capability": "TMF642 correlatedAlarm; TMF688",
+            "comarch": {
+                "score": "4 - Very Good",
+                "observations": [
+                    {
+                        "observation": "Predictive maintenance and assurance emphasize anomaly detection and proactive correlation to reduce MTTR and alarm noise.",
+                        "type": "ADVANTAGE"
+                    }
+                ],
+                "evidence": [
+                    "https://www.comarch.com/artificial-intelligence-management/predictive-maintenance/",
+                    "https://www.comarch.com/telecommunications/service-assurance/"
+                ],
+                "score_decision": "Strong telco correlation capability merits 4."
+            },
+            "servicenow": {
+                "score": "4 - Very Good",
+                "observations": [
+                    {
+                        "observation": "Alarm Management and event frameworks allow correlation and consolidation prior to ticket creation via TMF642 plugin and platform rules.",
+                        "type": "FEATURE"
+                    }
+                ],
+                "evidence": [
+                    "https://www.servicenow.com/docs/bundle/yokohama-api-reference/page/integrate/inbound-rest/concept/alarm-open-api.html",
+                    "https://www.tmforum.org/oda/open-apis/directory/event-management-api-TMF688/v4.0"
+                ],
+                "score_decision": "Good correlation via APIs and rules."
+            },
+            "salesforce": {
+                "score": "3 - Good",
+                "observations": [
+                    {
+                        "observation": "Correlation typically handled in external monitoring or event platforms then integrated to Service Cloud incidents or cases.",
+                        "type": "NOTE"
+                    }
+                ],
+                "evidence": [
+                    "https://www.salesforce.com/service/customer-service-incident-management/what-is-incident-management/"
+                ],
+                "score_decision": "Depends on upstream tools for correlation."
+            }
+        },
+        {
+            "attribute": "Event Subscription & Filtering",
+            "domain": "Alarm, Event & Monitoring Integration",
+            "weight": 60,
+            "tm_capability": "TMF688 Event",
+            "comarch": {
+                "score": "4 - Very Good",
+                "observations": [
+                    {
+                        "observation": "Open API adoption and assurance platform indicate event subscription with filtering and automation for telecom operations.",
+                        "type": "FEATURE"
+                    }
+                ],
+                "evidence": [
+                    "https://www.tmforum.org/oda/open-apis/directory/event-management-api-TMF688/v4.0",
+                    "https://www.comarch.com/telecommunications/service-assurance/"
+                ],
+                "score_decision": "Likely strong event handling for telco."
+            },
+            "servicenow": {
+                "score": "5 - Excellent",
+                "observations": [
+                    {
+                        "observation": "Event pub hub pattern is supported. TMF688 user guide and ServiceNow event architectures enable subscriptions and callback registration for notifications.",
+                        "type": "STRENGTH"
+                    }
+                ],
+                "evidence": [
+                    "https://www.tmforum.org/resources/standard/tmf688-event-management-api-user-guide-v4-0-0/",
+                    "https://www.servicenow.com/community/telecom-articles/trouble-ticket-notification-open-api-tmf-621-support/ta-p/2837640"
+                ],
+                "score_decision": "Strong subscription model with telecom patterns."
+            },
+            "salesforce": {
+                "score": "3 - Good",
+                "observations": [
+                    {
+                        "observation": "Platform events and integrations provide subscriptions though not TMF688 specific. Telecom TMF621 is available for tickets.",
+                        "type": "NOTE"
+                    }
+                ],
+                "evidence": [
+                    "https://developer.salesforce.com/docs/atlas.en-us.platform_events.meta/platform_events/platform_events_intro.htm",
+                    "https://developer.salesforce.com/docs/industries/communications/guide/TMF621v5.html"
+                ],
+                "score_decision": "Eventing present yet not aligned to TMF688 by default."
+            }
+        },
+        {
+            "attribute": "Notifications & Subscriptions",
+            "domain": "Customer Communication & Updates",
+            "weight": 65,
+            "tm_capability": "TMF621 notifications",
+            "comarch": {
+                "score": "3 - Good",
+                "observations": [
+                    {
+                        "observation": "Service Desk mentions proactive communication and reporting in line with SLAs. Specific customer subscription models are not shown publicly.",
+                        "type": "NOTE"
+                    }
+                ],
+                "evidence": [
+                    "https://www.comarch.com/trade-and-services/ict/managed-it-services/service-desk/"
+                ],
+                "score_decision": "General capability indicated. Score 3."
+            },
+            "servicenow": {
+                "score": "5 - Excellent",
+                "observations": [
+                    {
+                        "observation": "TMF621 notification support with event bus integration and communication plans for major incidents provide comprehensive updates to stakeholders.",
+                        "type": "STRENGTH"
+                    }
+                ],
+                "evidence": [
+                    "https://www.servicenow.com/community/telecom-articles/trouble-ticket-notification-open-api-tmf-621-support/ta-p/2837640",
+                    "https://www.servicenow.com/docs/bundle/xanadu-it-service-management/page/product/service-operations-workspace/task/configure-comm-plan-mim-sow.html"
+                ],
+                "score_decision": "Top tier notification features justify 5."
+            },
+            "salesforce": {
+                "score": "4 - Very Good",
+                "observations": [
+                    {
+                        "observation": "Incident and case notifications are supported with templates and community updates; Trust communications exemplify proactive notification patterns.",
+                        "type": "FEATURE"
+                    }
+                ],
+                "evidence": [
+                    "https://www.salesforce.com/service/customer-service-incident-management/",
+                    "https://help.salesforce.com/s/articleView?id=000389335&type=1"
+                ],
+                "score_decision": "Strong notification capabilities."
+            }
+        },
+        {
+            "attribute": "Role Based Access Control",
+            "domain": "Data Model, Security & Access",
+            "weight": 75,
+            "tm_capability": "TMF669 role semantics with platform RBAC",
+            "comarch": {
+                "score": "3 - Good",
+                "observations": [
+                    {
+                        "observation": "Multi-tenant domains and partner chains in OSS Service Desk imply granular access control across organizations.",
+                        "type": "ADVANTAGE"
+                    }
+                ],
+                "evidence": [
+                    "https://www.comarch.com/telecommunications/service-assurance/oss-service-desk/"
+                ],
+                "score_decision": "Implied RBAC. Documentation is high level."
+            },
+            "servicenow": {
+                "score": "5 - Excellent",
+                "observations": [
+                    {
+                        "observation": "CSM installs predefined roles and leverages platform RBAC and field security for case, task and knowledge access controls.",
+                        "type": "STRENGTH"
+                    }
+                ],
+                "evidence": [
+                    "https://www.servicenow.com/docs/bundle/vancouver-customer-service-management/page/product/customer-service-management/reference/r_RolesInstalledWithCustomerService.html"
+                ],
+                "score_decision": "Enterprise RBAC with fine grain control earns 5."
+            },
+            "salesforce": {
+                "score": "5 - Excellent",
+                "observations": [
+                    {
+                        "observation": "Profiles, permission sets and sharing rules provide robust object, record and field level security across cases and knowledge.",
+                        "type": "STRENGTH"
+                    }
+                ],
+                "evidence": [
+                    "https://help.salesforce.com/s/articleView?id=security_overview.htm&type=5",
+                    "https://help.salesforce.com/s/articleView?id=security_data_access_overview.htm&type=5"
+                ],
+                "score_decision": "Mature RBAC framework merits 5."
+            }
+        },
+        {
+            "attribute": "Change Audit Trail",
+            "domain": "Audit, Compliance & Localization",
+            "weight": 60,
+            "tm_capability": "TMF621 history and state",
+            "comarch": {
+                "score": "3 - Good",
+                "observations": [
+                    {
+                        "observation": "Assurance and Service Desk emphasize reporting and SLA conformity which implies audit trail though not detailed publicly.",
+                        "type": "NOTE"
+                    }
+                ],
+                "evidence": [
+                    "https://www.comarch.com/trade-and-services/ict/managed-it-services/service-desk/"
+                ],
+                "score_decision": "General compliance messaging supports a 3."
+            },
+            "servicenow": {
+                "score": "5 - Excellent",
+                "observations": [
+                    {
+                        "observation": "Platform provides audit history on task records and SLA timer changes; TMF621 notifications can include state change events.",
+                        "type": "STRENGTH"
+                    }
+                ],
+                "evidence": [
+                    "https://www.servicenow.com/docs/bundle/yokohama-api-reference/page/integrate/inbound-rest/concept/trouble-ticket-open-api.html",
+                    "https://www.servicenow.com/community/telecom-articles/trouble-ticket-notification-open-api-tmf-621-support/ta-p/2837640"
+                ],
+                "score_decision": "Comprehensive audit trail earns 5."
+            },
+            "salesforce": {
+                "score": "4 - Very Good",
+                "observations": [
+                    {
+                        "observation": "Field history tracking and event monitoring provide audit of changes to cases and related objects.",
+                        "type": "FEATURE"
+                    }
+                ],
+                "evidence": [
+                    "https://help.salesforce.com/s/articleView?id=security_overview_field_history.htm&type=5",
+                    "https://help.salesforce.com/s/articleView?id=security_event_monitoring_overview.htm&type=5"
+                ],
+                "score_decision": "Strong audit features justify 4."
+            }
+        },
+        {
+            "attribute": "Operational Dashboards",
+            "domain": "Analytics, Insights & CSAT",
+            "weight": 55,
+            "tm_capability": "KPIs aligned to TMF657",
+            "comarch": {
+                "score": "4 - Very Good",
+                "observations": [
+                    {
+                        "observation": "Assurance suite highlights service quality and performance analytics tied to SLA monitoring which can surface case backlogs and MTTR.",
+                        "type": "ADVANTAGE"
+                    }
+                ],
+                "evidence": [
+                    "https://www.comarch.com/telecommunications/service-assurance/",
+                    "https://www.comarch.com/telecommunications/service-assurance/sla-monitoring/"
+                ],
+                "score_decision": "Strong telco analytics context earns 4."
+            },
+            "servicenow": {
+                "score": "5 - Excellent",
+                "observations": [
+                    {
+                        "observation": "Workspaces provide real time backlog, SLA risk and major incident impact visualizations for operations teams.",
+                        "type": "STRENGTH"
+                    }
+                ],
+                "evidence": [
+                    "https://www.servicenow.com/docs/bundle/washingtondc-it-service-management/page/product/incident-management/concept/major-incident-management.html"
+                ],
+                "score_decision": "Best in class operational views."
+            },
+            "salesforce": {
+                "score": "4 - Very Good",
+                "observations": [
+                    {
+                        "observation": "Service Console and Analytics provide case dashboards for SLAs, backlog and agent productivity; Incident Management adds incident metrics.",
+                        "type": "FEATURE"
+                    }
+                ],
+                "evidence": [
+                    "https://www.salesforce.com/service/cloud/",
+                    "https://www.salesforce.com/service/customer-service-incident-management/"
+                ],
+                "score_decision": "Robust dashboards justify 4."
+            }
+        },
+        {
+            "attribute": "Trouble Ticket API Support",
+            "domain": "Integration & Open APIs",
+            "weight": 95,
+            "tm_capability": "TMF621",
+            "comarch": {
+                "score": "4 - Very Good",
+                "observations": [
+                    {
+                        "observation": "Comarch is TM Forum Open API conformant across multiple APIs and integrates ticketing in OSS and CRM.",
+                        "type": "ADVANTAGE"
+                    }
+                ],
+                "evidence": [
+                    "https://www.comarch.com/telecommunications/news/comarch-achieves-gold-status-for-tm-forum-open-api-conformance-certification/",
+                    "https://www.comarch.com/telecommunications/service-assurance/oss-service-desk/"
+                ],
+                "score_decision": "Conformance status suggests strong TMF621 support."
+            },
+            "servicenow": {
+                "score": "5 - Excellent",
+                "observations": [
+                    {
+                        "observation": "Trouble Ticket Open API and notification support implement TMF621 operations for create, update, retrieve and event callbacks.",
+                        "type": "STRENGTH"
+                    }
+                ],
+                "evidence": [
+                    "https://www.servicenow.com/docs/bundle/yokohama-api-reference/page/integrate/inbound-rest/concept/trouble-ticket-open-api.html",
+                    "https://www.servicenow.com/community/telecom-articles/trouble-ticket-notification-open-api-tmf-621-support/ta-p/2837640"
+                ],
+                "score_decision": "Full featured TMF621 earns 5."
+            },
+            "salesforce": {
+                "score": "5 - Excellent",
+                "observations": [
+                    {
+                        "observation": "Communications Cloud provides TMF621 v4 and v5 APIs with resource mappings for telecom integrations.",
+                        "type": "STRENGTH"
+                    }
+                ],
+                "evidence": [
+                    "https://developer.salesforce.com/docs/industries/communications/guide/TMF621.html",
+                    "https://developer.salesforce.com/docs/industries/communications/guide/TMF621v5.html",
+                    "https://developer.salesforce.com/docs/industries/communications/guide/tmf621_v5_resource_mapping.html"
+                ],
+                "score_decision": "Standards based API support earns 5."
+            }
+        },
+        {
+            "attribute": "Service Problem API Support",
+            "domain": "Integration & Open APIs",
+            "weight": 80,
+            "tm_capability": "TMF656",
+            "comarch": {
+                "score": "4 - Very Good",
+                "observations": [
+                    {
+                        "observation": "Assurance suite references service problem management aligned with TMF standards and Open API participation.",
+                        "type": "FEATURE"
+                    }
+                ],
+                "evidence": [
+                    "https://tmf-open-api-table-documents.s3.eu-west-1.amazonaws.com/OpenApiTable/TMF656_Service_Problem/5.0.0/user_guides/TMF656_Service_Problem-v5.0.0.pdf",
+                    "https://www.comarch.com/telecommunications/service-assurance/"
+                ],
+                "score_decision": "Strong telco alignment merits 4."
+            },
+            "servicenow": {
+                "score": "4 - Very Good",
+                "observations": [
+                    {
+                        "observation": "Problem Management is native and can be integrated to TMF656 patterns through customizations and event frameworks.",
+                        "type": "NOTE"
+                    }
+                ],
+                "evidence": [
+                    "https://www.tmforum.org/resources/specification/tmf656-service-problem-management-api-rest-specification-r16-5-1/",
+                    "https://www.servicenow.com/docs/bundle/washingtondc-it-service-management/page/product/problem-management/concept/problem-management.html"
+                ],
+                "score_decision": "TMF656 not out of the box but feasible via APIs. Score 4."
+            },
+            "salesforce": {
+                "score": "3 - Good",
+                "observations": [
+                    {
+                        "observation": "Problem records exist in Incident Management; TMF656 exposure is not documented natively and would rely on custom APIs or middleware.",
+                        "type": "LIMITATION"
+                    }
+                ],
+                "evidence": [
+                    "https://help.salesforce.com/s/articleView?id=service.incident_mgmt_objects.htm&type=5",
+                    "https://www.tmforum.org/resources/specification/tmf656-service-problem-management-api-rest-specification-r16-5-1/"
+                ],
+                "score_decision": "Good internal problem model without native TMF656."
+            }
+        },
+        {
+            "attribute": "Alarm and Event APIs",
+            "domain": "Integration & Open APIs",
+            "weight": 85,
+            "tm_capability": "TMF642; TMF688",
+            "comarch": {
+                "score": "5 - Excellent",
+                "observations": [
+                    {
+                        "observation": "Comarch highlights TMF Open API conformance including TMF642 and integrates alarms in Assurance for ticket creation and correlation.",
+                        "type": "STRENGTH"
+                    }
+                ],
+                "evidence": [
+                    "https://www.comarch.com/telecommunications/news/comarch-achieves-gold-status-for-tm-forum-open-api-conformance-certification/",
+                    "https://www.comarch.com/telecommunications/service-assurance/"
+                ],
+                "score_decision": "Native telco strength. Score 5."
+            },
+            "servicenow": {
+                "score": "5 - Excellent",
+                "observations": [
+                    {
+                        "observation": "ServiceNow provides TMF642 Alarm Management Open API and supports event pub hub patterns aligned with TMF688.",
+                        "type": "STRENGTH"
+                    }
+                ],
+                "evidence": [
+                    "https://www.servicenow.com/docs/bundle/yokohama-api-reference/page/integrate/inbound-rest/concept/alarm-open-api.html",
+                    "https://www.tmforum.org/resources/standard/tmf688-event-management-api-user-guide-v4-0-0/"
+                ],
+                "score_decision": "Direct API support for alarm and events."
+            },
+            "salesforce": {
+                "score": "3 - Good",
+                "observations": [
+                    {
+                        "observation": "Platform events provide eventing but TMF642 and TMF688 require external mediation. Telecom TMF621 is provided for tickets.",
+                        "type": "NOTE"
+                    }
+                ],
+                "evidence": [
+                    "https://developer.salesforce.com/docs/atlas.en-us.platform_events.meta/platform_events/platform_events_intro.htm",
+                    "https://developer.salesforce.com/docs/industries/communications/guide/TMF621.html"
+                ],
+                "score_decision": "Eventing present yet standards require integration."
+            }
+        },
+        {
+            "attribute": "Catalog and Inventory Context",
+            "domain": "Integration & Open APIs",
+            "weight": 65,
+            "tm_capability": "TMF620 Product Catalog; TMF637 Product Inventory",
+            "comarch": {
+                "score": "4 - Very Good",
+                "observations": [
+                    {
+                        "observation": "BSS suite is catalog driven and OSS integrates service and resource layers which can enrich cases with product and inventory context.",
+                        "type": "ADVANTAGE"
+                    }
+                ],
+                "evidence": [
+                    "https://www.ashb.com/wp-content/uploads/2020/04/IS-2017-195.pdf",
+                    "https://www.comarch.com/telecommunications/service-assurance/"
+                ],
+                "score_decision": "Strong telco catalog heritage merits 4."
+            },
+            "servicenow": {
+                "score": "4 - Very Good",
+                "observations": [
+                    {
+                        "observation": "CSM integrates with asset and product models; TMF APIs can be used for catalog and inventory via external systems where needed.",
+                        "type": "FEATURE"
+                    }
+                ],
+                "evidence": [
+                    "https://www.servicenow.com/docs/bundle/zurich-customer-service-management/page/product/customer-service-management/concept/case-management.html",
+                    "https://www.tmforum.org/oda/open-apis/directory/trouble-ticket-management-api-TMF621/v5.0"
+                ],
+                "score_decision": "Good context integration with standards."
+            },
+            "salesforce": {
+                "score": "5 - Excellent",
+                "observations": [
+                    {
+                        "observation": "Communications Cloud provides TMF620 and TMF637 industry APIs alongside cases and incidents which strengthens entitlement and diagnostics context.",
+                        "type": "STRENGTH"
+                    }
+                ],
+                "evidence": [
+                    "https://developer.salesforce.com/docs/industries/communications/guide/industry_api_version.html"
+                ],
+                "score_decision": "Native industry APIs justify 5."
+            }
+        }
+    ]
+}

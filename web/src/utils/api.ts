@@ -509,7 +509,6 @@ export const vendorScoreAPI = {
     score: string;
     score_numeric: number;
     observation: string;
-    evidence_url: string;
     score_decision: string;
     research_type?: string;
     research_date?: string;
@@ -522,7 +521,6 @@ export const vendorScoreAPI = {
     weight?: number;
     score?: string;
     score_numeric?: number;
-    evidence_url?: string;
     score_decision?: string;
     research_type?: string;
     research_date?: string;
@@ -542,11 +540,6 @@ export const vendorScoreAPI = {
     return apiClient.put(`/api/capabilities/vendor-scores/${scoreId}/observations`, { observations });
   },
 
-  // Update evidence URLs only
-  async updateEvidence(scoreId: number, evidenceUrls: string[]): Promise<APIResponse<{ message: string }>> {
-    return apiClient.put(`/api/capabilities/vendor-scores/${scoreId}/evidence`, { evidence_urls: evidenceUrls });
-  },
-
   // Delete vendor score
   async delete(capabilityId: number, scoreId: number): Promise<APIResponse<{ message: string }>> {
     return apiClient.delete(`/api/capabilities/${capabilityId}/vendor-scores/${scoreId}`);
@@ -559,7 +552,6 @@ export const vendorScoreAPI = {
     score?: string;
     score_numeric?: number;
     observation?: string;
-    evidence_url?: string;
     score_decision?: string;
   }[]): Promise<APIResponse<{ updated: number; errors: string[] }>> {
     return apiClient.put(`/api/capabilities/${capabilityId}/vendor-scores/bulk`, { scores });
