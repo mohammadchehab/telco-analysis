@@ -32,7 +32,6 @@ def get_database_schema(db: Session) -> dict:
             "tables": {},
             "relationships": [],
             "data_patterns": {
-                "evidence_url": "JSON array of strings (URLs)",
                 "observation": "JSON array of strings (bullet points)",
                 "status": "Workflow states: new, review, ready, completed",
                 "vendors": "Common vendors: ServiceNow, Salesforce, Comarch, LogiAI, Oracle"

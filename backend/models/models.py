@@ -108,7 +108,6 @@ class VendorScore(Base):
     weight = Column(Integer, default=50)
     score = Column(String, nullable=False)
     score_numeric = Column(Float, nullable=False)
-    evidence_url = Column(String)
     score_decision = Column(String)
     research_type = Column(String, default="capability_research")
     research_date = Column(DateTime(timezone=True), server_default=func.now())
@@ -271,7 +270,6 @@ class ProcessVendorScore(Base):
     vendor = Column(String, nullable=False)
     score = Column(Float, nullable=False)  # 0-100 score
     score_level = Column(String, nullable=False)  # "X - Level" format
-    evidence_url = Column(String)
     score_decision = Column(Text)
     research_date = Column(DateTime(timezone=True), server_default=func.now())
     created_at = Column(DateTime(timezone=True), server_default=func.now())

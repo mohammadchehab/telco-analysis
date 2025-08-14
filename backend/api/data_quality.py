@@ -10,7 +10,7 @@ from sqlalchemy import text
 
 from core.database import get_db
 from core.auth import get_current_user
-from models.models import Capability, Domain, Attribute, VendorScore
+from models.models import Capability, Domain, Attribute, VendorScore, URLValidation
 from schemas.schemas import APIResponse
 
 router = APIRouter(prefix="/data-quality", tags=["data-quality"])
@@ -30,7 +30,6 @@ def get_database_schema(db: Session) -> dict:
             "tables": {},
             "relationships": [],
             "data_patterns": {
-                "evidence_url": "JSON array of strings (URLs)",
                 "observation": "JSON array of strings (bullet points)",
                 "status": "Workflow states: new, review, ready, completed",
                 "vendors": "Common vendors: ServiceNow, Salesforce, Comarch, LogiAI, Oracle"
@@ -583,28 +582,23 @@ async def fallback_pattern_matching(user_query: str, db: Session) -> APIResponse
     )
 
 async def check_broken_urls(db: Session) -> APIResponse:
-    """Check for broken URLs in evidence links"""
+    """Check for broken URLs in URLValidation records"""
     try:
-        # Get all evidence URLs from vendor_scores
-        vendor_scores = db.query(VendorScore).filter(
-            VendorScore.evidence_url.isnot(None)
+        # Get all URLValidation records
+        url_validations = db.query(URLValidation).filter(
+            URLValidation.status.in_(['pending', 'flagged'])
         ).all()
         
         all_urls = []
         broken_urls = []
         
-        for score in vendor_scores:
-            try:
-                urls = json.loads(score.evidence_url) if score.evidence_url else []
-                for url in urls:
-                    all_urls.append({
-                        "url": url,
-                        "capability_id": score.capability_id,
-                        "attribute_name": score.attribute_name,
-                        "vendor": score.vendor
-                    })
-            except json.JSONDecodeError:
-                continue
+        for validation in url_validations:
+            all_urls.append({
+                "url": validation.url,
+                "validation_id": validation.id,
+                "vendor_score_id": validation.vendor_score_id,
+                "status": validation.status
+            })
         
         # Test URLs (simplified - in production, use async requests)
         for url_data in all_urls[:10]:  # Limit for demo
@@ -618,20 +612,22 @@ async def check_broken_urls(db: Session) -> APIResponse:
         # Get capability names for broken URLs
         broken_urls_with_names = []
         for url_data in broken_urls:
-            capability = db.query(Capability).filter(Capability.id == url_data["capability_id"]).first()
-            broken_urls_with_names.append({
-                "capability": capability.name if capability else "Unknown",
-                "attribute": url_data["attribute_name"],
-                "vendor": url_data["vendor"],
-                "url": url_data["url"],
-                "status": "404 or Error"
-            })
+            # Get vendor score to find capability
+            vendor_score = db.query(VendorScore).filter(VendorScore.id == url_data["vendor_score_id"]).first()
+            if vendor_score:
+                capability = db.query(Capability).filter(Capability.id == vendor_score.capability_id).first()
+                broken_urls_with_names.append({
+                    "capability": capability.name if capability else "Unknown",
+                    "vendor": vendor_score.vendor,
+                    "url": url_data["url"],
+                    "status": "404 or Error"
+                })
         
         return APIResponse(
             success=True,
             data={
                 "summary": f"🔍 **URL Health Check Complete**\n\nFound **{len(broken_urls)} broken URLs** out of {len(all_urls)} evidence links checked.\n\n**Broken URLs Found:**\n" + 
-                         "\n".join([f"• {item['capability']} > {item['attribute']} > {item['vendor']} ({item['status']})" 
+                         "\n".join([f"• {item['capability']} > {item['vendor']} ({item['status']})" 
                                    for item in broken_urls_with_names[:5]]),
                 "details": broken_urls_with_names,
                 "suggestions": ["Export broken URLs list", "Check for URL redirects", "Update evidence links"]

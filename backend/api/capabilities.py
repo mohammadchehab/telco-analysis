@@ -354,7 +354,6 @@ async def get_vendor_score_by_id(score_id: int, db: Session = Depends(get_db)):
             "weight": attribute.importance,  # Use weight from Attribute table instead of VendorScore
             "score": vendor_score.score,
             "score_numeric": vendor_score.score_numeric,
-            "evidence_url": vendor_score.evidence_url,
             "score_decision": vendor_score.score_decision,
             "research_type": vendor_score.research_type,
             "research_date": vendor_score.research_date,
@@ -395,8 +394,6 @@ async def update_vendor_score(
             score.score = score_data["score"]
         if "score_numeric" in score_data:
             score.score_numeric = score_data["score_numeric"]
-        if "evidence_url" in score_data:
-            score.evidence_url = score_data["evidence_url"]
         if "score_decision" in score_data:
             score.score_decision = score_data["score_decision"]
         if "research_date" in score_data:
@@ -466,38 +463,6 @@ async def update_vendor_score_observations(
             success=True, 
             data={"message": "Observations updated successfully"},
             message="Observations updated successfully"
-        )
-    except Exception as e:
-        db.rollback()
-        return APIResponse(success=False, error=str(e))
-
-@router.put("/vendor-scores/{score_id}/evidence", response_model=APIResponse)
-async def update_vendor_score_evidence(
-    score_id: int, 
-    evidence_data: Dict[str, Any], 
-    current_user: Dict[str, Any] = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    """Update evidence URLs for a vendor score"""
-    try:
-        # Check if user has permission to edit
-        if current_user.get("role") not in ["admin", "editor"]:
-            return APIResponse(success=False, error="Insufficient permissions")
-        
-        score = db.query(VendorScore).filter(VendorScore.id == score_id).first()
-        if not score:
-            return APIResponse(success=False, error="Vendor score not found")
-        
-        # Update evidence URLs
-        if "evidence_urls" in evidence_data:
-            score.evidence_url = json.dumps(evidence_data["evidence_urls"])
-        
-        db.commit()
-        
-        return APIResponse(
-            success=True, 
-            data={"message": "Evidence updated successfully"},
-            message="Evidence updated successfully"
         )
     except Exception as e:
         db.rollback()

@@ -18,20 +18,19 @@ class URLCheckerService:
         self.model = "anthropic/claude-3.5-sonnet"
         
     def extract_urls_from_vendor_scores(self, db: Session) -> List[Dict[str, Any]]:
-        """Extract URLs from VendorScore entries"""
-        vendor_scores = db.query(VendorScore).filter(
-            VendorScore.evidence_url.isnot(None),
-            VendorScore.evidence_url != ""
+        """Extract URLs from URLValidation entries"""
+        url_validations = db.query(URLValidation).filter(
+            URLValidation.status.in_(['pending', 'flagged'])
         ).all()
         
         urls = []
-        for score in vendor_scores:
+        for validation in url_validations:
             urls.append({
-                'vendor_score_id': score.id,
-                'url': score.evidence_url,
-                'capability_id': score.capability_id,
-                'attribute_name': score.attribute_name,
-                'vendor': score.vendor
+                'validation_id': validation.id,
+                'vendor_score_id': validation.vendor_score_id,
+                'url': validation.url,
+                'original_url': validation.original_url,
+                'status': validation.status
             })
         
         return urls

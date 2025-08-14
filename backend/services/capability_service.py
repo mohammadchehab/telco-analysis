@@ -285,12 +285,11 @@ class CapabilityService:
             result.append(VendorScoreResponse(
                 id=score.id,
                 capability_id=score.capability_id,
-                attribute_name=score.attribute.attribute_name if score.attribute else "Unknown",
+                attribute_name=score.attribute.attribute_name,
                 vendor=score.vendor,
                 weight=score.weight,
                 score=score.score,
                 score_numeric=score.score_numeric,
-                evidence_url=score.evidence_url,
                 score_decision=score.score_decision,
                 research_type=score.research_type,
                 research_date=score.research_date,
@@ -694,7 +693,6 @@ class CapabilityService:
                             weight=weight,
                             score=vendor_data.get("score", ""),
                             score_numeric=int(vendor_data.get("score", "0").split()[0]) if vendor_data.get("score") else 0,
-                            evidence_url=evidence,  # Now properly handled as string
                             score_decision=vendor_data.get("score_decision", ""),
                             research_type="capability_research",
                             research_date=datetime.fromisoformat(data.get("research_date", datetime.now().isoformat())),
@@ -950,7 +948,6 @@ class CapabilityService:
                         'score': vendor_score.score,
                         'score_numeric': vendor_score.score_numeric,
                         'observations': observation_list,
-                        'evidence_url': vendor_score.evidence_url,
                         'score_decision': vendor_score.score_decision,
                         'weight': vendor_score.weight
                     }
@@ -959,7 +956,6 @@ class CapabilityService:
                         'score': 'N/A',
                         'score_numeric': 0,
                         'observations': [],
-                        'evidence_url': 'N/A',
                         'score_decision': 'No data available',
                         'weight': 50
                     }
@@ -1141,19 +1137,10 @@ class CapabilityService:
                             'type': obs.observation_type.value
                         })
                     
-                    # Parse evidence_url back to array if it's a comma-separated string
-                    evidence_urls = []
-                    if score.evidence_url:
-                        if ',' in score.evidence_url:
-                            evidence_urls = [url.strip() for url in score.evidence_url.split(',')]
-                        else:
-                            evidence_urls = [score.evidence_url.strip()]
-                    
                     attr_data['vendors'][vendor] = {
                         'score': score.score,
                         'score_numeric': score.score_numeric,
                         'observations': observation_list,
-                        'evidence_url': evidence_urls,
                         'score_decision': score.score_decision,
                         'weight': score.weight
                     }
@@ -1162,7 +1149,6 @@ class CapabilityService:
                         'score': 'N/A',
                         'score_numeric': 0,
                         'observations': [],
-                        'evidence_url': 'N/A',
                         'score_decision': 'No data available',
                         'weight': 50
                     }

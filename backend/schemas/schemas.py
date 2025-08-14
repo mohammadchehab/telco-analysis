@@ -239,7 +239,6 @@ class VendorScoreResponse(Base):
     weight: int
     score: str
     score_numeric: int
-    evidence_url: str
     score_decision: str
     research_type: str
     research_date: datetime

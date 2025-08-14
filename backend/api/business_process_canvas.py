@@ -119,7 +119,6 @@ async def get_process_detail(process_id: int, db: Session = Depends(get_db)):
                     "vendor": vs.vendor,
                     "score": vs.score,
                     "score_level": vs.score_level,
-                    "evidence_url": vs.evidence_url,
                     "score_decision": vs.score_decision,
                     "research_date": vs.research_date.isoformat() if vs.research_date else None
                 } for vs in vendor_scores
@@ -190,7 +189,6 @@ async def add_vendor_score(
             vendor=vendor_data["vendor"],
             score=vendor_data["score"],
             score_level=vendor_data["score_level"],
-            evidence_url=vendor_data.get("evidence_url"),
             score_decision=vendor_data.get("score_decision")
         )
         

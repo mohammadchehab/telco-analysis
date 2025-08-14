@@ -885,7 +885,8 @@ def generate_vendor_analysis_excel(analysis_data: dict, capability_name: str, ve
             
             for vendor in vendors:
                 vendor_data = item.get('vendors', {}).get(vendor, {})
-                ws.cell(row=row, column=col, value=vendor_data.get('evidence_url', '')); col += 1
+                # Remove evidence_url column
+                col += 1
             
             row += 1
         
@@ -977,8 +978,7 @@ def generate_all_capabilities_excel(capabilities: list, vendors: list, db: Sessi
                     headers.extend([
                         f"Observations (Vendor {i})",
                         f"Score (Vendor {i})",
-                        f"Justification (Vendor {i})",
-                        f"Evidence (Vendor {i})"
+                        f"Justification (Vendor {i})"
                     ])
                 
                 for col, header in enumerate(headers, 1):
@@ -1006,8 +1006,7 @@ def generate_all_capabilities_excel(capabilities: list, vendors: list, db: Sessi
                             ws.cell(row=row, column=col, value='No observations available')
                         ws.cell(row=row, column=col + 1, value=vendor_data.get('score', 'N/A'))
                         ws.cell(row=row, column=col + 2, value=vendor_data.get('score_decision', 'N/A'))
-                        ws.cell(row=row, column=col + 3, value=vendor_data.get('evidence_url', 'N/A'))
-                        col += 4
+                        col += 3
                 
                 # Auto-adjust column widths
                 for column in ws.columns:

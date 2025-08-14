@@ -181,7 +181,6 @@ class ProcessMappingService:
                         vendor=vendor_score.vendor,
                         score=vendor_score.score_numeric,
                         score_level=vendor_score.score,
-                        evidence_url=vendor_score.evidence_url,
                         score_decision=f"Propagated from capability mapping (confidence: {mapping.confidence_score})"
                     )
                     db.add(new_process_score)

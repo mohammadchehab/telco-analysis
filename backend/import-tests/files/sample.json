@@ -1,125 +1,240 @@
 {
-    "capability": "Data Analytics and Machine Learning",
-    "analysis_date": "2025-08-04",
-    "capability_status": "existing",
-    "current_framework": {
-      "domains_count": 8,
-      "attributes_count": 30,
-      "domains": [
+  "domains": [
+    {
+      "domain_name": "Data Management & Integration",
+      "description": "Ensures data is collected, standardized, integrated, and made accessible across the enterprise.",
+      "importance": "high",
+      "attributes": [
         {
-          "domain_name": "Data Management & Integration",
-          "description": "Ensures data is collected, standardized, integrated, and made accessible across the enterprise.",
-          "on_premise": true,
-          "attributes": [
-            {
-              "attribute_name": "Master Data Management (MDM)",
-              "description": "Provides golden records for customers, products, suppliers, and other entities.",
-              "importance": "high",
-              "reasoning": "Ensures consistency and reduces duplication across enterprise systems."
-            },
-            {
-              "attribute_name": "Metadata Management",
-              "description": "Tracks business, technical, and operational metadata including lineage.",
-              "importance": "high",
-              "reasoning": "Critical for discoverability and compliance."
-            },
-            {
-              "attribute_name": "Data Integration / Ingestion",
-              "description": "Supports ETL/ELT pipelines, API ingestion, and streaming from multiple sources.",
-              "importance": "high",
-              "reasoning": "Foundation for enabling analytics and machine learning."
-            },
-            {
-              "attribute_name": "Data Quality Management",
-              "description": "Ensures data is cleansed, validated, and fit for purpose.",
-              "importance": "high",
-              "reasoning": "Improves trust and reliability of insights."
-            }
-          ]
+          "attribute_name": "Master Data Management (MDM)",
+          "definition": "Provides golden records for customers, products, suppliers, and other entities.",
+          "tm_forum_mapping": "",
+          "importance": "high"
         },
         {
-          "domain_name": "Data Engineering",
-          "description": "Builds and manages pipelines to move, transform, and enrich data for analytics and ML.",
-          "on_premise": true,
-          "attributes": [
-            {
-              "attribute_name": "Batch & Streaming Processing",
-              "description": "Enables both scheduled and real-time data processing.",
-              "importance": "high",
-              "reasoning": "Supports a range of use cases from reporting to operational decisioning."
-            },
-            {
-              "attribute_name": "Data Transformation & Enrichment",
-              "description": "Applies business logic, aggregation, and enrichment to raw data.",
-              "importance": "high",
-              "reasoning": "Transforms raw data into actionable insights."
-            },
-            {
-              "attribute_name": "Orchestration & Workflow Automation",
-              "description": "Manages scheduling, dependencies, and automation of data workflows.",
-              "importance": "medium",
-              "reasoning": "Ensures reliability and efficiency of pipeline execution."
-            },
-            {
-              "attribute_name": "DataOps",
-              "description": "Implements CI/CD practices, monitoring, and testing for data pipelines.",
-              "importance": "medium",
-              "reasoning": "Improves reliability and reduces pipeline failure risks."
-            }
-          ]
-        }
-      ]
-    },
-    "gap_analysis": {
-      "missing_domains": [
+          "attribute_name": "Metadata Management",
+          "definition": "Tracks business, technical, and operational metadata including lineage.",
+          "tm_forum_mapping": "",
+          "importance": "high"
+        },
         {
-          "domain_name": "Generative AI Enablement",
-          "description": "Capabilities focused on prompt engineering, LLM fine-tuning, and RAG pipelines.",
-          "importance": "medium",
-          "reasoning": "Growing demand for generative AI integration with analytics and ML."
-        }
-      ],
-      "missing_attributes": [
+          "attribute_name": "Data Integration / Ingestion",
+          "definition": "Supports ETL/ELT pipelines, API ingestion, and streaming from multiple sources.",
+          "tm_forum_mapping": "",
+          "importance": "high"
+        },
         {
-          "domain": "Data Governance & Security",
-          "attribute_name": "AI Model Governance",
-          "description": "Ensures fairness, bias monitoring, and regulatory compliance for ML/AI models.",
-          "importance": "high",
-          "reasoning": "Essential as AI adoption increases in regulated industries."
+          "attribute_name": "Data Quality Management",
+          "definition": "Ensures data is cleansed, validated, and fit for purpose.",
+          "tm_forum_mapping": "",
+          "importance": "high"
         }
       ]
     },
-    "market_research": {
-      "major_vendors": [
-        "Databricks",
-        "Snowflake",
-        "Microsoft Azure",
-        "AWS",
-        "Google Cloud",
-        "Collibra",
-        "Tableau",
-        "Power BI"
-      ],
-      "industry_standards": [
-        "ISO/IEC 38505",
-        "NIST AI RMF",
-        "DAMA-DMBOK",
-        "TM Forum",
-        "GDPR"
+    {
+      "domain_name": "Data Engineering",
+      "description": "Builds and manages pipelines to move, transform, and enrich data for analytics and machine learning.",
+      "importance": "high",
+      "attributes": [
+        {
+          "attribute_name": "Batch & Streaming Processing",
+          "definition": "Enables both scheduled and real-time data processing.",
+          "tm_forum_mapping": "",
+          "importance": "high"
+        },
+        {
+          "attribute_name": "Data Transformation & Enrichment",
+          "definition": "Applies business logic, aggregation, and enrichment to raw data.",
+          "tm_forum_mapping": "",
+          "importance": "high"
+        },
+        {
+          "attribute_name": "Orchestration & Workflow Automation",
+          "definition": "Manages scheduling, dependencies, and automation of data workflows.",
+          "tm_forum_mapping": "",
+          "importance": "medium"
+        },
+        {
+          "attribute_name": "DataOps",
+          "definition": "Implements CI/CD practices, monitoring, and testing for data pipelines.",
+          "tm_forum_mapping": "",
+          "importance": "medium"
+        }
       ]
     },
-    "recommendations": {
-      "priority_domains": [
-        "Data Governance & Security",
-        "Machine Learning & Data Science",
-        "Data Engineering"
-      ],
-      "priority_attributes": [
-        "Data Quality Management",
-        "MLOps",
-        "AI Model Governance"
-      ],
-      "framework_completeness": "needs_updates",
-      "next_steps": "Expand to include generative AI, strengthen governance for AI models, and enhance monitoring capabilities."
+    {
+      "domain_name": "Generative AI Enablement",
+      "description": "Capabilities focused on prompt engineering, LLM fine-tuning, and RAG pipelines.",
+      "importance": "medium",
+      "attributes": [
+        {
+          "attribute_name": "Prompt Engineering",
+          "definition": "Designs and refines prompts to optimize large language model outputs.",
+          "tm_forum_mapping": "",
+          "importance": "medium"
+        },
+        {
+          "attribute_name": "LLM Fine-Tuning",
+          "definition": "Customizes pre-trained language models on domain-specific data.",
+          "tm_forum_mapping": "",
+          "importance": "medium"
+        },
+        {
+          "attribute_name": "RAG Pipeline Orchestration",
+          "definition": "Coordinates retrieval augmented generation workflows with vector stores.",
+          "tm_forum_mapping": "",
+          "importance": "medium"
+        }
+      ]
+    },
+    {
+      "domain_name": "Data Governance & Security",
+      "description": "Defines and enforces policies, model governance, access, privacy, and compliance for data and AI assets.",
+      "importance": "high",
+      "attributes": [
+        {
+          "attribute_name": "Access Control & Authentication",
+          "definition": "Manages user roles, permissions, and secure identity verification.",
+          "tm_forum_mapping": "",
+          "importance": "high"
+        },
+        {
+          "attribute_name": "Data Privacy & Compliance",
+          "definition": "Ensures adherence to regulations such as GDPR and industry standards.",
+          "tm_forum_mapping": "",
+          "importance": "high"
+        },
+        {
+          "attribute_name": "Data Lineage & Audit",
+          "definition": "Tracks data origins, transformations, and usage for traceability.",
+          "tm_forum_mapping": "",
+          "importance": "high"
+        }
+      ]
+    },
+    {
+      "domain_name": "Machine Learning & Data Science",
+      "description": "Covers experimentation, model development, training, validation, and deployment processes.",
+      "importance": "high",
+      "attributes": [
+        {
+          "attribute_name": "Experiment Tracking",
+          "definition": "Records model parameters, metrics, and artifacts across runs.",
+          "tm_forum_mapping": "",
+          "importance": "high"
+        },
+        {
+          "attribute_name": "Feature Store Management",
+          "definition": "Centralizes feature definitions, storage, and access for models.",
+          "tm_forum_mapping": "",
+          "importance": "high"
+        },
+        {
+          "attribute_name": "Model Training & Validation",
+          "definition": "Conducts algorithm training and evaluates performance on test data.",
+          "tm_forum_mapping": "",
+          "importance": "high"
+        },
+        {
+          "attribute_name": "Hyperparameter Optimization",
+          "definition": "Automates tuning of model parameters to improve accuracy.",
+          "tm_forum_mapping": "",
+          "importance": "medium"
+        },
+        {
+          "attribute_name": "Model Explainability",
+          "definition": "Provides insights into model decision logic and feature impact.",
+          "tm_forum_mapping": "",
+          "importance": "medium"
+        }
+      ]
+    },
+    {
+      "domain_name": "Visualization & Business Intelligence",
+      "description": "Enables users to explore, analyze, and visualize insights via dashboards and reports.",
+      "importance": "medium",
+      "attributes": [
+        {
+          "attribute_name": "Dashboard Creation & Sharing",
+          "definition": "Builds interactive dashboards and enables collaboration.",
+          "tm_forum_mapping": "",
+          "importance": "medium"
+        },
+        {
+          "attribute_name": "Ad-hoc Query Building",
+          "definition": "Allows users to create custom queries against datasets.",
+          "tm_forum_mapping": "",
+          "importance": "medium"
+        },
+        {
+          "attribute_name": "Report Scheduling & Distribution",
+          "definition": "Automates generation and delivery of reports on a schedule.",
+          "tm_forum_mapping": "",
+          "importance": "low"
+        },
+        {
+          "attribute_name": "Self-Service Data Exploration",
+          "definition": "Empowers non-technical users to analyze data without IT support.",
+          "tm_forum_mapping": "",
+          "importance": "medium"
+        }
+      ]
+    },
+    {
+      "domain_name": "MLOps & Model Lifecycle Management",
+      "description": "Supports CI/CD, monitoring, versioning, and operationalization of machine learning models.",
+      "importance": "high",
+      "attributes": [
+        {
+          "attribute_name": "Model Versioning & Registry",
+          "definition": "Tracks and stores different model versions in a registry.",
+          "tm_forum_mapping": "",
+          "importance": "high"
+        },
+        {
+          "attribute_name": "Automated Deployment & CI/CD for Models",
+          "definition": "Implements pipelines to deploy models into production.",
+          "tm_forum_mapping": "",
+          "importance": "high"
+        },
+        {
+          "attribute_name": "Model Performance Monitoring",
+          "definition": "Continuously tracks model accuracy, drift, and latency.",
+          "tm_forum_mapping": "",
+          "importance": "high"
+        },
+        {
+          "attribute_name": "Retraining & Continuous Learning",
+          "definition": "Schedules model retraining with new data to maintain performance.",
+          "tm_forum_mapping": "",
+          "importance": "medium"
+        }
+      ]
+    },
+    {
+      "domain_name": "Data Catalog & Discovery",
+      "description": "Facilitates data asset searchability, classification, and lineage tracking across the enterprise.",
+      "importance": "medium",
+      "attributes": [
+        {
+          "attribute_name": "Data Asset Cataloging",
+          "definition": "Registers datasets, tables, and models in a searchable catalog.",
+          "tm_forum_mapping": "",
+          "importance": "medium"
+        },
+        {
+          "attribute_name": "Metadata Search & Tagging",
+          "definition": "Enables discovery of data via metadata keywords and tags.",
+          "tm_forum_mapping": "",
+          "importance": "medium"
+        },
+        {
+          "attribute_name": "Data Lineage Visualization",
+          "definition": "Displays data flow paths from source to consumption.",
+          "tm_forum_mapping": "",
+          "importance": "low"
+        }
+      ]
     }
-  }
+  ]
+}

@@ -322,14 +322,6 @@ def analyze_vendor_performance(vendor_scores: List[VendorScore], db: Session) ->
         if vendor_lower in vendors:
             scores[vendor_lower] += score.score_numeric
             score_counts[vendor_lower] += 1
-            
-            if score.evidence_url:
-                try:
-                    evidence_urls = eval(score.evidence_url) if isinstance(score.evidence_url, str) else score.evidence_url
-                    if isinstance(evidence_urls, list):
-                        evidence.extend(evidence_urls)
-                except:
-                    pass
 
     # Calculate average scores
     avg_scores = {}
@@ -358,7 +350,7 @@ def analyze_vendor_performance(vendor_scores: List[VendorScore], db: Session) ->
         "bestScore": round(best_score, 1),
         "scores": avg_scores,
         "status": status,
-        "evidence": list(set(evidence))  # Remove duplicates
+        "evidence": []  # No longer collecting evidence URLs
     }
 
 def map_capability_to_layer(capability_name: str) -> Dict[str, Any]:

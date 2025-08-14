@@ -1,61 +1,82 @@
-# Migration Scripts
+# Database Migrations
 
-This directory contains all database migration and initialization scripts for the Telco Analysis application.
+This directory contains database migration scripts for the Telco Capability Analysis system.
 
-## Scripts Overview
+## Recent Migrations
 
-### PostgreSQL Migration
-- **`deploy_postgresql.sh`** - Main deployment script for PostgreSQL migration
-- **`init_postgresql.py`** - Initialize PostgreSQL database with tables
-- **`migrate_to_postgresql.py`** - Migrate data from SQLite to PostgreSQL
+### Drop evidence_url Column Migration
 
-### Database Maintenance
-- **`migrate_db.py`** - General database migration script
-- **`migrate_uploads.py`** - Migrate upload data
-- **`migrate_url_validation.py`** - Migrate URL validation data
-- **`migrate_pinned_menu.py`** - Migrate pinned menu preferences
-- **`init_tmf_processes.py`** - Initialize TMF Business Process Framework
+**File:** `migrate_drop_evidence_url.py`
 
-## Usage
+**Purpose:** Removes the `evidence_url` column from both `vendor_scores` and `process_vendor_scores` tables.
 
-### PostgreSQL Migration
+**Changes Made:**
+- Removed `evidence_url` column from `VendorScore` model
+- Removed `evidence_url` column from `ProcessVendorScore` model
+- Updated all API endpoints to remove evidence_url references
+- Updated frontend components to remove evidence_url handling
+- Updated service layer to work with URLValidation records instead
+- Created migration script to safely drop the columns
+
+**To Run Migration:**
 ```bash
 cd backend/migration
-./deploy_postgresql.sh
+python migrate_drop_evidence_url.py
 ```
 
-### Individual Scripts
+**Backup Recommendation:**
+Before running this migration, it's recommended to backup your database:
 ```bash
-# Initialize PostgreSQL
-python init_postgresql.py
+# For SQLite
+cp telco_analysis.db telco_analysis_backup.db
 
-# Migrate data
-python migrate_to_postgresql.py
+# For PostgreSQL
+pg_dump your_database_name > backup_$(date +%Y%m%d_%H%M%S).sql
+```
 
-# Other migrations
-python migrate_db.py
-python migrate_uploads.py
+## Previous Migrations
+
+### Vendor Scores Migration
+
+**File:** `migrate_vendor_scores.py`
+
+**Purpose:** Adds vendor_id column to vendor_scores table and updates references.
+
+**To Run:**
+```bash
+python migrate_vendor_scores.py
+```
+
+### URL Validation Migration
+
+**File:** `migrate_url_validation.py`
+
+**Purpose:** Creates URLValidation table for tracking evidence URLs.
+
+**To Run:**
+```bash
 python migrate_url_validation.py
-python migrate_pinned_menu.py
-python init_tmf_processes.py
 ```
 
-## Prerequisites
+## Migration Best Practices
 
-1. PostgreSQL server running on `172.16.14.112:5432`
-2. Database `telco_analysis` created
-3. User `postgres` with password `postgres` has access
-4. Python dependencies installed (`psycopg2-binary`)
+1. **Always backup your database** before running migrations
+2. **Test migrations** on a copy of your production data first
+3. **Run migrations during maintenance windows** to minimize downtime
+4. **Monitor migration progress** and check for any errors
+5. **Verify data integrity** after migration completion
 
-## Configuration
+## Troubleshooting
 
-All scripts use the `DATABASE_URL` from `../config.env`:
-```
-DATABASE_URL=postgresql://postgres:postgres@172.16.14.112:5432/telco_analysis
-```
+If a migration fails:
 
-## Rollback
+1. Check the error message for specific issues
+2. Verify database connectivity and permissions
+3. Ensure all required dependencies are installed
+4. Check if the migration has already been partially applied
+5. Restore from backup if necessary and retry
 
-To rollback to SQLite:
-1. Change `DATABASE_URL` in `../config.env` back to `sqlite:///telco_analysis.db`
-2. Restart the application 
+For SQLite-specific issues:
+- SQLite doesn't support DROP COLUMN directly, so some migrations recreate tables
+- Ensure you have sufficient disk space for table recreation
+- Consider using PostgreSQL for production environments 
